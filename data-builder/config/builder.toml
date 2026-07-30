@@ -1,0 +1,17 @@
+[build]
+language_tag = "ku-Latn"
+data_version = "2026.1"
+format_version = 1
+strict_mode = true
+source_file = "data/reviewed/lexicon.jsonl"
+build_dir = "data/build"
+reports_dir = "data/reports"
+
+[normalization]
+form = "NFC"
+preserve_diacritics = true
+accepted_script = "Latin"
+
+[limits]
+min_word_length = 1
+max_word_length = 64

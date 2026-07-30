@@ -1,0 +1,25 @@
+[package]
+name = "kurmanci-data-builder"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kurmancî Language Platform Contributors"]
+description = "Language data compiler and reproducible binary builder for the Kurmancî platform."
+license = "Apache-2.0"
+repository = "https://github.com/Kurdi-Language/kurmanci"
+homepage = "https://github.com/Kurdi-Language/kurmanci"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+clap = { version = "4.4", features = ["derive"] }
+unicode-normalization = "0.1"
+sha2 = "0.10"
+
+[[bin]]
+name = "data-builder"
+path = "src/main.rs"
+
+[lib]
+name = "data_builder_lib"
+path = "src/lib.rs"

@@ -1,0 +1,75 @@
+# Kurmancî Language Platform — CI & Determinism Pipeline
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+      - 'dev/**'
+  pull_request:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-test-verify:
+    name: Build, Lint, Test & Validate Determinism
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.85.0'
+          components: rustfmt, clippy
+
+      - name: Cargo Formatting Check
+        run: cargo fmt --all --check
+
+      - name: Cargo Clippy Linter
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Run Cargo Workspace Tests
+        run: cargo test --workspace
+
+      - name: Run Data-Builder Compiler (First Pass)
+        run: cargo run -p kurmanci-data-builder -- build
+
+      - name: Record First Pass Checksums
+        run: |
+          mkdir -p /tmp/ci-check
+          sha256sum data/build/lexicon.bin > /tmp/ci-check/pass1_bin.sha256
+          sha256sum data/build/manifest.json > /tmp/ci-check/pass1_manifest.sha256
+          echo "Pass 1 lexicon.bin: $(cat /tmp/ci-check/pass1_bin.sha256)"
+          echo "Pass 1 manifest.json: $(cat /tmp/ci-check/pass1_manifest.sha256)"
+
+      - name: Run Data-Builder Compiler (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- build
+
+      - name: Verify Deterministic Binary Hash Consistency
+        run: |
+          sha256sum data/build/lexicon.bin > /tmp/ci-check/pass2_bin.sha256
+          sha256sum data/build/manifest.json > /tmp/ci-check/pass2_manifest.sha256
+          echo "Pass 2 lexicon.bin: $(cat /tmp/ci-check/pass2_bin.sha256)"
+          echo "Pass 2 manifest.json: $(cat /tmp/ci-check/pass2_manifest.sha256)"
+          diff /tmp/ci-check/pass1_bin.sha256 /tmp/ci-check/pass2_bin.sha256
+          diff /tmp/ci-check/pass1_manifest.sha256 /tmp/ci-check/pass2_manifest.sha256
+          echo "Deterministic build verification passed."
+
+      - name: Test Generated Binary Pack Integration
+        run: |
+          cargo test -p kurmanci-engine --test binary_pack_test
+          cargo test -p kurmanci-engine --test binary_integrity_tests
+
+      - name: Verify Repository Cleanliness
+        run: |
+          git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Test CLI Query Functionality
+        run: cargo run -p kurmanci-cli -- suggest rojb
