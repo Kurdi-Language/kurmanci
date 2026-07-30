@@ -7,7 +7,7 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | Feature / Milestone | Status | Description |
 |---|---|---|
 | **Deterministic Language-Pack Pipeline** | Completed | Reproducible binary compiler (`data-builder`), zero-copy pack encoding, and SHA-256 manifest verification. |
-| **First Licensed Lexical Source** | Completed | Provenance-registered Hunspell Kurmancî dataset (`hunspell-kmr`, CC BY-SA 4.0). |
+| **Deterministic Hunspell Importer** | Completed | Parsed preserved Hunspell .dic dataset into provenanced lexicon JSONL and reports (.aff expansion remains planned). |
 | **Typo & Keyboard Distance Model** | Completed | Weighted Damerau-Levenshtein edit distance with Kurmancî diacritic penalties. |
 | **Word & Document Frequencies** | Active | Multi-corpus document frequency estimation and Zipfian frequency calibration. |
 | **N-Grams & Next-Word Prediction** | Planned | Compact bigram/trigram probabilistic language models for context-aware prediction. |

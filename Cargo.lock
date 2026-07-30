@@ -424,6 +424,7 @@ name = "kurmanci-data-builder"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "kurmanci-engine",
  "serde",
  "serde_json",
  "sha2",
