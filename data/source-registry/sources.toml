@@ -1,0 +1,14 @@
+[[sources]]
+source_id = "manual-seed"
+source_name = "Kurmancî Manually Reviewed Seed Lexicon"
+author = "Kurmancî Language Platform Contributors"
+license = "Apache-2.0"
+license_url = "https://www.apache.org/licenses/LICENSE-2.0"
+url = "https://github.com/Kurdi-Language/kurmanci"
+version = "0.1.0"
+redistribution = "allowed"
+notes = "Handcrafted canonical seed entries for initial validation and baseline engine testing."
+
+[[sources.files]]
+path = "data/reviewed/lexicon.jsonl"
+sha256 = "c5c31b3d1b4fcaa8da8ccbec0bd4c4c6a52ce24143db44936770246bd86338ae"

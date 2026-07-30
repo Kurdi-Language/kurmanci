@@ -1,0 +1,28 @@
+[package]
+name = "kurmanci-engine"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kurmancî Language Platform Contributors"]
+description = "Early-stage offline Kurmancî spelling, completion, and correction engine."
+license = "Apache-2.0"
+repository = "https://github.com/Kurdi-Language/kurmanci"
+homepage = "https://github.com/Kurdi-Language/kurmanci"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+unicode-normalization = "0.1"
+clap = { version = "4.4", features = ["derive"] }
+sha2 = "0.10"
+
+[[bin]]
+name = "kurmanci_engine_bin"
+path = "src/main.rs"
+
+[[bin]]
+name = "evaluation_spelling"
+path = "../evaluation/spelling/spelling_test.rs"
+
+[lib]
+name = "kurmanci_engine"
+path = "src/lib.rs"

@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "engine",
+    "data-builder",
+    "cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Kurmancî Language Platform Contributors"]
+license = "Apache-2.0"
+repository = "https://github.com/Kurdi-Language/kurmanci"
+homepage = "https://github.com/Kurdi-Language/kurmanci"

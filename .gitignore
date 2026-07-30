@@ -1,0 +1,28 @@
+# Rust
+/target/
+**/target/
+
+# Generated language packs
+/data/build/
+
+# Generated reports
+/data/reports/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Operating systems
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~

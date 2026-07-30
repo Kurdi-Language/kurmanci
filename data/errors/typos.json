@@ -1,0 +1,58 @@
+[
+  {
+    "incorrect": "rojbas",
+    "intended": "rojbaş",
+    "category": "missing_diacritic",
+    "source": "handcrafted_benchmarks",
+    "count": 1420
+  },
+  {
+    "incorrect": "biji",
+    "intended": "bijî",
+    "category": "missing_diacritic",
+    "source": "handcrafted_benchmarks",
+    "count": 2150
+  },
+  {
+    "incorrect": "spaz",
+    "intended": "spas",
+    "category": "adjacent_key",
+    "source": "handcrafted_benchmarks",
+    "count": 890
+  },
+  {
+    "incorrect": "hevall",
+    "intended": "heval",
+    "category": "duplicate_letter",
+    "source": "handcrafted_benchmarks",
+    "count": 650
+  },
+  {
+    "incorrect": "kurdi",
+    "intended": "kurdî",
+    "category": "missing_diacritic",
+    "source": "handcrafted_benchmarks",
+    "count": 1890
+  },
+  {
+    "incorrect": "pirtuk",
+    "intended": "pirtûk",
+    "category": "missing_diacritic",
+    "source": "handcrafted_benchmarks",
+    "count": 520
+  },
+  {
+    "incorrect": "azadi",
+    "intended": "azadî",
+    "category": "missing_diacritic",
+    "source": "handcrafted_benchmarks",
+    "count": 780
+  },
+  {
+    "incorrect": "sevbas",
+    "intended": "şevbaş",
+    "category": "missing_diacritic",
+    "source": "handcrafted_benchmarks",
+    "count": 430
+  }
+]

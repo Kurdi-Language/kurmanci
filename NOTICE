@@ -1,0 +1,9 @@
+Kurmancî Language Platform
+Copyright 2026 Kurdi-Language Organization Contributors
+Canonical Repository: https://github.com/Kurdi-Language/kurmanci
+
+This product includes software and linguistic tools developed as part of the Kurmancî Language Platform project.
+
+Third-Party Linguistic Resources Notice:
+Source code in this repository is licensed under the Apache License 2.0.
+Third-party linguistic datasets, lexicons, and corpora integrated by the data-builder compiler carry their respective upstream open licenses (e.g. CC BY-SA 4.0, CC BY 4.0) as recorded in data/source-registry/sources.toml and data/licenses/.

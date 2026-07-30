@@ -1,0 +1,139 @@
+use clap::{Parser, Subcommand};
+use data_builder_lib::{
+    calculate_sha256, compile_binary_pack, generate_and_save_report, merge_and_deduplicate,
+    normalize_text, validate_entry, write_artifacts, BuildReport, BuilderConfig, ReleaseManifest,
+    SourceLexiconEntry,
+};
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
+
+#[derive(Parser)]
+#[command(
+    name = "data-builder",
+    author = "Kurmancî Language Platform Contributors",
+    version = "0.1.0",
+    about = "Kurmancî Language Platform Data Compiler Subsystem"
+)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Executes the full reproducible build pipeline (source -> normalized -> validated -> merged -> compiled binary)
+    Build {
+        #[arg(short, long, default_value = "data-builder/config/builder.toml")]
+        config: PathBuf,
+    },
+}
+
+fn main() {
+    let cli = Cli::parse();
+    let command = cli.command.unwrap_or(Commands::Build {
+        config: PathBuf::from("data-builder/config/builder.toml"),
+    });
+
+    match command {
+        Commands::Build { config } => {
+            let builder_cfg = if config.exists() {
+                BuilderConfig::load_from_file(&config)
+                    .unwrap_or_else(|e| panic!("Error loading config {:?}: {}", config, e))
+            } else {
+                BuilderConfig::default()
+            };
+
+            println!("=== Kurmancî Data-Builder Compiler Pipeline ===");
+            println!("Configuration: {:?}", builder_cfg.build);
+
+            let source_path = &builder_cfg.build.source_file;
+            let file = File::open(source_path)
+                .unwrap_or_else(|_| panic!("Failed to open source file '{}'", source_path));
+            let reader = BufReader::new(file);
+
+            let mut raw_entries = Vec::new();
+            let mut total_source_entries = 0;
+
+            for (line_idx, line_res) in reader.lines().enumerate() {
+                let line = line_res.expect("Error reading line");
+                if line.trim().is_empty() {
+                    continue;
+                }
+                total_source_entries += 1;
+
+                let mut entry: SourceLexiconEntry =
+                    serde_json::from_str(&line).unwrap_or_else(|e| {
+                        panic!("Line {}: Malformed JSON schema: {}", line_idx + 1, e)
+                    });
+
+                // 1. Unicode Normalization
+                entry.normalized = normalize_text(&entry.normalized);
+                entry.word = normalize_text(&entry.word);
+
+                // 2. Validation
+                validate_entry(&entry, line_idx + 1)
+                    .unwrap_or_else(|e| panic!("Validation failed: {}", e));
+
+                raw_entries.push(entry);
+            }
+
+            let validated_entries_count = raw_entries.len();
+            println!(
+                "  [1/4] Loaded & validated {} source entries.",
+                validated_entries_count
+            );
+
+            // 3. Merge & Deduplicate
+            let merged_entries = merge_and_deduplicate(raw_entries);
+            let unique_count = merged_entries.len();
+            println!(
+                "  [2/4] Merged & deduplicated into {} unique entries.",
+                unique_count
+            );
+
+            // 4. Binary Compilation & Checksum Calculation
+            let binary_bytes =
+                compile_binary_pack(&merged_entries).expect("Binary compilation failed");
+            let checksum = calculate_sha256(&binary_bytes);
+            println!(
+                "  [3/4] Compiled binary pack ({:.2} KB, SHA-256: {}).",
+                binary_bytes.len() as f64 / 1024.0,
+                checksum
+            );
+
+            // 5. Manifest & Report Generation
+            let manifest = ReleaseManifest {
+                project: "kurmanci-language-platform".to_string(),
+                language: builder_cfg.build.language_tag.clone(),
+                data_version: builder_cfg.build.data_version.clone(),
+                format_version: builder_cfg.build.format_version,
+                entry_count: unique_count,
+                checksum_sha256: checksum.clone(),
+                build_configuration_hash: calculate_sha256(
+                    format!("{:?}", builder_cfg.build).as_bytes(),
+                ),
+                reproducible: true,
+            };
+
+            write_artifacts(&builder_cfg.build.build_dir, &binary_bytes, &manifest)
+                .expect("Failed to write build artifacts");
+
+            let report = BuildReport {
+                timestamp: "2026-07-30T00:00:00Z".to_string(),
+                total_source_entries,
+                validated_entries: validated_entries_count,
+                unique_lexicon_entries: unique_count,
+                binary_pack_size_bytes: binary_bytes.len(),
+                checksum_sha256: checksum,
+                status: "SUCCESS".to_string(),
+            };
+
+            generate_and_save_report(&builder_cfg.build.reports_dir, &report)
+                .expect("Failed to write build report");
+
+            println!("  [4/4] Successfully generated manifest & report.");
+            println!("⚡ BUILD SUCCESSFUL!");
+        }
+    }
+}

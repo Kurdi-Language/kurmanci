@@ -1,0 +1,8 @@
+{"input": "rojbas", "expected": "rojbaş", "category": "missing_diacritic"}
+{"input": "biji", "expected": "bijî", "category": "missing_diacritic"}
+{"input": "spaz", "expected": "spas", "category": "adjacent_key"}
+{"input": "hevall", "expected": "heval", "category": "duplicated_letter"}
+{"input": "kurdi", "expected": "kurdî", "category": "missing_diacritic"}
+{"input": "pirtuk", "expected": "pirtûk", "category": "missing_diacritic"}
+{"input": "azadi", "expected": "azadî", "category": "missing_diacritic"}
+{"input": "sevbas", "expected": "şevbaş", "category": "missing_diacritic"}

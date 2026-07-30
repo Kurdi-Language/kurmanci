@@ -1,0 +1,73 @@
+# Kurmancî Platform Data Subsystem & Provenance Guide
+
+This directory contains version-controlled linguistic source datasets, provenance registries, and build output specifications for the Kurmancî platform (`ku-Latn`).
+
+---
+
+## 📁 Data Directory Layout
+
+```
+data/
+├── reviewed/            # Hand-reviewed canonical lexicon entries (JSONL)
+├── source-registry/     # Upstream source metadata & license registry (sources.toml)
+├── raw/                 # Original downloaded source files & checksums (Hunspell, etc.)
+├── licenses/            # Full license texts & provenance records
+├── build/               # [GENERATED] Production binary packs (lexicon.bin & manifest.json)
+└── reports/             # [GENERATED] Build and import validation reports
+```
+
+---
+
+## 🔒 Source Data vs. Generated Data
+
+1. **Source Data (`data/reviewed/`, `data/source-registry/`, `data/raw/`)**:
+   - Version-controlled text resources and metadata.
+   - Every dataset must have a registered entry in `data/source-registry/sources.toml` specifying author, license, canonical URL, and SHA-256 checksum.
+
+2. **Generated Data (`data/build/`, `data/reports/`)**:
+   - Production binary packs (`lexicon.bin`) and manifests produced deterministically by `kurmanci-data-builder`.
+   - **DO NOT EDIT MANUALLY**: Generated language packs are compiled binary build outputs. Hand edits break checksum integrity and format specifications.
+
+---
+
+## 🛠️ How to Run the Data Builder
+
+```bash
+# Compile reviewed lexicon sources into production binary pack
+cargo run -p kurmanci-data-builder -- build
+
+# Output binary pack: data/build/lexicon.bin
+# Output manifest:    data/build/manifest.json
+```
+
+---
+
+## ➕ How to Register and Add a New Source
+
+1. **Verify Licensing**: Ensure the dataset is released under an open license compatible with redistribution (e.g., CC BY-SA 4.0, CC BY 4.0, Apache-2.0, MIT).
+2. **Register Metadata**: Add a `[[sources]]` entry in `data/source-registry/sources.toml`:
+   ```toml
+   [[sources]]
+   source_id = "my-new-source"
+   source_name = "Canonical Lexicon Name"
+   author = "Upstream Author or Organization"
+   license = "CC BY-SA 4.0"
+   license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
+   url = "https://example.org/dataset"
+   retrieval_date = "2026-07-30"
+   version = "1.0.0"
+   redistribution = "allowed"
+   sha256 = "64_character_hex_checksum"
+   notes = "Description of dataset provenance and contents."
+   ```
+3. **Save Raw Copies**: Store the original raw files under `data/raw/<source_id>/` along with license text in `data/licenses/`.
+4. **Implement Importer**: Add fixture-tested parsing code in `data-builder/src/importers/`.
+
+---
+
+## 🐛 How to Report a Linguistic Issue
+
+If you encounter an incorrect spelling, missing word, invalid diacritic form, or regional discrepancy:
+
+1. Open a **[Linguistic Data Issue](https://github.com/Kurdi-Language/kurmanci/issues/new?template=linguistic_issue.md)** on GitHub.
+2. Provide the word, proposed correction, region/variety (`ku-Latn-TR`, `ku-Latn-SY`, `ku-Latn-IQ`, or `general`), source reference, and explanation.
