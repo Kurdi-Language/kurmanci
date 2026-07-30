@@ -12,3 +12,46 @@ notes = "Handcrafted canonical seed entries for initial validation and baseline 
 [[sources.files]]
 path = "data/reviewed/lexicon.jsonl"
 sha256 = "c5c31b3d1b4fcaa8da8ccbec0bd4c4c6a52ce24143db44936770246bd86338ae"
+
+[[sources]]
+source_id = "kurdish-hunspell-kmr"
+source_name = "KurdishHunspell Kurmanji Dictionary"
+source_type = "hunspell"
+language = "kmr"
+script = "Latn"
+author = "Sina Ahmadi"
+copyright = "Copyright (c) 2020-2022 Sina Ahmadi"
+license = "CC-BY-SA-4.0"
+license_url = "https://raw.githubusercontent.com/sinaahmadi/KurdishHunspell/88131d6878ef7fa3ee114aa554adc385ff85b44c/LICENSE"
+url = "https://github.com/sinaahmadi/KurdishHunspell"
+version = "88131d6878ef7fa3ee114aa554adc385ff85b44c"
+redistribution = "allowed"
+attribution_required = true
+share_alike_required = true
+disclosed_upstream_sources = ["FreeDict", "Wîkîferheng/Kurdish Wiktionary", "Wikidata"]
+retrieval_date = "2026-07-30"
+notes = "Original Hunspell Kurmancî dictionary and affix files preserved byte-for-byte from immutable commit 88131d6878ef7fa3ee114aa554adc385ff85b44c."
+
+[[sources.files]]
+path = "data/original/kurdish-hunspell-kmr/kmr-Latn.dic"
+upstream_path = "kmr/kmr-Latn.dic"
+url = "https://raw.githubusercontent.com/sinaahmadi/KurdishHunspell/88131d6878ef7fa3ee114aa554adc385ff85b44c/kmr/kmr-Latn.dic"
+sha256 = "5ddce75891052a63885ebba3183756aece9835b18580bc1edcdfdb87d9192b5e"
+
+[[sources.files]]
+path = "data/original/kurdish-hunspell-kmr/kmr-Latn.aff"
+upstream_path = "kmr/kmr-Latn.aff"
+url = "https://raw.githubusercontent.com/sinaahmadi/KurdishHunspell/88131d6878ef7fa3ee114aa554adc385ff85b44c/kmr/kmr-Latn.aff"
+sha256 = "cbb36a8d58182c24114316cdb74014ce15610cda76bd64239486e41b822ae87c"
+
+[[sources.files]]
+path = "data/original/kurdish-hunspell-kmr/LICENSE"
+upstream_path = "LICENSE"
+url = "https://raw.githubusercontent.com/sinaahmadi/KurdishHunspell/88131d6878ef7fa3ee114aa554adc385ff85b44c/LICENSE"
+sha256 = "e23fd65bf591c2b310047dd9f53ab44d9f833e50a8f68d43b2b876098277d82d"
+
+[[sources.files]]
+path = "data/original/kurdish-hunspell-kmr/README.md"
+upstream_path = "README.md"
+url = "https://raw.githubusercontent.com/sinaahmadi/KurdishHunspell/88131d6878ef7fa3ee114aa554adc385ff85b44c/README.md"
+sha256 = "5a88976d52e2238eb5e4cba019208b68d4453c320400ce112134a857af8872d9"

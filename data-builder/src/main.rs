@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use data_builder_lib::{
     calculate_sha256, compile_binary_pack, generate_and_save_report, merge_and_deduplicate,
     normalize_text, validate_entry, write_artifacts, BuildReport, BuilderConfig, ReleaseManifest,
-    SourceLexiconEntry,
+    SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -26,6 +26,18 @@ enum Commands {
     Build {
         #[arg(short, long, default_value = "data-builder/config/builder.toml")]
         config: PathBuf,
+    },
+    /// Verifies all registered preserved source files in sources.toml against SHA-256 checksums and provenance limits
+    VerifySources {
+        #[arg(short, long, default_value = "data/source-registry/sources.toml")]
+        registry: PathBuf,
+    },
+    /// Atomically acquires source files for a source ID from commit-pinned URLs with SHA-256 verification
+    AcquireSource {
+        #[arg(index = 1)]
+        source_id: String,
+        #[arg(short, long, default_value = "data/source-registry/sources.toml")]
+        registry: PathBuf,
     },
 }
 
@@ -134,6 +146,37 @@ fn main() {
 
             println!("  [4/4] Successfully generated manifest & report.");
             println!("⚡ BUILD SUCCESSFUL!");
+        }
+        Commands::VerifySources { registry } => {
+            println!("=== Kurmancî Source Registry Integrity Verification ===");
+            let reg = SourceRegistry::load_from_file(&registry)
+                .unwrap_or_else(|e| panic!("Failed to load source registry {:?}: {}", registry, e));
+
+            reg.verify_preserved_files(".")
+                .unwrap_or_else(|e| panic!("Source verification failed: {}", e));
+
+            println!(
+                "⚡ Source Registry Verification PASSED! Verified {} registered sources.",
+                reg.sources.len()
+            );
+        }
+        Commands::AcquireSource {
+            source_id,
+            registry,
+        } => {
+            println!("=== Kurmancî Deterministic Source Acquisition ===");
+            println!("Acquiring source ID '{}' from {:?}", source_id, registry);
+
+            let reg = SourceRegistry::load_from_file(&registry)
+                .unwrap_or_else(|e| panic!("Failed to load source registry {:?}: {}", registry, e));
+
+            reg.acquire_source(&source_id, ".", None)
+                .unwrap_or_else(|e| panic!("Source acquisition failed: {}", e));
+
+            println!(
+                "⚡ Source Acquisition SUCCESSFUL! Source '{}' acquired and verified.",
+                source_id
+            );
         }
     }
 }
