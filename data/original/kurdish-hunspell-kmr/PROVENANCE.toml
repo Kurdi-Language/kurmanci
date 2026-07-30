@@ -1,0 +1,34 @@
+[source]
+source_id = "kurdish-hunspell-kmr"
+source_name = "KurdishHunspell Kurmanji Dictionary"
+repository = "https://github.com/sinaahmadi/KurdishHunspell"
+revision = "88131d6878ef7fa3ee114aa554adc385ff85b44c"
+retrieval_date = "2026-07-30"
+spdx_license = "CC-BY-SA-4.0"
+copyright = "Copyright (c) 2020-2022 Sina Ahmadi"
+author = "Sina Ahmadi"
+disclosed_upstream_sources = ["FreeDict", "Wîkîferheng/Kurdish Wiktionary", "Wikidata"]
+
+attribution = "Kurmanji Hunspell dictionary data derived from KurdishHunspell by Sina Ahmadi, used under CC BY-SA 4.0. Changes and transformations made by the Kurmancî Language Platform are documented in the build provenance."
+
+preservation_note = "The files in this directory are preserved byte-for-byte from the upstream immutable commit SHA. Future transformed output derived from this dataset must retain provenance and comply with CC BY-SA 4.0."
+
+[[files]]
+path = "kmr-Latn.dic"
+upstream_path = "kmr/kmr-Latn.dic"
+sha256 = "5ddce75891052a63885ebba3183756aece9835b18580bc1edcdfdb87d9192b5e"
+
+[[files]]
+path = "kmr-Latn.aff"
+upstream_path = "kmr/kmr-Latn.aff"
+sha256 = "cbb36a8d58182c24114316cdb74014ce15610cda76bd64239486e41b822ae87c"
+
+[[files]]
+path = "LICENSE"
+upstream_path = "LICENSE"
+sha256 = "e23fd65bf591c2b310047dd9f53ab44d9f833e50a8f68d43b2b876098277d82d"
+
+[[files]]
+path = "README.md"
+upstream_path = "README.md"
+sha256 = "5a88976d52e2238eb5e4cba019208b68d4453c320400ce112134a857af8872d9"

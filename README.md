@@ -12,7 +12,8 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Rust Core Engine** (`kurmanci-engine`): Fast Trie prefix autocomplete, weighted Damerau-Levenshtein distance, and diacritic-sensitive candidate ranking (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
 - [x] **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`) with embedded SHA-256 payload validation and a deterministic release manifest.
 - [x] **CLI Demonstration** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration for completions and corrections.
-- [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0).
+- [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
+- [x] **Deterministic Hunspell Importer** (`kurmanci-data-builder import-hunspell`): Parses preserved `.dic` files into provenanced lexicon JSONLs and reports (`.aff` affix expansion remains planned).
 
 ### Planned Features
 - [ ] **N-Grams & Next-Word Prediction** *(Planned)*: Probabilistic context-aware prediction models.

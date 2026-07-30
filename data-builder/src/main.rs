@@ -1,8 +1,8 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
-    calculate_sha256, compile_binary_pack, generate_and_save_report, merge_and_deduplicate,
-    normalize_text, validate_entry, write_artifacts, BuildReport, BuilderConfig, ReleaseManifest,
-    SourceLexiconEntry,
+    calculate_sha256, compile_binary_pack, evaluate_lexicon_impact, generate_and_save_report,
+    import_hunspell_dic, merge_and_deduplicate, normalize_text, validate_entry, write_artifacts,
+    BuildReport, BuilderConfig, ReleaseManifest, SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -26,6 +26,32 @@ enum Commands {
     Build {
         #[arg(short, long, default_value = "data-builder/config/builder.toml")]
         config: PathBuf,
+    },
+    /// Verifies all registered preserved source files in sources.toml against SHA-256 checksums and provenance limits
+    VerifySources {
+        #[arg(short, long, default_value = "data/source-registry/sources.toml")]
+        registry: PathBuf,
+    },
+    /// Atomically acquires source files for a source ID from commit-pinned URLs with SHA-256 verification
+    AcquireSource {
+        #[arg(index = 1)]
+        source_id: String,
+        #[arg(short, long, default_value = "data/source-registry/sources.toml")]
+        registry: PathBuf,
+    },
+    /// Deterministically parses and imports a registered Hunspell .dic source
+    ImportHunspell {
+        #[arg(index = 1)]
+        source_id: String,
+    },
+    /// Evaluates engine benchmark performance metrics between baseline manual seed and imported Hunspell entries
+    EvaluateLexicon {
+        #[arg(
+            short,
+            long,
+            default_value = "data/imported/kurdish-hunspell-kmr/lexicon.jsonl"
+        )]
+        imported: PathBuf,
     },
 }
 
@@ -134,6 +160,146 @@ fn main() {
 
             println!("  [4/4] Successfully generated manifest & report.");
             println!("⚡ BUILD SUCCESSFUL!");
+        }
+        Commands::VerifySources { registry } => {
+            println!("=== Kurmancî Source Registry Integrity Verification ===");
+            let reg = SourceRegistry::load_from_file(&registry)
+                .unwrap_or_else(|e| panic!("Failed to load source registry {:?}: {}", registry, e));
+
+            reg.verify_preserved_files(".")
+                .unwrap_or_else(|e| panic!("Source verification failed: {}", e));
+
+            println!(
+                "⚡ Source Registry Verification PASSED! Verified {} registered sources.",
+                reg.sources.len()
+            );
+        }
+        Commands::AcquireSource {
+            source_id,
+            registry,
+        } => {
+            println!("=== Kurmancî Deterministic Source Acquisition ===");
+            println!("Acquiring source ID '{}' from {:?}", source_id, registry);
+
+            let reg = SourceRegistry::load_from_file(&registry)
+                .unwrap_or_else(|e| panic!("Failed to load source registry {:?}: {}", registry, e));
+
+            reg.acquire_source(&source_id, ".", None)
+                .unwrap_or_else(|e| panic!("Source acquisition failed: {}", e));
+
+            println!(
+                "⚡ Source Acquisition SUCCESSFUL! Source '{}' acquired and verified.",
+                source_id
+            );
+        }
+        Commands::ImportHunspell { source_id } => {
+            println!("=== Kurmancî Deterministic Hunspell Importer ===");
+            let summary = import_hunspell_dic(&source_id, ".")
+                .unwrap_or_else(|e| panic!("Hunspell import failed: {}", e));
+
+            println!("  Source ID:               {}", summary.source_id);
+            println!(
+                "  Declared Entries Count:  {:?}",
+                summary.declared_entry_count
+            );
+            println!(
+                "  Physical Input Lines:    {}",
+                summary.physical_input_lines
+            );
+            println!("  Parsed Entries:          {}", summary.parsed_entries);
+            println!("  Accepted Entries:        {}", summary.accepted_entries);
+            println!("  Rejected Entries:        {}", summary.rejected_entries);
+            println!(
+                "  Duplicate Surface Forms: {}",
+                summary.duplicate_surface_forms
+            );
+            println!(
+                "  Conflicting Flag Sets:   {}",
+                summary.conflicting_flag_sets
+            );
+            println!(
+                "  Output SHA-256 Checksum: {}",
+                summary.output_checksum_sha256
+            );
+            println!("⚡ IMPORT SUCCESSFUL!");
+        }
+        Commands::EvaluateLexicon { imported } => {
+            println!("=== Kurmancî Lexicon Impact Benchmark Evaluation ===");
+            let eval_report = evaluate_lexicon_impact(&imported, &PathBuf::from("."))
+                .unwrap_or_else(|e| panic!("Lexicon evaluation failed: {}", e));
+
+            println!("\nBaseline (Manual Seed):");
+            println!(
+                "  Entries:      {}",
+                eval_report.baseline_manual_seed.entry_count
+            );
+            println!(
+                "  Binary Size:  {:.2} KB",
+                eval_report.baseline_manual_seed.binary_pack_size_bytes as f64 / 1024.0
+            );
+            println!(
+                "  Coverage:     {:.1}%",
+                eval_report.baseline_manual_seed.known_word_coverage_percent
+            );
+            println!(
+                "  Top-1 Acc:    {:.1}%",
+                eval_report
+                    .baseline_manual_seed
+                    .correction_top_1_accuracy_percent
+            );
+            println!(
+                "  Top-K Acc:    {:.1}%",
+                eval_report
+                    .baseline_manual_seed
+                    .correction_top_k_accuracy_percent
+            );
+            println!(
+                "  Load Time:    {} µs",
+                eval_report.baseline_manual_seed.load_time_us
+            );
+            println!(
+                "  Query Lat:    {:.2} µs",
+                eval_report.baseline_manual_seed.avg_query_latency_us
+            );
+
+            println!("\nCombined (Seed + Imported Hunspell):");
+            println!(
+                "  Entries:      {}",
+                eval_report.combined_with_imported.entry_count
+            );
+            println!(
+                "  Binary Size:  {:.2} KB",
+                eval_report.combined_with_imported.binary_pack_size_bytes as f64 / 1024.0
+            );
+            println!(
+                "  Coverage:     {:.1}%",
+                eval_report
+                    .combined_with_imported
+                    .known_word_coverage_percent
+            );
+            println!(
+                "  Top-1 Acc:    {:.1}%",
+                eval_report
+                    .combined_with_imported
+                    .correction_top_1_accuracy_percent
+            );
+            println!(
+                "  Top-K Acc:    {:.1}%",
+                eval_report
+                    .combined_with_imported
+                    .correction_top_k_accuracy_percent
+            );
+            println!(
+                "  Load Time:    {} µs",
+                eval_report.combined_with_imported.load_time_us
+            );
+            println!(
+                "  Query Lat:    {:.2} µs",
+                eval_report.combined_with_imported.avg_query_latency_us
+            );
+
+            println!("\nQuality Note: {}", eval_report.quality_note);
+            println!("⚡ EVALUATION COMPLETED!");
         }
     }
 }

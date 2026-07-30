@@ -34,6 +34,12 @@ jobs:
       - name: Cargo Clippy Linter
         run: cargo clippy --workspace --all-targets --all-features -- -D warnings
 
+      - name: Verify Source Registry Integrity
+        run: cargo run -p kurmanci-data-builder -- verify-sources
+
+      - name: Run Deterministic Hunspell Importer
+        run: cargo run -p kurmanci-data-builder -- import-hunspell kurdish-hunspell-kmr
+
       - name: Run Cargo Workspace Tests
         run: cargo test --workspace
 
