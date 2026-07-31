@@ -1,8 +1,9 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
     calculate_sha256, compile_binary_pack, evaluate_lexicon_impact, generate_and_save_report,
-    import_hunspell_dic, merge_and_deduplicate, normalize_text, validate_entry, write_artifacts,
-    BuildReport, BuilderConfig, ReleaseManifest, SourceLexiconEntry, SourceRegistry,
+    import_hunspell_dic, merge_and_deduplicate, normalize_text, run_quality_audit, validate_entry,
+    write_artifacts, BuildReport, BuilderConfig, ReleaseManifest, SourceLexiconEntry,
+    SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -52,6 +53,11 @@ enum Commands {
             default_value = "data/imported/kurdish-hunspell-kmr/lexicon.jsonl"
         )]
         imported: PathBuf,
+    },
+    /// Runs a deterministic quality audit on imported lexicon data
+    AuditLexicon {
+        #[arg(index = 1)]
+        source_id: String,
     },
 }
 
@@ -300,6 +306,10 @@ fn main() {
 
             println!("\nQuality Note: {}", eval_report.quality_note);
             println!("⚡ EVALUATION COMPLETED!");
+        }
+        Commands::AuditLexicon { source_id } => {
+            run_quality_audit(&source_id, ".")
+                .unwrap_or_else(|e| panic!("Quality audit failed: {}", e));
         }
     }
 }
