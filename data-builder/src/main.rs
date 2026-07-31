@@ -1,9 +1,10 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
     build_corpus_frequencies, calculate_sha256, compile_binary_pack, evaluate_lexicon_impact,
-    generate_and_save_report, import_corpus, import_hunspell_dic, merge_and_deduplicate,
-    normalize_text, run_quality_audit, validate_entry, write_artifacts, BuildReport, BuilderConfig,
-    ReleaseManifest, SourceLexiconEntry, SourceRegistry,
+    generate_and_save_report, import_corpus, import_hunspell_dic, join_frequencies_to_lexicon,
+    merge_and_deduplicate, normalize_text, run_quality_audit, run_ranking_evaluation,
+    validate_entry, write_artifacts, BuildReport, BuilderConfig, ReleaseManifest,
+    SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -11,10 +12,10 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
-    name = "data-builder",
+    name = "kurmanci-data-builder",
     author = "Kurmancî Language Platform Contributors",
     version = "0.1.0",
-    about = "Kurmancî Language Platform Data Compiler Subsystem"
+    about = "Offline Kurmancî Language Data Compiler & Processing Crate"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -66,6 +67,8 @@ enum Commands {
     },
     /// Builds word and document frequencies across all imported text corpora
     BuildFrequencies,
+    /// Evaluates candidate suggestion ranking accuracy (baseline vs frequency-aware)
+    EvaluateRanking,
 }
 
 fn main() {
@@ -124,11 +127,16 @@ fn main() {
             );
 
             // 3. Merge & Deduplicate
-            let merged_entries = merge_and_deduplicate(raw_entries);
+            let mut merged_entries = merge_and_deduplicate(raw_entries);
             let unique_count = merged_entries.len();
+
+            let join_summary = join_frequencies_to_lexicon(".", &mut merged_entries)
+                .expect("Frequency-to-lexicon join failed");
+
             println!(
-                "  [2/4] Merged & deduplicated into {} unique entries.",
-                unique_count
+                "  [2/4] Merged & deduplicated into {} unique entries (Frequency coverage: {:.1}%).",
+                unique_count,
+                join_summary.lexicon_coverage_percent
             );
 
             // 4. Binary Compilation & Checksum Calculation
@@ -338,6 +346,30 @@ fn main() {
             println!("  Unique Words:    {}", stats.records.len());
             println!("  Output File:     data/build/frequencies.jsonl");
             println!("  Reports Dir:     data/reports/frequencies/");
+        }
+        Commands::EvaluateRanking => {
+            println!("=== Kurmancî Suggestion Ranking Evaluation ===");
+            let summary = run_ranking_evaluation(".")
+                .unwrap_or_else(|e| panic!("Ranking evaluation failed: {}", e));
+            println!("⚡ RANKING EVALUATION COMPLETED!");
+            println!("  Total Cases:         {}", summary.total_cases);
+            println!(
+                "  Baseline Top-1 Acc:  {:.2}%",
+                summary.baseline_top_1_accuracy
+            );
+            println!(
+                "  Frequency Top-1 Acc: {:.2}%",
+                summary.experiment_top_1_accuracy
+            );
+            println!(
+                "  Baseline Top-3 Acc:  {:.2}%",
+                summary.baseline_top_3_accuracy
+            );
+            println!(
+                "  Frequency Top-3 Acc: {:.2}%",
+                summary.experiment_top_3_accuracy
+            );
+            println!("  Acceptance Passed:   {}", summary.acceptance_passed);
         }
     }
 }

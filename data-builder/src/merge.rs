@@ -81,6 +81,7 @@ mod tests {
             variants: vec![],
             sources: vec!["wiktionary".to_string()],
             regions: vec!["general".to_string()],
+            frequency_metadata: None,
         };
 
         let e2 = SourceLexiconEntry {
@@ -93,6 +94,7 @@ mod tests {
             variants: vec![],
             sources: vec!["manual-seed".to_string()],
             regions: vec!["general".to_string()],
+            frequency_metadata: None,
         };
 
         let merged = merge_and_deduplicate(vec![e1, e2]);
@@ -118,6 +120,7 @@ mod tests {
                 "m_source".to_string(),
             ],
             regions: vec!["general".to_string()],
+            frequency_metadata: None,
         };
 
         let merged = merge_and_deduplicate(vec![e1]);

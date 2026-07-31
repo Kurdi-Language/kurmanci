@@ -11,6 +11,7 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Lexical Data Quality Audit** | Completed | 15-report deterministic quality audit with importer cross-check, Unicode analysis, conflict grouping, suspicious entry detection, and manual-seed comparison. Verdict A — suitable for controlled evaluation only. |
 | **Typo & Keyboard Distance Model** | Completed | Weighted Damerau-Levenshtein edit distance with Kurmancî diacritic penalties. |
 | **Word & Document Frequencies** | Completed | Deterministic corpus frequency pipeline (`import-corpus`, `build-frequencies`), NFC lowercase tokenizer, JSONL frequency table, and statistical reports suite. |
+| **Frequency-Aware Suggestion Ranking** | Completed | Fixed-point Zipf (`zipf_milli`) in binary pack v2, secondary frequency tie-breaking, reviewed evaluation suite (`cases.jsonl`), CLI `--explain`, and `evaluate-ranking` benchmark tool. |
 | **N-Grams & Next-Word Prediction** | Planned | Compact bigram/trigram probabilistic language models for context-aware prediction. |
 | **Swift SDK** | Planned | Native Apple SDK wrapper around `kurmanci-engine` Rust core. |
 | **iOS Reference Keyboard** | Planned | Custom iOS keyboard extension using `ku-Latn` layout and native engine bindings. |

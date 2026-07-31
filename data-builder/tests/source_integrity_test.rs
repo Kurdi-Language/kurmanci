@@ -357,6 +357,7 @@ fn test_compiler_determinism_remains_intact() {
         variants: Vec::new(),
         regions: vec!["general".to_string()],
         sources: vec!["manual-seed".to_string()],
+        frequency_metadata: None,
     };
 
     let entries = vec![sample_entry];

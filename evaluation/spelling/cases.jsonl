@@ -1,0 +1,10 @@
+{"input":"spaz","expected":["spas"],"category":"single-edit","notes":"Single character substitution z -> s"}
+{"input":"biji","expected":["bijî"],"category":"missing-diacritics","notes":"Restoration of i -> î"}
+{"input":"rojb","expected":["rojbaş"],"category":"prefix-completion","notes":"Prefix autocomplete rojb -> rojbaş"}
+{"input":"roja","expected":["roja"],"category":"exact-word-preservation","notes":"Exact match preservation for roja"}
+{"input":"heval","expected":["heval"],"category":"exact-word-preservation","notes":"Exact match preservation for heval"}
+{"input":"ewar","expected":["êvar"],"category":"missing-diacritics","notes":"Diacritic restoration e -> ê"}
+{"input":"ziman","expected":["zimanê"],"category":"prefix-completion","notes":"Prefix completion for ziman"}
+{"input":"spasi","expected":["spasiya"],"category":"prefix-completion","notes":"Prefix completion for spasi"}
+{"input":"ku","expected":["ku"],"category":"exact-word-preservation","notes":"Short common word preservation"}
+{"input":"kurdi","expected":["kurdî"],"category":"missing-diacritics","notes":"Diacritic restoration i -> î"}

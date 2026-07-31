@@ -92,7 +92,33 @@ cargo run -p kurmanci-cli -- suggest biji
 
 # Typo correction: 'spaz' -> 'spas'
 cargo run -p kurmanci-cli -- suggest spaz
+
+# Diagnostic ranking explanation
+cargo run -p kurmanci-cli -- suggest spaz --explain
 ```
+
+---
+
+## 🎯 Frequency-Aware Suggestion Ranking
+
+Milestone 2E integrates frequency metadata into the binary pack (`PACK_VERSION = 2`) and candidate suggestion ranking.
+
+### 1. Frequency-to-Lexicon Join
+During `cargo run -p kurmanci-data-builder -- build`, frequency records from `data/build/frequencies.jsonl` are joined to canonical lexicon entries by exact normalized form. Zipf values are stored as fixed-point integers (`zipf_milli`, e.g. `4.823` -> `4823`). Missing entries default to zero values.
+
+### 2. Candidate Ranking Policy
+Frequency is used strictly as a **secondary** signal after exact match and edit distance:
+- **Exact Matches**: `SuggestionKind::Exact` candidates are strictly prioritized above non-exact candidates.
+- **Spelling Corrections**: 1) Kind priority (`Exact` -> `DiacriticCorrection` -> `Completion` -> `Correction`), 2) Edit cost (ascending), 3) Exact diacritic match, 4) Zipf frequency (`zipf_milli`), 5) Document count, 6) Lexical tie-breaker.
+- **Prefix Completions**: 1) Kind priority, 2) Prefix match quality, 3) Zipf frequency, 4) Document count, 5) Completion length, 6) Lexical tie-breaker.
+
+### 3. Ranking Evaluation & Benchmarking
+To evaluate candidate ranking accuracy on reviewed spelling cases:
+```bash
+cargo run -p kurmanci-data-builder -- evaluate-ranking
+```
+Compares baseline (`use_frequency: false`) against experiment (`use_frequency: true`) and writes evaluation reports to `data/reports/ranking-evaluation/`.
+*Note*: The evaluation suite validates pipeline integration, exact-word preservation, and determinism. Statistical effectiveness will scale as larger text corpora are registered.
 
 ---
 
