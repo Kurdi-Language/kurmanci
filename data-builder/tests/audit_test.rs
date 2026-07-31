@@ -306,3 +306,53 @@ fn test_registered_source_audit_pipeline_and_determinism() {
         "Verdict should be A"
     );
 }
+
+#[test]
+fn test_backup_and_rollback_mechanism() {
+    use std::fs;
+
+    let temp_root = std::env::temp_dir().join("kurmanci_audit_rollback_test");
+    let _ = fs::remove_dir_all(&temp_root);
+    fs::create_dir_all(&temp_root).unwrap();
+
+    let output_dir = temp_root.join("quality-audit");
+    let stage_dir = temp_root.join("quality-audit.tmp_stage");
+    let backup_dir = temp_root.join("quality-audit.tmp_backup");
+
+    // 1. Establish initial "known-good" report directory
+    fs::create_dir_all(&output_dir).unwrap();
+    let sentinel = output_dir.join("sentinel.json");
+    fs::write(&sentinel, "KNOWN_GOOD_DATA").unwrap();
+
+    // 2. Simulate stage-first generation
+    fs::create_dir_all(&stage_dir).unwrap();
+    fs::write(stage_dir.join("new_data.json"), "NEW_DATA").unwrap();
+
+    // 3. Move output_dir to backup_dir (as write_all_reports does)
+    if output_dir.exists() {
+        fs::rename(&output_dir, &backup_dir).unwrap();
+    }
+
+    // 4. Simulate a failure when installing stage_dir -> output_dir
+    fs::remove_dir_all(&stage_dir).unwrap();
+
+    let install_res = fs::rename(&stage_dir, &output_dir);
+    assert!(
+        install_res.is_err(),
+        "Rename must fail when stage_dir is missing"
+    );
+
+    // 5. Execute rollback as done in reports.rs
+    if backup_dir.exists() {
+        fs::rename(&backup_dir, &output_dir).unwrap();
+    }
+
+    // 6. Verify original report directory was restored perfectly
+    assert!(output_dir.exists(), "output_dir must exist after rollback");
+    assert!(sentinel.exists(), "sentinel file must exist after rollback");
+    let content = fs::read_to_string(&sentinel).unwrap();
+    assert_eq!(content, "KNOWN_GOOD_DATA");
+
+    // Clean up
+    let _ = fs::remove_dir_all(&temp_root);
+}

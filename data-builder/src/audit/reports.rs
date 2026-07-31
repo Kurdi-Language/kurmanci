@@ -444,23 +444,48 @@ pub fn write_all_reports(
     fs::write(stage_dir.join("artifacts.sha256"), manifest_content)
         .map_err(|e| format!("Failed to write artifacts.sha256 manifest: {}", e))?;
 
-    // Atomic replacement: remove output_dir if present, then rename stage_dir -> output_dir
-    if output_dir.exists() {
-        fs::remove_dir_all(output_dir).map_err(|e| {
+    // Backup and replacement with rollback safety
+    let backup_dir = output_dir.with_extension("tmp_backup");
+    if backup_dir.exists() {
+        fs::remove_dir_all(&backup_dir).map_err(|e| {
             format!(
-                "Failed to clean existing audit output dir {:?}: {}",
-                output_dir, e
+                "Failed to clean existing backup dir {:?}: {}",
+                backup_dir, e
             )
         })?;
     }
-    fs::rename(&stage_dir, output_dir).map_err(|e| {
-        format!(
-            "Failed to move stage dir {:?} to output dir {:?}: {}",
-            stage_dir, output_dir, e
-        )
-    })?;
 
-    Ok(())
+    if output_dir.exists() {
+        fs::rename(output_dir, &backup_dir).map_err(|e| {
+            format!(
+                "Failed to move output dir {:?} to backup dir {:?}: {}",
+                output_dir, backup_dir, e
+            )
+        })?;
+    }
+
+    match fs::rename(&stage_dir, output_dir) {
+        Ok(()) => {
+            if backup_dir.exists() {
+                let _ = fs::remove_dir_all(&backup_dir);
+            }
+            Ok(())
+        }
+        Err(install_error) => {
+            if backup_dir.exists() {
+                if let Err(rollback_error) = fs::rename(&backup_dir, output_dir) {
+                    return Err(format!(
+                        "Failed to install staged reports: {}; rollback also failed: {}",
+                        install_error, rollback_error
+                    ));
+                }
+            }
+            Err(format!(
+                "Failed to install staged reports: {}",
+                install_error
+            ))
+        }
+    }
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
