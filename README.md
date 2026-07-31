@@ -96,6 +96,43 @@ cargo run -p kurmanci-cli -- suggest spaz
 
 ---
 
+## 📊 Corpus Frequency Pipeline
+
+The platform includes a deterministic corpus frequency pipeline (`kurmanci-data-builder`) for importing text corpora and building word and document frequency metadata.
+
+### 1. Corpus Registry & Format
+Corpora are registered in [`data/source-registry/corpora.toml`](data/source-registry/corpora.toml). Every corpus entry requires:
+- `corpus_id`, `language` (`ku-Latn`), `license`, `url`, `sha256`, `description`, `attribution`.
+- Preserved text files in `data/original/<corpus-id>/` validated against SHA-256 checksums.
+
+### 2. Importing a Corpus
+To import a registered corpus:
+```bash
+cargo run -p kurmanci-data-builder -- import-corpus opensubtitles-kmr
+```
+This verifies registration, validates SHA-256 checksums, copies preserved text files into `data/imported/<corpus-id>/`, and writes `data/reports/corpora/<corpus-id>/import-summary.json`.
+
+### 3. Tokenizer Rules
+The tokenizer operates deterministically:
+1. **Unicode Normalization**: Canonical Composition (NFC).
+2. **Case Normalization**: Lowercase, preserving full Kurmancî diacritics (`ç`, `ê`, `î`, `ş`, `û`).
+3. **Word Boundaries**: Splits on whitespace and Unicode Punctuation (`P*`) and Symbols (`S*`). Apostrophes and hyphens split clitics and compound forms (e.g. `l'amour` -> `l`, `amour`).
+4. **Filtering**: Discards pure numbers, letterless strings, and empty tokens.
+
+### 4. Frequency Builder & Output
+To generate word and document frequencies across all imported corpora:
+```bash
+cargo run -p kurmanci-data-builder -- build-frequencies
+```
+- **Output Record**: `data/build/frequencies.jsonl` containing `word`, `token_count`, `document_count`, `normalized_frequency`, and `zipf` (`log10(count_per_billion)`).
+- **Deterministic Sort**: Primary sort by `token_count` descending, secondary sort by `word` ascending.
+- **Statistical Reports**: Generated under `data/reports/frequencies/` (`summary.json`, `top-100.json`, `length-distribution.json`, `character-analysis.json`, `coverage.json`, `README.md`, `artifacts.sha256`).
+
+### 5. Determinism Guarantees
+Executing `build-frequencies` consecutively on identical inputs produces 100% byte-identical `frequencies.jsonl` and report outputs verified via SHA-256 manifests. Staged generation uses backup-and-rollback safety to prevent report corruption upon failure.
+
+---
+
 ## ⚠️ Data Licensing & Provenance Notice
 
 - **Source Code**: All software logic across `engine/`, `data-builder/`, and `cli/` is licensed under the [Apache License 2.0](LICENSE).

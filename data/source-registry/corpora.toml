@@ -1,0 +1,18 @@
+# Kurmancî Language Platform — Corpus Registry
+# Contains registered, licensed text corpora for frequency analysis.
+
+[[corpora]]
+corpus_id = "opensubtitles-kmr"
+corpus_name = "OpenSubtitles Kurmanji Dialogue Corpus"
+language = "ku-Latn"
+license = "CC BY-SA 4.0"
+license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
+url = "https://raw.githubusercontent.com/Kurdi-Language/kurmanci/main/data/original/opensubtitles-kmr/corpus.txt"
+version = "1.0.0"
+description = "OpenSubtitles Kurmanji dialogue text corpus for frequency modeling."
+attribution = "OpenSubtitles project contributors and Kurdi-Language maintainers"
+notes = "Preserved line-delimited Kurmancî text corpus for building document and token frequency tables."
+
+[[corpora.files]]
+path = "data/original/opensubtitles-kmr/corpus.txt"
+sha256 = "19c91373276a153f4477bb4ccf8fb171662b637d463372601b4800f19000bc54"

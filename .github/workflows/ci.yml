@@ -58,6 +58,30 @@ jobs:
           diff /tmp/ci-check/audit1_hashes.txt /tmp/ci-check/audit2_hashes.txt
           echo "Quality audit report determinism verification passed."
 
+      - name: Run Corpus Importer
+        run: cargo run -p kurmanci-data-builder -- import-corpus opensubtitles-kmr
+
+      - name: Run Frequency Builder (First Pass)
+        run: cargo run -p kurmanci-data-builder -- build-frequencies
+
+      - name: Record Frequency Build Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/freq1
+          sha256sum data/build/frequencies.jsonl > /tmp/ci-check/freq1/frequencies.sha256
+          sha256sum data/reports/frequencies/* > /tmp/ci-check/freq1/reports.sha256
+
+      - name: Run Frequency Builder (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- build-frequencies
+
+      - name: Verify Frequency Build Determinism
+        run: |
+          mkdir -p /tmp/ci-check/freq2
+          sha256sum data/build/frequencies.jsonl > /tmp/ci-check/freq2/frequencies.sha256
+          sha256sum data/reports/frequencies/* > /tmp/ci-check/freq2/reports.sha256
+          diff /tmp/ci-check/freq1/frequencies.sha256 /tmp/ci-check/freq2/frequencies.sha256
+          diff /tmp/ci-check/freq1/reports.sha256 /tmp/ci-check/freq2/reports.sha256
+          echo "Frequency build determinism verification passed."
+
       - name: Run Cargo Workspace Tests
         run: cargo test --workspace
 

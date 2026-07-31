@@ -1,9 +1,9 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
-    calculate_sha256, compile_binary_pack, evaluate_lexicon_impact, generate_and_save_report,
-    import_hunspell_dic, merge_and_deduplicate, normalize_text, run_quality_audit, validate_entry,
-    write_artifacts, BuildReport, BuilderConfig, ReleaseManifest, SourceLexiconEntry,
-    SourceRegistry,
+    build_corpus_frequencies, calculate_sha256, compile_binary_pack, evaluate_lexicon_impact,
+    generate_and_save_report, import_corpus, import_hunspell_dic, merge_and_deduplicate,
+    normalize_text, run_quality_audit, validate_entry, write_artifacts, BuildReport, BuilderConfig,
+    ReleaseManifest, SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -59,6 +59,13 @@ enum Commands {
         #[arg(index = 1)]
         source_id: String,
     },
+    /// Imports a registered text corpus with SHA-256 integrity verification
+    ImportCorpus {
+        #[arg(index = 1)]
+        corpus_id: String,
+    },
+    /// Builds word and document frequencies across all imported text corpora
+    BuildFrequencies,
 }
 
 fn main() {
@@ -310,6 +317,27 @@ fn main() {
         Commands::AuditLexicon { source_id } => {
             run_quality_audit(&source_id, ".")
                 .unwrap_or_else(|e| panic!("Quality audit failed: {}", e));
+        }
+        Commands::ImportCorpus { corpus_id } => {
+            println!("=== Kurmancî Corpus Importer ===");
+            println!("Corpus ID: {}", corpus_id);
+            let summary = import_corpus(&corpus_id, ".")
+                .unwrap_or_else(|e| panic!("Corpus import failed: {}", e));
+            println!("⚡ CORPUS IMPORT SUCCESSFUL!");
+            println!("  Corpus Name: {}", summary.corpus_name);
+            println!("  Files Count: {}", summary.imported_files_count);
+            println!("  Total Bytes: {} B", summary.total_bytes);
+        }
+        Commands::BuildFrequencies => {
+            println!("=== Kurmancî Corpus Frequency Builder ===");
+            let stats = build_corpus_frequencies(".")
+                .unwrap_or_else(|e| panic!("Frequency build failed: {}", e));
+            println!("⚡ FREQUENCY BUILD SUCCESSFUL!");
+            println!("  Total Documents: {}", stats.total_documents);
+            println!("  Total Tokens:    {}", stats.total_tokens);
+            println!("  Unique Words:    {}", stats.records.len());
+            println!("  Output File:     data/build/frequencies.jsonl");
+            println!("  Reports Dir:     data/reports/frequencies/");
         }
     }
 }
