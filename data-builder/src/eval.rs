@@ -30,10 +30,10 @@ pub struct EvaluationReport {
     pub quality_note: String,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct BenchmarkItem {
-    input: String,
-    expected: String,
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct BenchmarkItem {
+    pub input: String,
+    pub expected: String,
 }
 
 pub fn evaluate_lexicon_impact<P: AsRef<Path>>(

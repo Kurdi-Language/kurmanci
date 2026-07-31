@@ -7,6 +7,124 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
+// ─── Shared streaming parser API ────────────────────────────────────────────
+
+/// Events emitted by the shared Hunspell `.dic` parser. Both the importer and
+/// the audit consume this stream to ensure identical interpretation.
+#[derive(Debug, Clone)]
+pub enum HunspellSourceEvent {
+    /// First line that is purely ASCII digits → declared entry count.
+    DeclaredCount {
+        source_line_num: usize,
+        raw_line: String,
+        count: usize,
+    },
+    /// Blank or whitespace-only line.
+    Blank {
+        source_line_num: usize,
+        raw_line: String,
+    },
+    /// Successfully parsed dictionary entry.
+    Parsed {
+        source_line_num: usize,
+        raw_line: String,
+        entry: ParsedHunspellEntry,
+        normalized: String,
+        part_of_speech: String,
+    },
+    /// Line that failed validation.
+    Rejected {
+        source_line_num: usize,
+        raw_line: String,
+        reason_code: String,
+        explanation: String,
+    },
+    /// Line that could not be decoded as valid UTF-8.
+    Utf8Error {
+        source_line_num: usize,
+        explanation: String,
+    },
+}
+
+/// Streams every physical line of a Hunspell `.dic` file through the shared
+/// parser, emitting one `HunspellSourceEvent` per line. The caller decides
+/// what to do with each event (import vs audit).
+pub fn parse_hunspell_source<R: BufRead>(reader: R) -> Vec<HunspellSourceEvent> {
+    let mut events = Vec::new();
+    let mut saw_first_line = false;
+
+    for (line_idx, line_res) in reader.lines().enumerate() {
+        let line_num = line_idx + 1;
+
+        let line = match line_res {
+            Ok(l) => l,
+            Err(e) => {
+                events.push(HunspellSourceEvent::Utf8Error {
+                    source_line_num: line_num,
+                    explanation: format!("Failed UTF-8 decoding on line {}: {}", line_num, e),
+                });
+                continue;
+            }
+        };
+
+        let trimmed = line.trim();
+
+        // Check if line 1 contains purely digits (declared count header)
+        if !saw_first_line && !trimmed.is_empty() && trimmed.chars().all(|c| c.is_ascii_digit()) {
+            saw_first_line = true;
+            if let Ok(count) = trimmed.parse::<usize>() {
+                events.push(HunspellSourceEvent::DeclaredCount {
+                    source_line_num: line_num,
+                    raw_line: line,
+                    count,
+                });
+                continue;
+            }
+        }
+        saw_first_line = true;
+
+        if trimmed.is_empty() {
+            events.push(HunspellSourceEvent::Blank {
+                source_line_num: line_num,
+                raw_line: line,
+            });
+            continue;
+        }
+
+        match parse_hunspell_line(&line) {
+            Ok(parsed) => {
+                let normalized = normalize_text(&parsed.raw_word);
+                let pos = map_part_of_speech(&parsed.morphology);
+                events.push(HunspellSourceEvent::Parsed {
+                    source_line_num: line_num,
+                    raw_line: line,
+                    entry: parsed,
+                    normalized,
+                    part_of_speech: pos,
+                });
+            }
+            Err((code, explanation)) => {
+                events.push(HunspellSourceEvent::Rejected {
+                    source_line_num: line_num,
+                    raw_line: line,
+                    reason_code: code,
+                    explanation,
+                });
+            }
+        }
+    }
+
+    events
+}
+
+/// Maps Hunspell morphology tags to canonical POS string. Public so the audit
+/// can derive POS identically to the importer.
+pub fn map_part_of_speech(morphology: &[String]) -> String {
+    map_part_of_speech_inner(morphology)
+}
+
+// ─── End shared parser API ──────────────────────────────────────────────────
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ImportedLexiconRecord {
     pub word: String,
@@ -153,7 +271,7 @@ pub fn parse_hunspell_line(line: &str) -> Result<ParsedHunspellEntry, (String, S
 }
 
 /// Maps Hunspell morphology tags (e.g. `po:adj`) to platform canonical part_of_speech string
-fn map_part_of_speech(morphology: &[String]) -> String {
+fn map_part_of_speech_inner(morphology: &[String]) -> String {
     for morph in morphology {
         if let Some(pos_val) = morph.strip_prefix("po:") {
             match pos_val.to_lowercase().as_str() {

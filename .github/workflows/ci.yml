@@ -40,6 +40,24 @@ jobs:
       - name: Run Deterministic Hunspell Importer
         run: cargo run -p kurmanci-data-builder -- import-hunspell kurdish-hunspell-kmr
 
+      - name: Run Quality Audit (First Pass)
+        run: cargo run -p kurmanci-data-builder -- audit-lexicon kurdish-hunspell-kmr
+
+      - name: Record Quality Audit Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/audit1
+          sha256sum data/reports/kurdish-hunspell-kmr/quality-audit/* > /tmp/ci-check/audit1_hashes.txt
+
+      - name: Run Quality Audit (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- audit-lexicon kurdish-hunspell-kmr
+
+      - name: Verify Quality Audit Report Hash Consistency
+        run: |
+          mkdir -p /tmp/ci-check/audit2
+          sha256sum data/reports/kurdish-hunspell-kmr/quality-audit/* > /tmp/ci-check/audit2_hashes.txt
+          diff /tmp/ci-check/audit1_hashes.txt /tmp/ci-check/audit2_hashes.txt
+          echo "Quality audit report determinism verification passed."
+
       - name: Run Cargo Workspace Tests
         run: cargo test --workspace
 
