@@ -19,6 +19,19 @@ pub struct FrequencyMetadata {
     pub zipf_milli: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct NextWordPrediction {
+    pub word: String,
+    pub count: u64,
+    pub probability_millionths: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum UnknownContextPolicy {
+    #[default]
+    Empty,
+}
+
 #[derive(Debug, Clone)]
 pub struct RankingConfig {
     pub use_frequency: bool,

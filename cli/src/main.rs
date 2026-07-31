@@ -39,6 +39,27 @@ enum Commands {
         #[arg(long)]
         explain: bool,
     },
+    /// Predicts context-aware next word given previous word context
+    PredictNext {
+        /// Previous word context (e.g. 'ez')
+        context: String,
+
+        /// Maximum number of predictions to return
+        #[arg(short, long, default_value_t = 5)]
+        limit: usize,
+
+        /// Path to compiled binary language pack (.bin)
+        #[arg(short, long, default_value = "data/build/lexicon.bin")]
+        pack: PathBuf,
+
+        /// Output results as JSON
+        #[arg(long)]
+        json: bool,
+
+        /// Print diagnostic ranking explanation for predictions
+        #[arg(long)]
+        explain: bool,
+    },
 }
 
 fn main() {
@@ -116,6 +137,79 @@ fn main() {
                             sug.text,
                             kind_str,
                             sug.score
+                        );
+                    }
+                }
+            }
+        }
+        Commands::PredictNext {
+            context,
+            limit,
+            pack,
+            json,
+            explain,
+        } => {
+            let mut engine = Engine::new();
+
+            let bytes = fs::read(&pack).unwrap_or_else(|e| {
+                panic!(
+                    "Failed to open binary language pack file '{:?}': {}",
+                    pack, e
+                )
+            });
+
+            let count = engine
+                .load_binary_pack(&bytes)
+                .unwrap_or_else(|e| panic!("Failed to parse binary pack '{:?}': {}", pack, e));
+
+            if !json {
+                eprintln!("[info] Loaded {} lexicon entries from {:?}", count, pack);
+            }
+
+            let start = Instant::now();
+            let predictions = engine.predict_next(&context, limit);
+            let elapsed = start.elapsed();
+
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&predictions).unwrap_or_default()
+                );
+            } else if explain {
+                println!(
+                    "Predictions for '{}' (explained in {:.2?}):",
+                    context, elapsed
+                );
+                if predictions.is_empty() {
+                    println!("  (no predictions found)");
+                } else {
+                    for (i, pred) in predictions.iter().enumerate() {
+                        let pct = pred.probability_millionths as f64 / 10000.0;
+                        println!("  {}. {}", i + 1, pred.word);
+                        println!("     count: {}", pred.count);
+                        println!(
+                            "     probability_millionths: {}",
+                            pred.probability_millionths
+                        );
+                        println!("     percentage: {:.1}%", pct);
+                    }
+                }
+            } else {
+                println!(
+                    "Predictions for '{}' (processed in {:.2?}):",
+                    context, elapsed
+                );
+                if predictions.is_empty() {
+                    println!("  (no predictions found)");
+                } else {
+                    for (i, pred) in predictions.iter().enumerate() {
+                        let pct = pred.probability_millionths as f64 / 10000.0;
+                        println!(
+                            "  {}. {:<15} (probability: {:.1}%, count: {})",
+                            i + 1,
+                            pred.word,
+                            pct,
+                            pred.count
                         );
                     }
                 }

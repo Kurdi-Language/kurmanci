@@ -1,0 +1,8 @@
+# Kurmancî Bigram Language Model Pruning Configuration
+
+[pruning]
+# Minimum number of observed adjacent bigram occurrences
+minimum_count = 2
+
+# Maximum number of predictions retained per previous word context
+maximum_predictions_per_context = 16

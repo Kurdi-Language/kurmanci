@@ -12,7 +12,9 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Typo & Keyboard Distance Model** | Completed | Weighted Damerau-Levenshtein edit distance with Kurmancî diacritic penalties. |
 | **Word & Document Frequencies** | Completed | Deterministic corpus frequency pipeline (`import-corpus`, `build-frequencies`), NFC lowercase tokenizer, JSONL frequency table, and statistical reports suite. |
 | **Frequency-Aware Suggestion Ranking** | Completed | Fixed-point Zipf (`zipf_milli`) in binary pack v2, secondary frequency tie-breaking, reviewed evaluation suite (`cases.jsonl`), CLI `--explain`, and `evaluate-ranking` benchmark tool. |
-| **N-Grams & Next-Word Prediction** | Planned | Compact bigram/trigram probabilistic language models for context-aware prediction. |
+| **Deterministic Bigram Language Model** | Completed | Sentence boundary isolation, original-context checked integer probability (`probability_millionths`), pruning, binary pack v3 with lexicon indices, Engine `predict_next` API, CLI `predict-next`, reviewed benchmark (`cases.jsonl`), and 2-pass determinism verification. |
+| **Corpus & Benchmark Expansion** | Planned | Expanding corpus datasets, scaling evaluation benchmarks, and improving next-word prediction quality as larger corpus data becomes available. |
+| **Trigrams, Backoff & Context Interpolation** | Planned | Trigram language model extension, Stupid Backoff / Kneser-Ney interpolation, and context-aware candidate reranking. |
 | **Swift SDK** | Planned | Native Apple SDK wrapper around `kurmanci-engine` Rust core. |
 | **iOS Reference Keyboard** | Planned | Custom iOS keyboard extension using `ku-Latn` layout and native engine bindings. |
 | **Kotlin SDK** | Planned | Native Android/JVM SDK wrapper for Android applications. |

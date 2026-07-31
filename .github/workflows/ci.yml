@@ -82,6 +82,27 @@ jobs:
           diff /tmp/ci-check/freq1/reports.sha256 /tmp/ci-check/freq2/reports.sha256
           echo "Frequency build determinism verification passed."
 
+      - name: Run Bigram N-Gram Builder (First Pass)
+        run: cargo run -p kurmanci-data-builder -- build-ngrams
+
+      - name: Record Bigram Build Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/ngram1
+          sha256sum data/build/bigrams.jsonl > /tmp/ci-check/ngram1/bigrams.sha256
+          sha256sum data/reports/ngrams/* > /tmp/ci-check/ngram1/reports.sha256
+
+      - name: Run Bigram N-Gram Builder (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- build-ngrams
+
+      - name: Verify Bigram Build Determinism
+        run: |
+          mkdir -p /tmp/ci-check/ngram2
+          sha256sum data/build/bigrams.jsonl > /tmp/ci-check/ngram2/bigrams.sha256
+          sha256sum data/reports/ngrams/* > /tmp/ci-check/ngram2/reports.sha256
+          diff /tmp/ci-check/ngram1/bigrams.sha256 /tmp/ci-check/ngram2/bigrams.sha256
+          diff /tmp/ci-check/ngram1/reports.sha256 /tmp/ci-check/ngram2/reports.sha256
+          echo "Bigram build determinism verification passed."
+
       - name: Run Cargo Workspace Tests
         run: cargo test --workspace
 
@@ -127,6 +148,24 @@ jobs:
           diff /tmp/ci-check/eval1/reports.sha256 /tmp/ci-check/eval2/reports.sha256
           echo "Ranking evaluation report determinism verification passed."
 
+      - name: Run Next-Word Prediction Evaluation (First Pass)
+        run: cargo run -p kurmanci-data-builder -- evaluate-next-word
+
+      - name: Record Next-Word Evaluation Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/nextword1
+          sha256sum data/reports/next-word-evaluation/* > /tmp/ci-check/nextword1/reports.sha256
+
+      - name: Run Next-Word Prediction Evaluation (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- evaluate-next-word
+
+      - name: Verify Next-Word Evaluation Determinism
+        run: |
+          mkdir -p /tmp/ci-check/nextword2
+          sha256sum data/reports/next-word-evaluation/* > /tmp/ci-check/nextword2/reports.sha256
+          diff /tmp/ci-check/nextword1/reports.sha256 /tmp/ci-check/nextword2/reports.sha256
+          echo "Next-word evaluation report determinism verification passed."
+
       - name: Test Generated Binary Pack Integration
         run: |
           cargo test -p kurmanci-engine --test binary_pack_test
@@ -138,4 +177,7 @@ jobs:
           test -z "$(git status --porcelain --untracked-files=no)"
 
       - name: Test CLI Query Functionality
-        run: cargo run -p kurmanci-cli -- suggest rojb
+        run: |
+          cargo run -p kurmanci-cli -- suggest rojb
+          cargo run -p kurmanci-cli -- predict-next ez --explain
+

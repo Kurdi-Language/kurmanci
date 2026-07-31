@@ -1,10 +1,10 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
-    build_corpus_frequencies, calculate_sha256, compile_binary_pack, evaluate_lexicon_impact,
-    generate_and_save_report, import_corpus, import_hunspell_dic, join_frequencies_to_lexicon,
-    merge_and_deduplicate, normalize_text, run_quality_audit, run_ranking_evaluation,
-    validate_entry, write_artifacts, BuildReport, BuilderConfig, ReleaseManifest,
-    SourceLexiconEntry, SourceRegistry,
+    build_corpus_bigrams, build_corpus_frequencies, calculate_sha256, compile_binary_pack,
+    evaluate_lexicon_impact, generate_and_save_report, import_corpus, import_hunspell_dic,
+    join_frequencies_to_lexicon, merge_and_deduplicate, normalize_text, run_quality_audit,
+    run_ranking_evaluation, validate_entry, write_artifacts, BuildReport, BuilderConfig,
+    ReleaseManifest, SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -67,8 +67,12 @@ enum Commands {
     },
     /// Builds word and document frequencies across all imported text corpora
     BuildFrequencies,
+    /// Builds deterministic bigram statistics across all imported text corpora
+    BuildNgrams,
     /// Evaluates candidate suggestion ranking accuracy (baseline vs frequency-aware)
     EvaluateRanking,
+    /// Evaluates context-aware next-word prediction accuracy
+    EvaluateNextWord,
 }
 
 fn main() {
@@ -370,6 +374,55 @@ fn main() {
                 summary.experiment_top_3_accuracy
             );
             println!("  Acceptance Passed:   {}", summary.acceptance_passed);
+        }
+        Commands::BuildNgrams => {
+            println!("=== Kurmancî Bigram N-Gram Builder ===");
+            let stats =
+                build_corpus_bigrams(".").unwrap_or_else(|e| panic!("N-gram build failed: {}", e));
+            println!("⚡ BIGRAM BUILD SUCCESSFUL!");
+            println!("  Total Sentences:     {}", stats.total_sentences);
+            println!("  Total Bigram Tokens: {}", stats.total_bigram_tokens);
+            println!("  Pruned Bigrams:      {}", stats.records.len());
+            println!("  Output File:         data/build/bigrams.jsonl");
+            println!("  Reports Dir:         data/reports/ngrams/");
+        }
+        Commands::EvaluateNextWord => {
+            println!("=== Kurmancî Next-Word Prediction Evaluation ===");
+            let summary = data_builder_lib::run_next_word_evaluation(".")
+                .unwrap_or_else(|e| panic!("Next-word evaluation failed: {}", e));
+            println!("⚡ NEXT-WORD EVALUATION COMPLETED!");
+            println!("  Overall Case Count:      {}", summary.overall_case_count);
+            println!("  Positive Case Count:     {}", summary.positive_case_count);
+            println!(
+                "  Positive Top-1 Accuracy: {:.2}%",
+                summary.positive_top_1_accuracy
+            );
+            println!(
+                "  Positive Top-3 Accuracy: {:.2}%",
+                summary.positive_top_3_accuracy
+            );
+            println!(
+                "  Positive Top-5 Accuracy: {:.2}%",
+                summary.positive_top_5_accuracy
+            );
+            println!(
+                "  Positive MRR:            {:.4}",
+                summary.positive_mean_reciprocal_rank
+            );
+            println!("  Overall Top-1 Accuracy:  {:.2}%", summary.top_1_accuracy);
+            println!(
+                "  Overall MRR:             {:.4}",
+                summary.mean_reciprocal_rank
+            );
+            println!(
+                "  Pipeline Validated:      {}",
+                summary.pipeline_validation_passed
+            );
+            println!(
+                "  Model Quality Passed:    {}",
+                summary.model_quality_passed
+            );
+            println!("  Acceptance Passed:       {}", summary.acceptance_passed);
         }
     }
 }

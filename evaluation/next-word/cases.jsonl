@@ -1,0 +1,4 @@
+{"context":"ji","expected":["bo"],"forbidden":[],"category":"common-context","notes":"Common preposition context from corpus"}
+{"context":"unknownwordxyz","expected":[],"forbidden":[],"category":"unknown-context","notes":"Out of vocabulary context"}
+{"context":"im","expected":[],"forbidden":["tu"],"category":"sentence-boundary","notes":"Sentence boundary context - forbidden pair 'im -> tu'"}
+{"context":"hev","expected":[],"forbidden":[],"category":"tie-breaking","notes":"Single occurrence bigram context below minimum_count 2"}

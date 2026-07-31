@@ -19,6 +19,7 @@
 {"word": "di", "lemma": "di", "normalized": "di", "part_of_speech": "preposition", "frequency": 130000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
 {"word": "li", "lemma": "li", "normalized": "li", "part_of_speech": "preposition", "frequency": 125000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
 {"word": "ji", "lemma": "ji", "normalized": "ji", "part_of_speech": "preposition", "frequency": 122000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
+{"word": "bo", "lemma": "bo", "normalized": "bo", "part_of_speech": "preposition", "frequency": 120000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
 {"word": "ku", "lemma": "ku", "normalized": "ku", "part_of_speech": "conjunction", "frequency": 105000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
 {"word": "çawa", "lemma": "çawa", "normalized": "çawa", "part_of_speech": "adverb", "frequency": 67000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
 {"word": "baş", "lemma": "baş", "normalized": "baş", "part_of_speech": "adjective", "frequency": 83000, "status": "verified", "variants": [], "sources": ["manual-seed"], "regions": ["general"]}
