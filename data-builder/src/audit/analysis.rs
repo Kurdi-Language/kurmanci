@@ -199,6 +199,7 @@ pub struct SourceAnalysis {
     pub parsed_surface_findings: ParsedSurfaceFindings,
 
     pub conflict_groups: Vec<ConflictGroup>,
+    pub duplicate_groups: Vec<DuplicateGroup>,
     pub rejection_review: Vec<RejectionReview>,
 }
 
@@ -243,6 +244,18 @@ pub struct RejectionReview {
     pub raw_line: String,
     pub reason_code: String,
     pub explanation: String,
+}
+
+/// A group of exact duplicate records (identical normalized form AND metadata).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DuplicateGroup {
+    pub normalized: String,
+    pub word: String,
+    pub flags: String,
+    pub morphology: Vec<String>,
+    pub part_of_speech: String,
+    pub occurrence_count: usize,
+    pub source_line_nums: Vec<usize>,
 }
 
 /// Analyzes the replayed source records.
@@ -377,6 +390,34 @@ pub fn analyze_source_records(inputs: &AuditInputs) -> SourceAnalysis {
         });
     }
 
+    // Build duplicate groups (exact duplicates: same normalized + same metadata)
+    let mut duplicate_groups = Vec::new();
+    for (norm, records) in &grouped {
+        if records.len() <= 1 {
+            continue;
+        }
+
+        let first = &records[0];
+        let all_identical = records[1..].iter().all(|other| {
+            first.word == other.word
+                && first.flags == other.flags
+                && first.morphology == other.morphology
+                && first.part_of_speech == other.part_of_speech
+        });
+
+        if all_identical {
+            duplicate_groups.push(DuplicateGroup {
+                normalized: norm.clone(),
+                word: first.word.clone(),
+                flags: first.flags.clone(),
+                morphology: first.morphology.clone(),
+                part_of_speech: first.part_of_speech.clone(),
+                occurrence_count: records.len(),
+                source_line_nums: records.iter().map(|r| r.source_line_num).collect(),
+            });
+        }
+    }
+
     // Rejection review
     let rejection_review: Vec<RejectionReview> = inputs
         .replayed_rejected
@@ -400,6 +441,7 @@ pub fn analyze_source_records(inputs: &AuditInputs) -> SourceAnalysis {
         raw_line_findings: rlf,
         parsed_surface_findings: psf,
         conflict_groups,
+        duplicate_groups,
         rejection_review,
     }
 }

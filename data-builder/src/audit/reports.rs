@@ -6,6 +6,7 @@ use crate::audit::input::AuditInputs;
 use crate::audit::sampling::ReviewSample;
 use crate::audit::AUDIT_VERSION;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::io::Write;
@@ -362,6 +363,13 @@ pub fn write_all_reports(
         &source_analysis.conflict_groups,
     )?;
 
+    // ── duplicate-groups.jsonl ──────────────────────────────────────────
+    write_jsonl(
+        output_dir,
+        "duplicate-groups.jsonl",
+        &source_analysis.duplicate_groups,
+    )?;
+
     // ── rejection-review.jsonl ──────────────────────────────────────────
     write_jsonl(
         output_dir,
@@ -395,6 +403,35 @@ pub fn write_all_reports(
 
     // ── README.md ───────────────────────────────────────────────────────
     write_readme(output_dir, &summary, source_analysis, accepted_analysis)?;
+
+    // ── artifacts.sha256 ────────────────────────────────────────────────
+    let report_files = [
+        "benchmark-audit.json",
+        "character-inventory.json",
+        "conflict-groups.jsonl",
+        "duplicate-groups.jsonl",
+        "flag-analysis.json",
+        "length-distribution.json",
+        "manual-seed-comparison.json",
+        "morphology-analysis.json",
+        "README.md",
+        "rejection-review.jsonl",
+        "review-sample.jsonl",
+        "script-analysis.json",
+        "shape-analysis.json",
+        "summary.json",
+        "suspicious-entries.jsonl",
+    ];
+
+    let mut manifest_content = String::new();
+    for file in &report_files {
+        let content = fs::read(output_dir.join(file))
+            .map_err(|e| format!("Failed to read report file {} for manifest: {}", file, e))?;
+        let hash = format!("{:x}", Sha256::digest(&content));
+        manifest_content.push_str(&format!("{}  {}\n", hash, file));
+    }
+    fs::write(output_dir.join("artifacts.sha256"), manifest_content)
+        .map_err(|e| format!("Failed to write artifacts.sha256 manifest: {}", e))?;
 
     Ok(())
 }

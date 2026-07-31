@@ -1,6 +1,7 @@
 //! Deterministic classification functions for Unicode properties, script
 //! detection, shape analysis, and structural checks.
 
+use std::collections::BTreeSet;
 use unicode_general_category::{get_general_category, GeneralCategory};
 use unicode_script::{Script, UnicodeScript};
 use unicode_segmentation::UnicodeSegmentation;
@@ -128,13 +129,10 @@ impl ScriptClass {
 }
 
 /// Classifies a word by the scripts of its alphabetic characters.
+/// Uses a BTreeSet<String> to track all distinct scripts deterministically
+/// (Script does not implement Ord, so we store formatted names).
 pub fn classify_script(word: &str) -> ScriptClass {
-    let mut has_latin = false;
-    let mut has_arabic = false;
-    let mut has_cyrillic = false;
-    let mut has_other_script = false;
-    let mut other_script_name: Option<String> = None;
-    let mut has_any_scripted = false;
+    let mut scripts: BTreeSet<String> = BTreeSet::new();
 
     for ch in word.chars() {
         if !is_unicode_letter(ch) {
@@ -144,43 +142,29 @@ pub fn classify_script(word: &str) -> ScriptClass {
         if script == Script::Common || script == Script::Inherited {
             continue;
         }
-        has_any_scripted = true;
-        match script {
-            Script::Latin => has_latin = true,
-            Script::Arabic => has_arabic = true,
-            Script::Cyrillic => has_cyrillic = true,
-            other => {
-                has_other_script = true;
-                if other_script_name.is_none() {
-                    other_script_name = Some(format!("{:?}", other));
-                }
-            }
-        }
+        scripts.insert(format!("{:?}", script));
     }
 
-    if !has_any_scripted {
+    if scripts.is_empty() {
         return ScriptClass::NoScriptedLetters;
     }
 
-    let script_count = [has_latin, has_arabic, has_cyrillic, has_other_script]
-        .iter()
-        .filter(|&&v| v)
-        .count();
-
-    if script_count == 1 {
-        if has_latin {
-            return ScriptClass::LatinOnly;
-        }
-        if has_arabic {
-            return ScriptClass::ArabicOnly;
-        }
-        if has_cyrillic {
-            return ScriptClass::CyrillicOnly;
-        }
-        return ScriptClass::OtherSingleScript(other_script_name.unwrap_or_default());
+    if scripts.len() == 1 {
+        let name = scripts.iter().next().unwrap().as_str();
+        return match name {
+            "Latin" => ScriptClass::LatinOnly,
+            "Arabic" => ScriptClass::ArabicOnly,
+            "Cyrillic" => ScriptClass::CyrillicOnly,
+            _ => ScriptClass::OtherSingleScript(name.to_string()),
+        };
     }
 
-    if script_count == 2 {
+    // Multiple scripts detected
+    let has_latin = scripts.contains("Latin");
+    let has_arabic = scripts.contains("Arabic");
+    let has_cyrillic = scripts.contains("Cyrillic");
+
+    if scripts.len() == 2 {
         if has_latin && has_arabic {
             return ScriptClass::LatinArabicMixed;
         }
@@ -252,14 +236,15 @@ pub fn classify_shape(original_word: &str, normalized: &str) -> ShapeFlags {
     // Uppercase-only: at least one cased letter, every cased letter uppercase, no lowercase
     let is_uppercase_only = has_cased && has_uppercase && !has_lowercase;
 
-    // Title case: first letter uppercase, rest lowercase, at least 2 letters
+    // Title case: first letter uppercase, remaining letters must be lowercase,
+    // at least 2 letters total. Uncased letters (Lo) do not satisfy lowercase.
     let letters: Vec<char> = original_word
         .chars()
         .filter(|c| is_unicode_letter(*c))
         .collect();
     let is_title_case = letters.len() >= 2
         && letters[0].is_uppercase()
-        && letters[1..].iter().all(|c| !c.is_uppercase());
+        && letters[1..].iter().all(|c| c.is_lowercase());
 
     // Mixed case: has both uppercase and lowercase cased characters, not title case
     let is_mixed_case = has_uppercase && has_lowercase && !is_title_case;
@@ -462,5 +447,49 @@ mod tests {
     fn test_raw_line_embedded_cr() {
         let findings = check_raw_line("rojbaş\rAN");
         assert!(findings.has_unexpected_cr);
+    }
+
+    #[test]
+    fn test_greek_plus_syriac_is_other_mixed_script() {
+        // Greek α (U+03B1) + Syriac ܐ (U+0710) — two non-Latin scripts
+        let result = classify_script("α\u{0710}");
+        assert_eq!(result, ScriptClass::OtherMixedScript);
+    }
+
+    #[test]
+    fn test_arabic_only() {
+        // Arabic مرحبا
+        assert_eq!(classify_script("مرحبا"), ScriptClass::ArabicOnly);
+    }
+
+    #[test]
+    fn test_cyrillic_only() {
+        // Cyrillic Привет
+        assert_eq!(classify_script("Привет"), ScriptClass::CyrillicOnly);
+    }
+
+    #[test]
+    fn test_latin_arabic_mixed() {
+        assert_eq!(classify_script("abcمرح"), ScriptClass::LatinArabicMixed);
+    }
+
+    #[test]
+    fn test_latin_cyrillic_mixed() {
+        assert_eq!(classify_script("abcПри"), ScriptClass::LatinCyrillicMixed);
+    }
+
+    #[test]
+    fn test_title_case_requires_lowercase_remaining() {
+        // "Rojbaş" first letter uppercase, rest lowercase — true title case
+        let shape = classify_shape("Rojbaş", "rojbaş");
+        assert!(shape.is_title_case);
+
+        // First uppercase + uncased Lo letter: NOT title case
+        // Chinese 中 is Lo (OtherLetter), not Ll (lowercase)
+        let shape = classify_shape("A中", "a中");
+        assert!(
+            !shape.is_title_case,
+            "Uncased Lo letters should not satisfy lowercase rule"
+        );
     }
 }

@@ -26,6 +26,18 @@ fn test_latin_arabic_mixed_script() {
 }
 
 #[test]
+fn test_latin_cyrillic_mixed_script() {
+    assert_eq!(classify_script("abcПри"), ScriptClass::LatinCyrillicMixed);
+}
+
+#[test]
+fn test_greek_plus_syriac_is_other_mixed() {
+    // Greek α (U+03B1) + Syriac ܐ (U+0710) — two non-Latin scripts
+    let result = classify_script("α\u{0710}");
+    assert_eq!(result, ScriptClass::OtherMixedScript);
+}
+
+#[test]
 fn test_digits_do_not_make_mixed_script() {
     // Latin letters with digits — digits are Common script
     assert_eq!(classify_script("abc123"), ScriptClass::LatinOnly);
@@ -68,28 +80,33 @@ fn test_digit_only() {
 fn test_no_letters_mixed_punct_digit() {
     let shape = classify_shape("123!", "123!");
     assert!(shape.has_no_letters);
-    assert!(!shape.is_digit_only); // not all digits
-    assert!(!shape.is_punctuation_only); // not all punctuation
+    assert!(!shape.is_digit_only);
+    assert!(!shape.is_punctuation_only);
 }
 
 #[test]
 fn test_uppercase_requires_cased_letter() {
-    // Punctuation should NOT be classified as uppercase
     let shape = classify_shape("!!!", "!!!");
     assert!(!shape.is_uppercase_only);
 
-    // Pure uppercase
     let shape = classify_shape("ABC", "abc");
     assert!(shape.is_uppercase_only);
     assert!(!shape.is_title_case);
 }
 
 #[test]
-fn test_title_case() {
+fn test_title_case_strict() {
     let shape = classify_shape("Rojbaş", "rojbaş");
     assert!(shape.is_title_case);
     assert!(!shape.is_uppercase_only);
     assert!(!shape.is_mixed_case);
+
+    // Uncased Lo letter should not satisfy the lowercase rule
+    let shape = classify_shape("A中", "a中");
+    assert!(
+        !shape.is_title_case,
+        "Uncased Lo letters must not satisfy the lowercase requirement"
+    );
 }
 
 #[test]
@@ -104,14 +121,13 @@ fn test_mixed_case() {
 fn test_possible_proper_noun() {
     assert!(is_possible_proper_noun("Rojbaş"));
     assert!(is_possible_proper_noun("Diyarbekir"));
-    assert!(!is_possible_proper_noun("rojbaş")); // all lowercase
-    assert!(!is_possible_proper_noun("ROJBAŞ")); // all uppercase
-    assert!(!is_possible_proper_noun("a")); // too short
+    assert!(!is_possible_proper_noun("rojbaş"));
+    assert!(!is_possible_proper_noun("ROJBAŞ"));
+    assert!(!is_possible_proper_noun("a"));
 }
 
 #[test]
 fn test_grapheme_vs_scalar_length() {
-    // e followed by combining acute accent (2 scalars, 1 grapheme cluster)
     let shape = classify_shape("e\u{0301}", "e\u{0301}");
     assert_eq!(shape.unicode_scalar_length, 2);
     assert_eq!(shape.grapheme_length, 1);
@@ -132,11 +148,9 @@ fn test_very_long_thresholds() {
 
 #[test]
 fn test_contains_digits_requires_letters() {
-    // Pure digits should NOT be "contains_digits" (which means digits mixed with letters)
     let shape = classify_shape("123", "123");
-    assert!(!shape.contains_digits); // no letters present
+    assert!(!shape.contains_digits);
 
-    // Letters + digits
     let shape = classify_shape("abc123", "abc123");
     assert!(shape.contains_digits);
 }
@@ -155,13 +169,13 @@ fn test_unicode_category_functions() {
     assert!(is_unicode_punctuation('!'));
     assert!(is_unicode_punctuation('.'));
     assert!(is_unicode_punctuation(','));
-    assert!(!is_unicode_punctuation('$')); // Currency symbol, not punctuation
+    assert!(!is_unicode_punctuation('$'));
     assert!(!is_unicode_punctuation('a'));
     assert!(!is_unicode_punctuation('5'));
 
     assert!(is_unicode_symbol('$'));
     assert!(is_unicode_symbol('€'));
-    assert!(is_unicode_symbol('+')); // Math symbol
+    assert!(is_unicode_symbol('+'));
     assert!(!is_unicode_symbol('a'));
     assert!(!is_unicode_symbol('!'));
 
@@ -176,28 +190,49 @@ fn test_unicode_category_functions() {
     assert!(!is_unicode_letter('!'));
 }
 
+fn get_workspace_root() -> std::path::PathBuf {
+    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    if manifest_dir
+        .join("data/source-registry/sources.toml")
+        .exists()
+    {
+        manifest_dir
+    } else if manifest_dir
+        .join("../data/source-registry/sources.toml")
+        .exists()
+    {
+        manifest_dir.join("..")
+    } else {
+        std::path::PathBuf::from(".")
+    }
+}
+
 // ─── Full pipeline integration test ─────────────────────────────────────────
 
 #[test]
 fn test_registered_source_audit_pipeline_and_determinism() {
     use sha2::{Digest, Sha256};
     use std::fs;
-    use std::path::Path;
 
-    let root = Path::new(".");
+    let root = get_workspace_root();
 
-    // Ensure import has been run first
+    // Run the importer to ensure lexicon.jsonl exists.
+    // A missing prerequisite must FAIL, not silently skip.
     let lexicon_path = root.join("data/imported/kurdish-hunspell-kmr/lexicon.jsonl");
     if !lexicon_path.exists() {
-        // Skip if import hasn't been run
-        eprintln!("SKIP: lexicon.jsonl not found, run import-hunspell first");
-        return;
+        data_builder_lib::import_hunspell_dic("kurdish-hunspell-kmr", &root)
+            .expect("Importer must succeed to create lexicon.jsonl for audit test");
     }
+
+    assert!(
+        lexicon_path.exists(),
+        "FATAL: lexicon.jsonl must exist after import — cannot silently skip"
+    );
 
     let audit_dir = root.join("data/reports/kurdish-hunspell-kmr/quality-audit");
 
     // Run 1
-    data_builder_lib::run_quality_audit("kurdish-hunspell-kmr", root).expect("Audit run 1 failed");
+    data_builder_lib::run_quality_audit("kurdish-hunspell-kmr", &root).expect("Audit run 1 failed");
 
     let expected_files = [
         "summary.json",
@@ -208,15 +243,17 @@ fn test_registered_source_audit_pipeline_and_determinism() {
         "flag-analysis.json",
         "morphology-analysis.json",
         "conflict-groups.jsonl",
+        "duplicate-groups.jsonl",
         "rejection-review.jsonl",
         "suspicious-entries.jsonl",
         "manual-seed-comparison.json",
         "benchmark-audit.json",
         "review-sample.jsonl",
         "README.md",
+        "artifacts.sha256",
     ];
 
-    // Verify all files exist
+    // Verify all 16 files exist
     for filename in &expected_files {
         assert!(
             audit_dir.join(filename).exists(),
@@ -237,9 +274,9 @@ fn test_registered_source_audit_pipeline_and_determinism() {
         .collect();
 
     // Run 2
-    data_builder_lib::run_quality_audit("kurdish-hunspell-kmr", root).expect("Audit run 2 failed");
+    data_builder_lib::run_quality_audit("kurdish-hunspell-kmr", &root).expect("Audit run 2 failed");
 
-    // Compute checksums for run 2 and compare
+    // Compare all 15 files byte-for-byte
     for (filename, run1_hash) in &run1_checksums {
         let content = fs::read(audit_dir.join(filename))
             .unwrap_or_else(|e| panic!("Failed to read {}: {}", filename, e));
