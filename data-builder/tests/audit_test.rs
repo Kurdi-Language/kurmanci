@@ -253,14 +253,20 @@ fn test_registered_source_audit_pipeline_and_determinism() {
         "artifacts.sha256",
     ];
 
-    // Verify all 16 files exist
-    for filename in &expected_files {
-        assert!(
-            audit_dir.join(filename).exists(),
-            "Missing audit report file: {}",
-            filename
-        );
-    }
+    // Verify all 16 files exist and that NO extra/stale files exist in audit_dir
+    let actual_files: std::collections::BTreeSet<String> = fs::read_dir(&audit_dir)
+        .expect("Failed to read audit_dir")
+        .filter_map(|entry| entry.ok())
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .collect();
+
+    let expected_set: std::collections::BTreeSet<String> =
+        expected_files.iter().map(|s| s.to_string()).collect();
+
+    assert_eq!(
+        actual_files, expected_set,
+        "Audit directory contains unexpected or missing files!"
+    );
 
     // Compute checksums for run 1
     let run1_checksums: Vec<(String, String)> = expected_files
@@ -276,7 +282,7 @@ fn test_registered_source_audit_pipeline_and_determinism() {
     // Run 2
     data_builder_lib::run_quality_audit("kurdish-hunspell-kmr", &root).expect("Audit run 2 failed");
 
-    // Compare all 15 files byte-for-byte
+    // Compare all 16 files byte-for-byte
     for (filename, run1_hash) in &run1_checksums {
         let content = fs::read(audit_dir.join(filename))
             .unwrap_or_else(|e| panic!("Failed to read {}: {}", filename, e));

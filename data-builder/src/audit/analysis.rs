@@ -212,6 +212,8 @@ pub struct RawLineFindings {
     pub lines_with_unexpected_cr: usize,
     pub lines_with_null_bytes: usize,
     pub lines_with_replacement_chars: usize,
+    pub distinct_lines_with_findings: usize,
+    pub total_findings: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -280,32 +282,55 @@ pub fn analyze_source_records(inputs: &AuditInputs) -> SourceAnalysis {
         lines_with_unexpected_cr: 0,
         lines_with_null_bytes: 0,
         lines_with_replacement_chars: 0,
+        distinct_lines_with_findings: 0,
+        total_findings: 0,
     };
+
+    let mut lines_with_findings_set = BTreeSet::new();
 
     for rec in &inputs.replayed_parsed {
         let findings = check_raw_line(&rec.raw_line);
+        let mut line_has_finding = false;
         if findings.has_leading_whitespace {
             rlf.lines_with_leading_whitespace += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
         }
         if findings.has_trailing_whitespace {
             rlf.lines_with_trailing_whitespace += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
         }
         if findings.has_tab {
             rlf.lines_with_tabs += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
         }
         if findings.has_control_char {
             rlf.lines_with_control_chars += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
         }
         if findings.has_unexpected_cr {
             rlf.lines_with_unexpected_cr += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
         }
         if findings.has_null_byte {
             rlf.lines_with_null_bytes += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
         }
         if findings.has_replacement_char {
             rlf.lines_with_replacement_chars += 1;
+            rlf.total_findings += 1;
+            line_has_finding = true;
+        }
+        if line_has_finding {
+            lines_with_findings_set.insert(rec.source_line_num);
         }
     }
+    rlf.distinct_lines_with_findings = lines_with_findings_set.len();
 
     // Parsed surface findings
     let mut psf = ParsedSurfaceFindings {

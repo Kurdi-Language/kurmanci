@@ -48,6 +48,7 @@ pub struct StructuralValiditySummary {
     pub population: String,
     pub clean_raw_lines: usize,
     pub lines_with_findings: usize,
+    pub total_findings: usize,
     pub by_finding: BTreeMap<String, usize>,
 }
 
@@ -145,18 +146,22 @@ pub fn write_all_reports(
     accepted_analysis: &AcceptedAnalysis,
     review_sample: &ReviewSample,
 ) -> Result<(), String> {
+    // If output directory already exists, clean it up to prevent stale artifacts
+    if output_dir.exists() {
+        fs::remove_dir_all(output_dir).map_err(|e| {
+            format!(
+                "Failed to clean existing audit output dir {:?}: {}",
+                output_dir, e
+            )
+        })?;
+    }
     fs::create_dir_all(output_dir)
         .map_err(|e| format!("Failed to create audit output dir {:?}: {}", output_dir, e))?;
 
     // ── summary.json ────────────────────────────────────────────────────
     let sa = &source_analysis;
-    let raw_findings_count = sa.raw_line_findings.lines_with_leading_whitespace
-        + sa.raw_line_findings.lines_with_trailing_whitespace
-        + sa.raw_line_findings.lines_with_tabs
-        + sa.raw_line_findings.lines_with_control_chars
-        + sa.raw_line_findings.lines_with_unexpected_cr
-        + sa.raw_line_findings.lines_with_null_bytes
-        + sa.raw_line_findings.lines_with_replacement_chars;
+    let distinct_lines_with_findings = sa.raw_line_findings.distinct_lines_with_findings;
+    let total_findings = sa.raw_line_findings.total_findings;
 
     let mut by_finding = BTreeMap::new();
     if sa.raw_line_findings.lines_with_leading_whitespace > 0 {
@@ -238,8 +243,11 @@ pub fn write_all_reports(
         importer_cross_check: cross_check.clone(),
         structural_validity: StructuralValiditySummary {
             population: "physical_source_records".to_string(),
-            clean_raw_lines: sa.successfully_parsed_records.saturating_sub(raw_findings_count),
-            lines_with_findings: raw_findings_count,
+            clean_raw_lines: sa
+                .successfully_parsed_records
+                .saturating_sub(distinct_lines_with_findings),
+            lines_with_findings: distinct_lines_with_findings,
+            total_findings,
             by_finding,
         },
         unicode_analysis: UnicodeAnalysisSummary {
