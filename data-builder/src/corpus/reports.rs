@@ -125,11 +125,28 @@ pub fn write_all_frequency_reports<P: AsRef<Path>>(
         0.0
     };
 
+    // Calculate token-weighted median character length (lower median for even total tokens)
+    let median_length = if stats.total_tokens > 0 {
+        let mid = (stats.total_tokens - 1) / 2;
+        let mut cumulative = 0usize;
+        let mut med = 0usize;
+        for (&len, &count) in &length_dist {
+            cumulative += count;
+            if cumulative > mid {
+                med = len;
+                break;
+            }
+        }
+        med
+    } else {
+        0
+    };
+
     let length_report = LengthDistributionReport {
         min_length,
         max_length,
         mean_length: (mean_length * 10000.0).round() / 10000.0,
-        median_length: 0, // calculate if needed
+        median_length,
         distribution: length_dist,
     };
     write_json(&stage_dir, "length-distribution.json", &length_report)?;

@@ -197,3 +197,35 @@ fn test_provenance_ignores_unregistered_and_stale_files() {
         "Undeclared stale files in corpus directory must be IGNORED by build-frequencies"
     );
 }
+
+#[test]
+fn test_length_distribution_median_length_calculation() {
+    let _lock = PIPELINE_LOCK.lock().unwrap();
+    let root = get_workspace_root();
+
+    import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    build_corpus_frequencies(&root).expect("Build frequencies failed");
+
+    let report_path = root.join("data/reports/frequencies/length-distribution.json");
+    let content =
+        fs::read_to_string(&report_path).expect("Failed to read length-distribution.json");
+    let json: serde_json::Value =
+        serde_json::from_str(&content).expect("Failed to parse length-distribution.json");
+
+    let min_length = json["min_length"].as_u64().unwrap();
+    let max_length = json["max_length"].as_u64().unwrap();
+    let median_length = json["median_length"].as_u64().unwrap();
+
+    assert!(
+        min_length > 0,
+        "min_length must be positive for non-empty corpus"
+    );
+    assert!(max_length >= min_length, "max_length must be >= min_length");
+    assert!(
+        median_length >= min_length && median_length <= max_length,
+        "median_length must be bounded between min_length ({}) and max_length ({}), got {}",
+        min_length,
+        max_length,
+        median_length
+    );
+}

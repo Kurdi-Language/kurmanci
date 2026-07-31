@@ -80,16 +80,41 @@ pub fn import_corpus<P: AsRef<Path>>(
         total_bytes += bytes_copied;
     }
 
-    if dest_dir.exists() {
-        fs::remove_dir_all(&dest_dir)
-            .map_err(|e| format!("Failed to clean existing import dir {:?}: {}", dest_dir, e))?;
+    let backup_dest = dest_dir.with_extension(format!(
+        "tmp_import_backup_{}_{:?}",
+        std::process::id(),
+        std::thread::current().id()
+    ));
+
+    if backup_dest.exists() {
+        let _ = fs::remove_dir_all(&backup_dest);
     }
-    fs::rename(&stage_dest, &dest_dir).map_err(|e| {
-        format!(
-            "Failed to install imported corpus dir {:?}: {}",
-            dest_dir, e
-        )
-    })?;
+
+    if dest_dir.exists() {
+        fs::rename(&dest_dir, &backup_dest).map_err(|e| {
+            format!(
+                "Failed to move dest_dir {:?} to backup_dest {:?}: {}",
+                dest_dir, backup_dest, e
+            )
+        })?;
+    }
+
+    match fs::rename(&stage_dest, &dest_dir) {
+        Ok(()) => {
+            if backup_dest.exists() {
+                let _ = fs::remove_dir_all(&backup_dest);
+            }
+        }
+        Err(err) => {
+            if backup_dest.exists() {
+                let _ = fs::rename(&backup_dest, &dest_dir);
+            }
+            return Err(format!(
+                "Failed to install imported corpus dir {:?}: {}",
+                dest_dir, err
+            ));
+        }
+    }
 
     let report = CorpusImportSummaryReport {
         corpus_id: corpus_id.to_string(),
