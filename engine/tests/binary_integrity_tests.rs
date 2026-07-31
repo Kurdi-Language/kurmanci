@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 fn build_test_pack(entry_count: u32, payload_bytes: &[u8]) -> Vec<u8> {
     let mut pack = Vec::new();
     pack.extend_from_slice(b"KRM1");
-    pack.extend_from_slice(&1u32.to_le_bytes());
+    pack.extend_from_slice(&2u32.to_le_bytes());
 
     let lang = b"ku-Latn";
     pack.extend_from_slice(&(lang.len() as u16).to_le_bytes());
@@ -40,6 +40,10 @@ fn encode_test_entry(word: &str) -> Vec<u8> {
     encode_str(&mut buf, "general");
     buf.extend_from_slice(&1u16.to_le_bytes());
     encode_str(&mut buf, "manual-seed");
+    // Version 2 frequency metadata extension (token_count, document_count, zipf_milli)
+    buf.extend_from_slice(&100u64.to_le_bytes());
+    buf.extend_from_slice(&10u64.to_le_bytes());
+    buf.extend_from_slice(&7500u32.to_le_bytes());
 
     buf
 }

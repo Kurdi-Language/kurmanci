@@ -34,6 +34,10 @@ enum Commands {
         /// Output results as JSON
         #[arg(long)]
         json: bool,
+
+        /// Print diagnostic ranking explanation for each candidate
+        #[arg(long)]
+        explain: bool,
     },
 }
 
@@ -46,6 +50,7 @@ fn main() {
             limit,
             pack,
             json,
+            explain,
         } => {
             let mut engine = Engine::new();
 
@@ -73,6 +78,22 @@ fn main() {
                     "{}",
                     serde_json::to_string_pretty(&suggestions).unwrap_or_default()
                 );
+            } else if explain {
+                println!(
+                    "Suggestions for '{}' (explained in {:.2?}):",
+                    query, elapsed
+                );
+                if suggestions.is_empty() {
+                    println!("  (no suggestions found)");
+                } else {
+                    for (i, sug) in suggestions.iter().enumerate() {
+                        println!("  {}. {}", i + 1, sug.text);
+                        println!("     edit_cost: {}", sug.edit_cost);
+                        println!("     zipf_milli: {}", sug.zipf_milli);
+                        println!("     document_count: {}", sug.document_count);
+                        println!("     ranking_reason: {}", sug.ranking_reason);
+                    }
+                }
             } else {
                 println!(
                     "Suggestions for '{}' (processed in {:.2?}):",

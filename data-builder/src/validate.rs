@@ -1,5 +1,12 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct FrequencyMetadata {
+    pub token_count: u64,
+    pub document_count: u64,
+    pub zipf_milli: u32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SourceLexiconEntry {
     pub word: String,
@@ -14,6 +21,8 @@ pub struct SourceLexiconEntry {
     pub sources: Vec<String>,
     #[serde(default)]
     pub regions: Vec<String>,
+    #[serde(default)]
+    pub frequency_metadata: Option<FrequencyMetadata>,
 }
 
 pub fn validate_entry(entry: &SourceLexiconEntry, line_num: usize) -> Result<(), String> {

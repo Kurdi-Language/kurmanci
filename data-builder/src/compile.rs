@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 pub const MAGIC_BYTES: &[u8; 4] = b"KRM1";
-pub const PACK_VERSION: u32 = 1;
+pub const PACK_VERSION: u32 = 2;
 pub const LANGUAGE_TAG: &str = "ku-Latn";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,6 +69,16 @@ pub fn compile_binary_pack(entries: &[SourceLexiconEntry]) -> Result<Vec<u8>, St
             write_string(&mut payload, src)
                 .map_err(|e| format!("Entry {}: 'source' field error: {}", i + 1, e))?;
         }
+
+        // Encode FrequencyMetadata (Version 2 extension)
+        let freq_meta = entry
+            .frequency_metadata
+            .as_ref()
+            .cloned()
+            .unwrap_or_default();
+        payload.extend_from_slice(&freq_meta.token_count.to_le_bytes());
+        payload.extend_from_slice(&freq_meta.document_count.to_le_bytes());
+        payload.extend_from_slice(&freq_meta.zipf_milli.to_le_bytes());
     }
 
     // Calculate 32-byte raw SHA-256 of payload
