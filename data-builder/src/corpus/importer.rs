@@ -59,9 +59,8 @@ pub fn import_corpus<P: AsRef<Path>>(
     if stage_dest.exists() {
         let _ = fs::remove_dir_all(&stage_dest);
     }
-    fs::create_dir_all(&stage_dest).map_err(|e| {
-        format!("Failed to create stage import dir {:?}: {}", stage_dest, e)
-    })?;
+    fs::create_dir_all(&stage_dest)
+        .map_err(|e| format!("Failed to create stage import dir {:?}: {}", stage_dest, e))?;
 
     println!(
         "  [2/3] Copying preserved corpus files into data/imported/{}...",
@@ -82,9 +81,8 @@ pub fn import_corpus<P: AsRef<Path>>(
     }
 
     if dest_dir.exists() {
-        fs::remove_dir_all(&dest_dir).map_err(|e| {
-            format!("Failed to clean existing import dir {:?}: {}", dest_dir, e)
-        })?;
+        fs::remove_dir_all(&dest_dir)
+            .map_err(|e| format!("Failed to clean existing import dir {:?}: {}", dest_dir, e))?;
     }
     fs::rename(&stage_dest, &dest_dir).map_err(|e| {
         format!(
