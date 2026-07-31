@@ -146,17 +146,14 @@ pub fn write_all_reports(
     accepted_analysis: &AcceptedAnalysis,
     review_sample: &ReviewSample,
 ) -> Result<(), String> {
-    // If output directory already exists, clean it up to prevent stale artifacts
-    if output_dir.exists() {
-        fs::remove_dir_all(output_dir).map_err(|e| {
-            format!(
-                "Failed to clean existing audit output dir {:?}: {}",
-                output_dir, e
-            )
-        })?;
+    // Write into a temporary stage directory first for atomic safety
+    let stage_dir = output_dir.with_extension("tmp_stage");
+    if stage_dir.exists() {
+        fs::remove_dir_all(&stage_dir)
+            .map_err(|e| format!("Failed to clean existing stage dir {:?}: {}", stage_dir, e))?;
     }
-    fs::create_dir_all(output_dir)
-        .map_err(|e| format!("Failed to create audit output dir {:?}: {}", output_dir, e))?;
+    fs::create_dir_all(&stage_dir)
+        .map_err(|e| format!("Failed to create stage dir {:?}: {}", stage_dir, e))?;
 
     // ── summary.json ────────────────────────────────────────────────────
     let sa = &source_analysis;
@@ -270,7 +267,10 @@ pub fn write_all_reports(
             max_scalar: accepted_analysis.length_distribution.max_scalar,
             mean_scalar_numerator: accepted_analysis.length_distribution.mean_scalar_numerator,
             mean_scalar_denominator: accepted_analysis.length_distribution.mean_scalar_denominator,
-            mean_scalar_display_4dp: accepted_analysis.length_distribution.mean_scalar_display_4dp.clone(),
+            mean_scalar_display_4dp: accepted_analysis
+                .length_distribution
+                .mean_scalar_display_4dp
+                .clone(),
             median_scalar: accepted_analysis.length_distribution.median_scalar,
         },
         shape_analysis_brief: ShapeAnalysisBrief {
@@ -290,10 +290,13 @@ pub fn write_all_reports(
         },
         duplicate_analysis: DuplicateAnalysisBrief {
             population: "physical_source_records".to_string(),
-            exact_duplicate_additional_records: cross_check.audit_exact_duplicate_additional_records,
+            exact_duplicate_additional_records: cross_check
+                .audit_exact_duplicate_additional_records,
             metadata_conflict_groups: cross_check.audit_metadata_conflict_groups,
-            metadata_conflict_additional_records: cross_check.audit_metadata_conflict_additional_records,
-            metadata_conflicting_records_total: cross_check.audit_metadata_conflicting_records_total,
+            metadata_conflict_additional_records: cross_check
+                .audit_metadata_conflict_additional_records,
+            metadata_conflicting_records_total: cross_check
+                .audit_metadata_conflicting_records_total,
             unique_normalized_forms: cross_check.audit_unique_normalized_forms,
         },
         rejection_analysis: RejectionAnalysisBrief {
@@ -320,97 +323,97 @@ pub fn write_all_reports(
         verdict_explanation: "Suitable for controlled evaluation only. Manual linguistic review required before production inclusion.".to_string(),
     };
 
-    write_json(output_dir, "summary.json", &summary)?;
+    write_json(&stage_dir, "summary.json", &summary)?;
 
     // ── character-inventory.json ────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "character-inventory.json",
         &accepted_analysis.character_inventory,
     )?;
 
     // ── script-analysis.json ────────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "script-analysis.json",
         &accepted_analysis.script_analysis,
     )?;
 
     // ── length-distribution.json ────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "length-distribution.json",
         &accepted_analysis.length_distribution,
     )?;
 
     // ── shape-analysis.json ─────────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "shape-analysis.json",
         &accepted_analysis.shape_analysis,
     )?;
 
     // ── flag-analysis.json ──────────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "flag-analysis.json",
         &accepted_analysis.flag_analysis,
     )?;
 
     // ── morphology-analysis.json ────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "morphology-analysis.json",
         &accepted_analysis.morphology_analysis,
     )?;
 
     // ── conflict-groups.jsonl ───────────────────────────────────────────
     write_jsonl(
-        output_dir,
+        &stage_dir,
         "conflict-groups.jsonl",
         &source_analysis.conflict_groups,
     )?;
 
     // ── duplicate-groups.jsonl ──────────────────────────────────────────
     write_jsonl(
-        output_dir,
+        &stage_dir,
         "duplicate-groups.jsonl",
         &source_analysis.duplicate_groups,
     )?;
 
     // ── rejection-review.jsonl ──────────────────────────────────────────
     write_jsonl(
-        output_dir,
+        &stage_dir,
         "rejection-review.jsonl",
         &source_analysis.rejection_review,
     )?;
 
     // ── suspicious-entries.jsonl ────────────────────────────────────────
     write_jsonl(
-        output_dir,
+        &stage_dir,
         "suspicious-entries.jsonl",
         &accepted_analysis.suspicious_entries,
     )?;
 
     // ── manual-seed-comparison.json ─────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "manual-seed-comparison.json",
         &accepted_analysis.manual_seed_comparison,
     )?;
 
     // ── benchmark-audit.json ────────────────────────────────────────────
     write_json(
-        output_dir,
+        &stage_dir,
         "benchmark-audit.json",
         &accepted_analysis.benchmark_audit,
     )?;
 
     // ── review-sample.jsonl ─────────────────────────────────────────────
-    write_jsonl(output_dir, "review-sample.jsonl", &review_sample.records)?;
+    write_jsonl(&stage_dir, "review-sample.jsonl", &review_sample.records)?;
 
     // ── README.md ───────────────────────────────────────────────────────
-    write_readme(output_dir, &summary, source_analysis, accepted_analysis)?;
+    write_readme(&stage_dir, &summary, source_analysis, accepted_analysis)?;
 
     // ── artifacts.sha256 ────────────────────────────────────────────────
     let report_files = [
@@ -433,13 +436,29 @@ pub fn write_all_reports(
 
     let mut manifest_content = String::new();
     for file in &report_files {
-        let content = fs::read(output_dir.join(file))
+        let content = fs::read(stage_dir.join(file))
             .map_err(|e| format!("Failed to read report file {} for manifest: {}", file, e))?;
         let hash = format!("{:x}", Sha256::digest(&content));
         manifest_content.push_str(&format!("{}  {}\n", hash, file));
     }
-    fs::write(output_dir.join("artifacts.sha256"), manifest_content)
+    fs::write(stage_dir.join("artifacts.sha256"), manifest_content)
         .map_err(|e| format!("Failed to write artifacts.sha256 manifest: {}", e))?;
+
+    // Atomic replacement: remove output_dir if present, then rename stage_dir -> output_dir
+    if output_dir.exists() {
+        fs::remove_dir_all(output_dir).map_err(|e| {
+            format!(
+                "Failed to clean existing audit output dir {:?}: {}",
+                output_dir, e
+            )
+        })?;
+    }
+    fs::rename(&stage_dir, output_dir).map_err(|e| {
+        format!(
+            "Failed to move stage dir {:?} to output dir {:?}: {}",
+            stage_dir, output_dir, e
+        )
+    })?;
 
     Ok(())
 }
