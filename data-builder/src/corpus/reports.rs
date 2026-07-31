@@ -189,6 +189,20 @@ pub fn write_all_frequency_reports<P: AsRef<Path>>(
     write_readme(&stage_dir, &summary)?;
 
     // 7. artifacts.sha256
+    let build_freq_path = root.join("data/build/frequencies.jsonl");
+    let mut manifest_content = String::new();
+
+    if build_freq_path.exists() {
+        let content = fs::read(&build_freq_path).map_err(|e| {
+            format!(
+                "Failed to read data/build/frequencies.jsonl for manifest: {}",
+                e
+            )
+        })?;
+        let hash = format!("{:x}", Sha256::digest(&content));
+        manifest_content.push_str(&format!("{}  data/build/frequencies.jsonl\n", hash));
+    }
+
     let report_files = [
         "summary.json",
         "top-100.json",
@@ -198,12 +212,11 @@ pub fn write_all_frequency_reports<P: AsRef<Path>>(
         "README.md",
     ];
 
-    let mut manifest_content = String::new();
     for file in &report_files {
         let content = fs::read(stage_dir.join(file))
             .map_err(|e| format!("Failed to read report file {} for manifest: {}", file, e))?;
         let hash = format!("{:x}", Sha256::digest(&content));
-        manifest_content.push_str(&format!("{}  {}\n", hash, file));
+        manifest_content.push_str(&format!("{}  data/reports/frequencies/{}\n", hash, file));
     }
     fs::write(stage_dir.join("artifacts.sha256"), manifest_content)
         .map_err(|e| format!("Failed to write artifacts.sha256 manifest: {}", e))?;

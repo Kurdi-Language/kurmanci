@@ -41,9 +41,27 @@ pub fn import_corpus<P: AsRef<Path>>(
     println!("  [1/3] Verifying corpus checksums for '{}'...", corpus_id);
     registry.verify_corpus_files(entry, root)?;
 
-    let dest_dir = root.join("data/imported").join(corpus_id);
-    fs::create_dir_all(&dest_dir)
-        .map_err(|e| format!("Failed to create corpus import dir {:?}: {}", dest_dir, e))?;
+    let imported_parent = root.join("data/imported");
+    fs::create_dir_all(&imported_parent).map_err(|e| {
+        format!(
+            "Failed to create imported parent dir {:?}: {}",
+            imported_parent, e
+        )
+    })?;
+
+    let dest_dir = imported_parent.join(corpus_id);
+    let stage_dest = dest_dir.with_extension(format!(
+        "tmp_import_stage_{}_{:?}",
+        std::process::id(),
+        std::thread::current().id()
+    ));
+
+    if stage_dest.exists() {
+        let _ = fs::remove_dir_all(&stage_dest);
+    }
+    fs::create_dir_all(&stage_dest).map_err(|e| {
+        format!("Failed to create stage import dir {:?}: {}", stage_dest, e)
+    })?;
 
     println!(
         "  [2/3] Copying preserved corpus files into data/imported/{}...",
@@ -56,12 +74,24 @@ pub fn import_corpus<P: AsRef<Path>>(
         let filename = Path::new(&file_entry.path)
             .file_name()
             .ok_or_else(|| format!("Invalid file path in corpus entry: {}", file_entry.path))?;
-        let target_path = dest_dir.join(filename);
+        let target_path = stage_dest.join(filename);
 
         let bytes_copied = fs::copy(&src_path, &target_path)
             .map_err(|e| format!("Failed to copy {:?} to {:?}: {}", src_path, target_path, e))?;
         total_bytes += bytes_copied;
     }
+
+    if dest_dir.exists() {
+        fs::remove_dir_all(&dest_dir).map_err(|e| {
+            format!("Failed to clean existing import dir {:?}: {}", dest_dir, e)
+        })?;
+    }
+    fs::rename(&stage_dest, &dest_dir).map_err(|e| {
+        format!(
+            "Failed to install imported corpus dir {:?}: {}",
+            dest_dir, e
+        )
+    })?;
 
     let report = CorpusImportSummaryReport {
         corpus_id: corpus_id.to_string(),

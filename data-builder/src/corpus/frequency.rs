@@ -1,10 +1,12 @@
 //! Frequency Builder module for compiling token and document frequency statistics.
 
+use super::registry::CorpusRegistry;
 use super::tokenizer::tokenize_text;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::Path;
 
 /// A single frequency record in `frequencies.jsonl`.
@@ -30,11 +32,17 @@ pub fn build_corpus_frequencies<P: AsRef<Path>>(
     root_dir: P,
 ) -> Result<FrequencyBuildStats, String> {
     let root = root_dir.as_ref();
-    let imported_dir = root.join("data/imported");
+    let registry_path = root.join("data/source-registry/corpora.toml");
 
-    if !imported_dir.exists() {
-        return Err("No imported corpora directory found at data/imported".to_string());
+    if !registry_path.exists() {
+        return Err(format!("Corpus registry missing at {:?}", registry_path));
     }
+
+    let registry = CorpusRegistry::load_from_file(&registry_path)?;
+
+    // Sort registered corpora deterministically by corpus_id
+    let mut registered_corpora = registry.corpora.clone();
+    registered_corpora.sort_by(|a, b| a.corpus_id.cmp(&b.corpus_id));
 
     let mut total_documents = 0usize;
     let mut total_tokens = 0usize;
@@ -43,44 +51,61 @@ pub fn build_corpus_frequencies<P: AsRef<Path>>(
     let mut token_counts: BTreeMap<String, usize> = BTreeMap::new();
     let mut doc_counts: BTreeMap<String, usize> = BTreeMap::new();
 
-    // Iterate over all imported corpora subdirectories deterministically
-    let mut corpus_dirs: Vec<fs::DirEntry> = fs::read_dir(&imported_dir)
-        .map_err(|e| format!("Failed to read {:?}: {}", imported_dir, e))?
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().is_dir())
-        .collect();
+    for corpus_entry in &registered_corpora {
+        let imported_corpus_dir = root.join("data/imported").join(&corpus_entry.corpus_id);
+        if !imported_corpus_dir.exists() {
+            // Corpus has not been imported yet, skip
+            continue;
+        }
 
-    corpus_dirs.sort_by_key(|e| e.file_name());
+        // Process ONLY files explicitly declared in corpora.toml for this corpus
+        for file_entry in &corpus_entry.files {
+            let filename = Path::new(&file_entry.path)
+                .file_name()
+                .ok_or_else(|| format!("Invalid file path in corpus: {}", file_entry.path))?;
+            let imported_file_path = imported_corpus_dir.join(filename);
 
-    for dir_entry in &corpus_dirs {
-        let corpus_path = dir_entry.path();
-        let mut file_entries: Vec<fs::DirEntry> = fs::read_dir(&corpus_path)
-            .map_err(|e| format!("Failed to read {:?}: {}", corpus_path, e))?
-            .filter_map(|e| e.ok())
-            .filter(|e| {
-                if !e.path().is_file() {
-                    return false;
+            if !imported_file_path.exists() {
+                return Err(format!(
+                    "Imported corpus file missing for '{}': {:?}",
+                    corpus_entry.corpus_id, imported_file_path
+                ));
+            }
+
+            // Verify checksum before processing
+            let mut f = File::open(&imported_file_path).map_err(|e| {
+                format!(
+                    "Failed to open imported file {:?}: {}",
+                    imported_file_path, e
+                )
+            })?;
+            let mut hasher = Sha256::new();
+            let mut buffer = [0u8; 8192];
+            loop {
+                let n = f
+                    .read(&mut buffer)
+                    .map_err(|e| format!("Error reading {:?}: {}", imported_file_path, e))?;
+                if n == 0 {
+                    break;
                 }
-                let ext = e
-                    .path()
-                    .extension()
-                    .and_then(|ext| ext.to_str())
-                    .unwrap_or("")
-                    .to_lowercase();
-                ext != "json" && ext != "jsonl"
-            })
-            .collect();
+                hasher.update(&buffer[..n]);
+            }
+            let computed = format!("{:x}", hasher.finalize());
+            if computed != file_entry.sha256 {
+                return Err(format!(
+                    "Checksum verification failed for imported file {:?} in corpus '{}': expected {}, got {}",
+                    imported_file_path, corpus_entry.corpus_id, file_entry.sha256, computed
+                ));
+            }
 
-        file_entries.sort_by_key(|e| e.file_name());
-
-        for file_entry in &file_entries {
-            let file = File::open(file_entry.path())
-                .map_err(|e| format!("Failed to open {:?}: {}", file_entry.path(), e))?;
+            // Read line by line (line-delimited document format)
+            let file = File::open(&imported_file_path)
+                .map_err(|e| format!("Failed to open {:?}: {}", imported_file_path, e))?;
             let reader = BufReader::new(file);
 
             for line_res in reader.lines() {
                 let line = line_res
-                    .map_err(|e| format!("Read error in {:?}: {}", file_entry.path(), e))?;
+                    .map_err(|e| format!("Read error in {:?}: {}", imported_file_path, e))?;
                 if line.trim().is_empty() {
                     continue;
                 }

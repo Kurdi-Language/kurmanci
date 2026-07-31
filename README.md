@@ -124,12 +124,15 @@ To generate word and document frequencies across all imported corpora:
 ```bash
 cargo run -p kurmanci-data-builder -- build-frequencies
 ```
+- **Document Boundary**: In text corpus files, each non-empty line represents a single document boundary (line-delimited document format). `document_count` tracks how many distinct lines contain a given token.
 - **Output Record**: `data/build/frequencies.jsonl` containing `word`, `token_count`, `document_count`, `normalized_frequency`, and `zipf` (`log10(count_per_billion)`).
 - **Deterministic Sort**: Primary sort by `token_count` descending, secondary sort by `word` ascending.
 - **Statistical Reports**: Generated under `data/reports/frequencies/` (`summary.json`, `top-100.json`, `length-distribution.json`, `character-analysis.json`, `coverage.json`, `README.md`, `artifacts.sha256`).
 
-### 5. Determinism Guarantees
-Executing `build-frequencies` consecutively on identical inputs produces 100% byte-identical `frequencies.jsonl` and report outputs verified via SHA-256 manifests. Staged generation uses backup-and-rollback safety to prevent report corruption upon failure.
+### 5. Determinism & Provenance Guarantees
+- **Strict Provenance Filtering**: `build-frequencies` loads `corpora.toml` and processes *only* registered corpora and explicitly declared corpus files verified against SHA-256 checksums. Unregistered directories or undeclared stale files under `data/imported/` are strictly ignored.
+- **Staged Generation & Rollback**: `import-corpus` and `build-frequencies` use atomic staged directory replacement with backup-and-rollback safety.
+- **Artifact Manifest**: `data/reports/frequencies/artifacts.sha256` covers `data/build/frequencies.jsonl` as well as all statistical report files. Executing `build-frequencies` consecutively produces 100% byte-identical output verified in CI.
 
 ---
 

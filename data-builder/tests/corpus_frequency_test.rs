@@ -61,8 +61,11 @@ fn test_unknown_corpus_import_rejection() {
     );
 }
 
+static PIPELINE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 #[test]
 fn test_corpus_import_and_frequency_build_pipeline() {
+    let _lock = PIPELINE_LOCK.lock().unwrap();
     let root = get_workspace_root();
 
     // 1. Import corpus
@@ -101,9 +104,20 @@ fn test_corpus_import_and_frequency_build_pipeline() {
         );
     }
 
-    // Verify artifacts.sha256 manifest
+    // Verify artifacts.sha256 manifest covers data/build/frequencies.jsonl AND all report files
     let manifest_content = fs::read_to_string(report_dir.join("artifacts.sha256"))
         .expect("Failed to read artifacts.sha256");
+
+    let freq_content = fs::read(&freq_jsonl).expect("Failed to read frequencies.jsonl");
+    let freq_hash = format!("{:x}", Sha256::digest(freq_content));
+    assert!(
+        manifest_content.contains("data/build/frequencies.jsonl"),
+        "Manifest must explicitly cover data/build/frequencies.jsonl"
+    );
+    assert!(
+        manifest_content.contains(&freq_hash),
+        "Manifest must contain valid SHA256 hash for data/build/frequencies.jsonl"
+    );
 
     for file in &expected_reports[..6] {
         let content = fs::read(report_dir.join(file)).expect("Failed to read report file");
@@ -139,5 +153,47 @@ fn test_corpus_import_and_frequency_build_pipeline() {
     assert_eq!(
         pass1_manifest_hash, pass2_manifest_hash,
         "artifacts.sha256 must be byte-for-byte identical across runs"
+    );
+}
+
+#[test]
+fn test_provenance_ignores_unregistered_and_stale_files() {
+    let _lock = PIPELINE_LOCK.lock().unwrap();
+    let root = get_workspace_root();
+
+    // Ensure corpus is imported
+    import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+
+    // 1. Create an unregistered corpus directory
+    let unregistered_dir = root.join("data/imported/unregistered-corpus");
+    fs::create_dir_all(&unregistered_dir).unwrap();
+    let unregistered_file = unregistered_dir.join("notes.txt");
+    fs::write(&unregistered_file, "unregistered_token_text_12345").unwrap();
+
+    // 2. Create an undeclared stale file inside registered corpus folder
+    let stale_file = root.join("data/imported/opensubtitles-kmr/stale_file.txt");
+    fs::write(&stale_file, "stale_token_text_67890").unwrap();
+
+    // 3. Run build_corpus_frequencies
+    let stats = build_corpus_frequencies(&root).expect("Build frequencies failed");
+
+    // Clean up injected test files
+    let _ = fs::remove_file(&stale_file);
+    let _ = fs::remove_dir_all(&unregistered_dir);
+
+    // 4. Assert that neither unregistered nor stale tokens were included
+    let has_unregistered = stats
+        .records
+        .iter()
+        .any(|r| r.word.contains("unregistered"));
+    let has_stale = stats.records.iter().any(|r| r.word.contains("stale"));
+
+    assert!(
+        !has_unregistered,
+        "Unregistered corpus directory files must be IGNORED by build-frequencies"
+    );
+    assert!(
+        !has_stale,
+        "Undeclared stale files in corpus directory must be IGNORED by build-frequencies"
     );
 }
