@@ -1,11 +1,14 @@
+use crate::corpus::ngrams::BigramRecord;
 use crate::validate::SourceLexiconEntry;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fs;
+use std::collections::BTreeMap;
+use std::fs::{self, File};
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 pub const MAGIC_BYTES: &[u8; 4] = b"KRM1";
-pub const PACK_VERSION: u32 = 2;
+pub const PACK_VERSION: u32 = 3;
 pub const LANGUAGE_TAG: &str = "ku-Latn";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,9 +24,22 @@ pub struct ReleaseManifest {
 }
 
 pub fn compile_binary_pack(entries: &[SourceLexiconEntry]) -> Result<Vec<u8>, String> {
-    // 1. Build Payload
+    compile_binary_pack_with_root(".", entries)
+}
+
+pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
+    root_dir: P,
+    entries: &[SourceLexiconEntry],
+) -> Result<Vec<u8>, String> {
+    let root = root_dir.as_ref();
     let mut payload = Vec::new();
+    let mut lexicon_index_map: BTreeMap<String, u32> = BTreeMap::new();
+
+    // 1. Build Lexicon Section (Section 1)
     for (i, entry) in entries.iter().enumerate() {
+        let idx = u32::try_from(i).map_err(|_| "Entry index exceeds u32::MAX".to_string())?;
+        lexicon_index_map.insert(entry.normalized.clone(), idx);
+
         write_string(&mut payload, &entry.word)
             .map_err(|e| format!("Entry {}: 'word' field error: {}", i + 1, e))?;
         write_string(&mut payload, &entry.lemma)
@@ -70,7 +86,7 @@ pub fn compile_binary_pack(entries: &[SourceLexiconEntry]) -> Result<Vec<u8>, St
                 .map_err(|e| format!("Entry {}: 'source' field error: {}", i + 1, e))?;
         }
 
-        // Encode FrequencyMetadata (Version 2 extension)
+        // Encode FrequencyMetadata
         let freq_meta = entry
             .frequency_metadata
             .as_ref()
@@ -81,12 +97,107 @@ pub fn compile_binary_pack(entries: &[SourceLexiconEntry]) -> Result<Vec<u8>, St
         payload.extend_from_slice(&freq_meta.zipf_milli.to_le_bytes());
     }
 
-    // Calculate 32-byte raw SHA-256 of payload
+    // 2. Build Bigram Section (Section 2 - Version 3 Layout using Lexicon Indices)
+    let bigrams_path = root.join("data/build/bigrams.jsonl");
+    let mut bigram_groups: BTreeMap<u32, Vec<(u32, u64, u32, String)>> = BTreeMap::new();
+
+    if bigrams_path.exists() {
+        let file = File::open(&bigrams_path)
+            .map_err(|e| format!("Failed to open {:?}: {}", bigrams_path, e))?;
+        let reader = BufReader::new(file);
+
+        for (line_idx, line_res) in reader.lines().enumerate() {
+            let line = line_res.map_err(|e| format!("Read error in {:?}: {}", bigrams_path, e))?;
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            let rec: BigramRecord = serde_json::from_str(&line)
+                .map_err(|e| format!("Line {}: invalid bigram record: {}", line_idx + 1, e))?;
+
+            if rec.count == 0 {
+                return Err(format!(
+                    "Line {}: bigram ({}, {}) has zero count",
+                    line_idx + 1,
+                    rec.previous,
+                    rec.next
+                ));
+            }
+            if rec.probability_millionths > 1_000_000 {
+                return Err(format!(
+                    "Line {}: bigram ({}, {}) probability {} exceeds 1,000,000",
+                    line_idx + 1,
+                    rec.previous,
+                    rec.next,
+                    rec.probability_millionths
+                ));
+            }
+
+            // Filter for pack eligibility (both context & next word exist in lexicon)
+            if let (Some(&ctx_idx), Some(&next_idx)) = (
+                lexicon_index_map.get(&rec.previous),
+                lexicon_index_map.get(&rec.next),
+            ) {
+                bigram_groups.entry(ctx_idx).or_default().push((
+                    next_idx,
+                    rec.count,
+                    rec.probability_millionths,
+                    rec.next,
+                ));
+            }
+        }
+    }
+
+    let context_count = u32::try_from(bigram_groups.len())
+        .map_err(|_| "Bigram context count exceeds u32::MAX".to_string())?;
+    payload.extend_from_slice(&context_count.to_le_bytes());
+
+    // Sort and serialize context entries
+    for (ctx_idx, mut predictions) in bigram_groups {
+        payload.extend_from_slice(&ctx_idx.to_le_bytes());
+
+        // Sort predictions: probability_millionths DESC, count DESC, next-word lexical order ASC
+        predictions.sort_by(|a, b| {
+            b.2.cmp(&a.2)
+                .then_with(|| b.1.cmp(&a.1))
+                .then_with(|| a.3.cmp(&b.3))
+        });
+
+        // Reject duplicates within context
+        let mut seen_next_indices = std::collections::HashSet::with_capacity(predictions.len());
+        for (next_idx, _, _, _) in &predictions {
+            if !seen_next_indices.insert(*next_idx) {
+                return Err(format!(
+                    "Compiler detected duplicate prediction index {} for context index {}",
+                    next_idx, ctx_idx
+                ));
+            }
+        }
+
+        if predictions.len() > 16 {
+            return Err(format!(
+                "Context index {} has prediction count {} exceeding maximum 16",
+                ctx_idx,
+                predictions.len()
+            ));
+        }
+
+        let pred_count = predictions.len() as u16;
+        payload.extend_from_slice(&pred_count.to_le_bytes());
+
+        for (next_idx, count, prob, _) in predictions {
+            payload.extend_from_slice(&next_idx.to_le_bytes());
+            payload.extend_from_slice(&count.to_le_bytes());
+            payload.extend_from_slice(&prob.to_le_bytes());
+        }
+    }
+
+    // Calculate 32-byte raw SHA-256 of exact payload bytes
     let mut hasher = Sha256::new();
     hasher.update(&payload);
     let payload_checksum: [u8; 32] = hasher.finalize().into();
 
-    // 2. Build Header
+    // 3. Build Header
     let mut header = Vec::new();
     header.extend_from_slice(MAGIC_BYTES);
     header.extend_from_slice(&PACK_VERSION.to_le_bytes());

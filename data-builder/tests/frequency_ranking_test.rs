@@ -202,10 +202,10 @@ fn test_exact_match_priority_over_high_frequency_diacritic_variant() {
     );
 }
 
-// ─── Binary Pack Version 2 Tests ──────────────────────────────────────────
+// ─── Binary Pack Version 3 Tests ──────────────────────────────────────────
 
 #[test]
-fn test_binary_pack_v2_roundtrip_and_version_rejection() {
+fn test_binary_pack_v3_roundtrip_and_version_rejection() {
     let entries = vec![SourceLexiconEntry {
         word: "rojbaş".to_string(),
         lemma: "rojbaş".to_string(),
@@ -223,22 +223,22 @@ fn test_binary_pack_v2_roundtrip_and_version_rejection() {
         }),
     }];
 
-    let bin_bytes = compile_binary_pack(&entries).expect("Binary pack v2 compilation failed");
+    let bin_bytes = compile_binary_pack(&entries).expect("Binary pack v3 compilation failed");
     assert_eq!(&bin_bytes[0..4], MAGIC_BYTES);
-    assert_eq!(PACK_VERSION, 2);
+    assert_eq!(PACK_VERSION, 3);
 
     let mut engine = Engine::new();
     let loaded = engine
         .load_binary_pack(&bin_bytes)
-        .expect("Binary pack v2 load failed");
+        .expect("Binary pack v3 load failed");
     assert_eq!(loaded, 1);
 
-    // Verify version 1 pack rejection
-    let mut v1_bytes = bin_bytes.clone();
-    v1_bytes[4..8].copy_from_slice(&1u32.to_le_bytes()); // Force version 1
-    let res = engine.load_binary_pack(&v1_bytes);
+    // Verify version 2 pack rejection
+    let mut v2_bytes = bin_bytes.clone();
+    v2_bytes[4..8].copy_from_slice(&2u32.to_le_bytes()); // Force version 2
+    let res = engine.load_binary_pack(&v2_bytes);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Unsupported format version 1"));
+    assert!(res.unwrap_err().contains("Unsupported format version 2"));
 }
 
 // ─── Integration & Evaluation Suite Tests ─────────────────────────────────

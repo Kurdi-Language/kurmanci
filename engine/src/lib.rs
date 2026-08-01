@@ -6,4 +6,7 @@ pub mod trie;
 
 pub use engine::{Engine, LexiconEntry};
 pub use normalization::{normalize, strip_diacritics};
-pub use ranking::{FrequencyMetadata, RankedCandidate, RankingConfig, Suggestion, SuggestionKind};
+pub use ranking::{
+    FrequencyMetadata, NextWordPrediction, RankedCandidate, RankingConfig, Suggestion,
+    SuggestionKind, UnknownContextPolicy,
+};

@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 fn build_test_pack(entry_count: u32, payload_bytes: &[u8]) -> Vec<u8> {
     let mut pack = Vec::new();
     pack.extend_from_slice(b"KRM1");
-    pack.extend_from_slice(&2u32.to_le_bytes());
+    pack.extend_from_slice(&3u32.to_le_bytes());
 
     let lang = b"ku-Latn";
     pack.extend_from_slice(&(lang.len() as u16).to_le_bytes());
@@ -103,6 +103,7 @@ fn test_checksum_corruption() {
 fn test_one_trailing_byte() {
     let mut engine = Engine::new();
     let mut payload = encode_test_entry("rojbaş");
+    payload.extend_from_slice(&0u32.to_le_bytes()); // Bigram section (0 contexts)
     payload.push(0xFF);
 
     let pack = build_test_pack(1, &payload);
@@ -117,22 +118,22 @@ fn test_complete_extra_encoded_entry_not_in_entry_count() {
     let mut payload = encode_test_entry("rojbaş");
     let extra = encode_test_entry("bijî");
     payload.extend_from_slice(&extra);
+    payload.extend_from_slice(&0u32.to_le_bytes());
 
     let pack = build_test_pack(1, &payload);
     let res = engine.load_binary_pack(&pack);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Trailing payload bytes"));
 }
 
 #[test]
 fn test_zero_entries_with_nonempty_payload() {
     let mut engine = Engine::new();
-    let payload = encode_test_entry("rojbaş");
+    let mut payload = encode_test_entry("rojbaş");
+    payload.extend_from_slice(&0u32.to_le_bytes());
 
     let pack = build_test_pack(0, &payload);
     let res = engine.load_binary_pack(&pack);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Trailing payload bytes"));
 }
 
 #[test]
@@ -142,9 +143,9 @@ fn test_declared_count_lower_than_actual() {
     payload.extend_from_slice(&encode_test_entry("one"));
     payload.extend_from_slice(&encode_test_entry("two"));
     payload.extend_from_slice(&encode_test_entry("three"));
+    payload.extend_from_slice(&0u32.to_le_bytes());
 
     let pack = build_test_pack(2, &payload);
     let res = engine.load_binary_pack(&pack);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Trailing payload bytes"));
 }

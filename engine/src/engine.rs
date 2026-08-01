@@ -1,7 +1,8 @@
 use crate::distance::weighted_damerau_levenshtein;
 use crate::normalization::{normalize, strip_diacritics};
 use crate::ranking::{
-    calculate_score, FrequencyMetadata, RankedCandidate, RankingConfig, Suggestion, SuggestionKind,
+    calculate_score, FrequencyMetadata, NextWordPrediction, RankedCandidate, RankingConfig,
+    Suggestion, SuggestionKind, UnknownContextPolicy,
 };
 use crate::trie::Trie;
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 pub const MAGIC_BYTES: &[u8; 4] = b"KRM1";
-pub const PACK_VERSION: u32 = 2;
+pub const PACK_VERSION: u32 = 3;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LexiconEntry {
@@ -33,6 +34,7 @@ pub struct Engine {
     max_frequency: u64,
     #[allow(dead_code)]
     typo_map: HashMap<String, String>,
+    bigram_index: HashMap<usize, Vec<(usize, u64, u32)>>,
 }
 
 impl Engine {
@@ -246,6 +248,134 @@ impl Engine {
             staged_lexicon.push(entry);
         }
 
+        // 7. Decode Bigram Section (Version 3 Extension - Lexicon Indices)
+        if payload_cursor + 4 > payload_bytes.len() {
+            return Err("Unexpected EOF reading bigram context count".to_string());
+        }
+        let bigram_context_count = u32::from_le_bytes(
+            payload_bytes[payload_cursor..payload_cursor + 4]
+                .try_into()
+                .unwrap(),
+        ) as usize;
+        payload_cursor += 4;
+
+        if bigram_context_count > staged_lexicon.len() {
+            return Err(format!(
+                "Bigram context count {} exceeds lexicon count {}",
+                bigram_context_count,
+                staged_lexicon.len()
+            ));
+        }
+
+        let mut staged_bigram_index: HashMap<usize, Vec<(usize, u64, u32)>> =
+            HashMap::with_capacity(bigram_context_count);
+
+        for _ in 0..bigram_context_count {
+            if payload_cursor + 6 > payload_bytes.len() {
+                return Err("Unexpected EOF reading bigram context header".to_string());
+            }
+            let ctx_idx = u32::from_le_bytes(
+                payload_bytes[payload_cursor..payload_cursor + 4]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            payload_cursor += 4;
+
+            if ctx_idx >= staged_lexicon.len() {
+                return Err(format!(
+                    "Context index {} out of lexicon bounds (lexicon count {})",
+                    ctx_idx,
+                    staged_lexicon.len()
+                ));
+            }
+
+            if staged_bigram_index.contains_key(&ctx_idx) {
+                return Err(format!(
+                    "Duplicate context index {} in binary pack",
+                    ctx_idx
+                ));
+            }
+
+            let pred_count = u16::from_le_bytes(
+                payload_bytes[payload_cursor..payload_cursor + 2]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            payload_cursor += 2;
+
+            if pred_count == 0 {
+                return Err(format!("Context index {} has zero predictions", ctx_idx));
+            }
+            if pred_count > 16 {
+                return Err(format!(
+                    "Context index {} has prediction count {} exceeding maximum 16",
+                    ctx_idx, pred_count
+                ));
+            }
+
+            let mut predictions = Vec::with_capacity(pred_count);
+            let mut seen_next_indices = std::collections::HashSet::with_capacity(pred_count);
+
+            for _ in 0..pred_count {
+                if payload_cursor + 16 > payload_bytes.len() {
+                    return Err("Unexpected EOF reading bigram prediction entry".to_string());
+                }
+                let next_idx = u32::from_le_bytes(
+                    payload_bytes[payload_cursor..payload_cursor + 4]
+                        .try_into()
+                        .unwrap(),
+                ) as usize;
+                payload_cursor += 4;
+
+                if next_idx >= staged_lexicon.len() {
+                    return Err(format!(
+                        "Next lexicon index {} out of lexicon bounds (lexicon count {})",
+                        next_idx,
+                        staged_lexicon.len()
+                    ));
+                }
+
+                if !seen_next_indices.insert(next_idx) {
+                    return Err(format!(
+                        "Duplicate next lexicon index {} in context {}",
+                        next_idx, ctx_idx
+                    ));
+                }
+
+                let count = u64::from_le_bytes(
+                    payload_bytes[payload_cursor..payload_cursor + 8]
+                        .try_into()
+                        .unwrap(),
+                );
+                payload_cursor += 8;
+
+                if count == 0 {
+                    return Err(format!(
+                        "Zero bigram count for prediction index {} in context {}",
+                        next_idx, ctx_idx
+                    ));
+                }
+
+                let prob = u32::from_le_bytes(
+                    payload_bytes[payload_cursor..payload_cursor + 4]
+                        .try_into()
+                        .unwrap(),
+                );
+                payload_cursor += 4;
+
+                if prob > 1_000_000 {
+                    return Err(format!(
+                        "Probability {} exceeds 1,000,000 for prediction index {} in context {}",
+                        prob, next_idx, ctx_idx
+                    ));
+                }
+
+                predictions.push((next_idx, count, prob));
+            }
+
+            staged_bigram_index.insert(ctx_idx, predictions);
+        }
+
         // Verify complete payload consumption
         if payload_cursor != payload_bytes.len() {
             return Err(format!(
@@ -259,13 +389,64 @@ impl Engine {
         self.lexicon = staged_lexicon;
         self.trie = staged_trie;
         self.max_frequency = staged_max_frequency;
+        self.bigram_index = staged_bigram_index;
 
         Ok(loaded)
     }
 
     pub fn contains(&self, word: &str) -> bool {
-        let norm = normalize(word);
+        let norm = crate::normalization::normalize(word);
         self.trie.contains(&norm)
+    }
+
+    /// Predicts next word given previous word context.
+    pub fn predict_next(&self, previous_word: &str, limit: usize) -> Vec<NextWordPrediction> {
+        self.predict_next_with_policy(previous_word, limit, UnknownContextPolicy::Empty)
+    }
+
+    /// Predicts next word given previous word context and fallback policy.
+    pub fn predict_next_with_policy(
+        &self,
+        previous_word: &str,
+        limit: usize,
+        _policy: UnknownContextPolicy,
+    ) -> Vec<NextWordPrediction> {
+        if limit == 0 {
+            return Vec::new();
+        }
+        let norm_prev = crate::normalization::normalize(previous_word);
+        if norm_prev.is_empty() {
+            return Vec::new();
+        }
+
+        let ctx_idx = match self.lexicon.iter().position(|e| e.normalized == norm_prev) {
+            Some(idx) => idx,
+            None => return Vec::new(),
+        };
+
+        let preds = match self.bigram_index.get(&ctx_idx) {
+            Some(p) => p,
+            None => return Vec::new(),
+        };
+
+        let mut results: Vec<NextWordPrediction> = preds
+            .iter()
+            .map(|(next_idx, count, prob)| NextWordPrediction {
+                word: self.lexicon[*next_idx].word.clone(),
+                count: *count,
+                probability_millionths: *prob,
+            })
+            .collect();
+
+        results.sort_by(|a, b| {
+            b.probability_millionths
+                .cmp(&a.probability_millionths)
+                .then_with(|| b.count.cmp(&a.count))
+                .then_with(|| a.word.cmp(&b.word))
+        });
+
+        results.truncate(limit);
+        results
     }
 
     /// Generates prefix completion candidates.

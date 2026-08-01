@@ -3,6 +3,7 @@ pub mod compile;
 pub mod config;
 pub mod corpus;
 pub mod eval;
+pub mod eval_next_word;
 pub mod eval_ranking;
 pub mod importers;
 pub mod merge;
@@ -13,16 +14,18 @@ pub mod validate;
 
 pub use audit::run_quality_audit;
 pub use compile::{
-    calculate_sha256, compile_binary_pack, write_artifacts, ReleaseManifest, MAGIC_BYTES,
-    PACK_VERSION,
+    calculate_sha256, compile_binary_pack, compile_binary_pack_with_root, write_artifacts,
+    ReleaseManifest, MAGIC_BYTES, PACK_VERSION,
 };
 pub use config::BuilderConfig;
 pub use corpus::{
-    build_corpus_frequencies, import_corpus, join_frequencies_to_lexicon, tokenize_text,
-    CorpusImportSummaryReport, CorpusRegistry, CorpusRegistryEntry, FrequencyBuildStats,
-    FrequencyJoinSummaryReport, FrequencyRecord,
+    build_corpus_bigrams, build_corpus_frequencies, import_corpus, join_frequencies_to_lexicon,
+    split_into_sentences, tokenize_text, BigramBuildStats, BigramRecord, CorpusImportSummaryReport,
+    CorpusRegistry, CorpusRegistryEntry, FrequencyBuildStats, FrequencyJoinSummaryReport,
+    FrequencyRecord, NgramSummaryReport,
 };
 pub use eval::{evaluate_lexicon_impact, BenchmarkItem, EvaluationReport, LexiconMetrics};
+pub use eval_next_word::{run_next_word_evaluation, NextWordEvalSummaryReport};
 pub use eval_ranking::{run_ranking_evaluation, RankingEvalSummaryReport};
 pub use importers::{
     import_hunspell_dic, parse_hunspell_line, parse_hunspell_source, HunspellSourceEvent,
