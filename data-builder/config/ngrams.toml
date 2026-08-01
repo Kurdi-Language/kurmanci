@@ -1,8 +1,15 @@
-# Kurmancî Bigram Language Model Pruning Configuration
+# Kurmancî Bigram and Trigram Language Model Pruning Configuration
 
-[pruning]
+[bigram]
 # Minimum number of observed adjacent bigram occurrences
 minimum_count = 2
 
 # Maximum number of predictions retained per previous word context
 maximum_predictions_per_context = 16
+
+[trigram]
+# Minimum number of observed adjacent trigram occurrences
+minimum_count = 2
+
+# Maximum number of predictions retained per two-word context
+maximum_predictions_per_context = 12

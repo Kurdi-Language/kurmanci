@@ -223,9 +223,9 @@ fn test_binary_pack_v3_roundtrip_and_version_rejection() {
         }),
     }];
 
-    let bin_bytes = compile_binary_pack(&entries).expect("Binary pack v3 compilation failed");
+    let bin_bytes = compile_binary_pack(&entries).expect("Binary pack v4 compilation failed");
     assert_eq!(&bin_bytes[0..4], MAGIC_BYTES);
-    assert_eq!(PACK_VERSION, 3);
+    assert_eq!(PACK_VERSION, 4);
 
     let mut engine = Engine::new();
     let loaded = engine

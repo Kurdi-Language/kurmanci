@@ -26,6 +26,18 @@ pub struct NextWordPrediction {
     pub probability_millionths: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum PredictionSource {
+    Trigram,
+    BigramBackoff,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ContextPredictionResult {
+    pub source: Option<PredictionSource>,
+    pub predictions: Vec<NextWordPrediction>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum UnknownContextPolicy {
     #[default]

@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
-    build_corpus_bigrams, build_corpus_frequencies, calculate_sha256, compile_binary_pack,
+    build_corpus_frequencies, build_corpus_ngrams, calculate_sha256, compile_binary_pack,
     evaluate_lexicon_impact, generate_and_save_report, import_corpus, import_hunspell_dic,
     join_frequencies_to_lexicon, merge_and_deduplicate, normalize_text, run_quality_audit,
     run_ranking_evaluation, validate_entry, write_artifacts, BuildReport, BuilderConfig,
@@ -376,53 +376,86 @@ fn main() {
             println!("  Acceptance Passed:   {}", summary.acceptance_passed);
         }
         Commands::BuildNgrams => {
-            println!("=== Kurmancî Bigram N-Gram Builder ===");
+            println!("=== Kurmancî N-Gram Builder (Bigrams & Trigrams) ===");
             let stats =
-                build_corpus_bigrams(".").unwrap_or_else(|e| panic!("N-gram build failed: {}", e));
-            println!("⚡ BIGRAM BUILD SUCCESSFUL!");
-            println!("  Total Sentences:     {}", stats.total_sentences);
-            println!("  Total Bigram Tokens: {}", stats.total_bigram_tokens);
-            println!("  Pruned Bigrams:      {}", stats.records.len());
-            println!("  Output File:         data/build/bigrams.jsonl");
-            println!("  Reports Dir:         data/reports/ngrams/");
+                build_corpus_ngrams(".").unwrap_or_else(|e| panic!("N-gram build failed: {}", e));
+            println!("⚡ N-GRAM BUILD SUCCESSFUL!");
+            println!(
+                "  Total Sentences:      {}",
+                stats.bigram_stats.total_sentences
+            );
+            println!(
+                "  Total Bigram Tokens:  {}",
+                stats.bigram_stats.total_bigram_tokens
+            );
+            println!(
+                "  Pruned Bigrams:       {}",
+                stats.bigram_stats.records.len()
+            );
+            println!(
+                "  Total Trigram Tokens: {}",
+                stats.trigram_stats.total_trigram_tokens
+            );
+            println!(
+                "  Pruned Trigrams:      {}",
+                stats.trigram_stats.records.len()
+            );
+            println!("  Bigrams Output:       data/build/bigrams.jsonl");
+            println!("  Trigrams Output:      data/build/trigrams.jsonl");
+            println!("  Reports Dirs:         data/reports/ngrams/, data/reports/trigrams/");
         }
         Commands::EvaluateNextWord => {
-            println!("=== Kurmancî Next-Word Prediction Evaluation ===");
+            println!("=== Kurmancî Context Prediction Evaluation ===");
             let summary = data_builder_lib::run_next_word_evaluation(".")
                 .unwrap_or_else(|e| panic!("Next-word evaluation failed: {}", e));
-            println!("⚡ NEXT-WORD EVALUATION COMPLETED!");
-            println!("  Overall Case Count:      {}", summary.overall_case_count);
-            println!("  Positive Case Count:     {}", summary.positive_case_count);
+            println!("⚡ CONTEXT PREDICTION EVALUATION COMPLETED!");
+            println!("  Overall Case Count:       {}", summary.overall_case_count);
             println!(
-                "  Positive Top-1 Accuracy: {:.2}%",
+                "  Positive Case Count:      {}",
+                summary.positive_case_count
+            );
+            println!("  Trigram Hits:             {}", summary.trigram_hit_count);
+            println!(
+                "  Bigram Backoffs:          {}",
+                summary.bigram_backoff_count
+            );
+            println!(
+                "  Unknown Contexts:         {}",
+                summary.unknown_context_count
+            );
+            println!(
+                "  Positive Top-1 Accuracy:  {:.2}%",
                 summary.positive_top_1_accuracy
             );
             println!(
-                "  Positive Top-3 Accuracy: {:.2}%",
+                "  Positive Top-3 Accuracy:  {:.2}%",
                 summary.positive_top_3_accuracy
             );
             println!(
-                "  Positive Top-5 Accuracy: {:.2}%",
+                "  Positive Top-5 Accuracy:  {:.2}%",
                 summary.positive_top_5_accuracy
             );
             println!(
-                "  Positive MRR:            {:.4}",
+                "  Positive MRR:             {:.4}",
                 summary.positive_mean_reciprocal_rank
             );
-            println!("  Overall Top-1 Accuracy:  {:.2}%", summary.top_1_accuracy);
             println!(
-                "  Overall MRR:             {:.4}",
-                summary.mean_reciprocal_rank
+                "  Baseline Bigram Top-3:    {:.2}%",
+                summary.baseline_bigram_top_3_accuracy
             );
             println!(
-                "  Pipeline Validated:      {}",
+                "  Source Selection Acc:     {:.2}%",
+                summary.source_selection_accuracy
+            );
+            println!(
+                "  Pipeline Validated:       {}",
                 summary.pipeline_validation_passed
             );
             println!(
-                "  Model Quality Passed:    {}",
+                "  Model Quality Passed:     {}",
                 summary.model_quality_passed
             );
-            println!("  Acceptance Passed:       {}", summary.acceptance_passed);
+            println!("  Acceptance Passed:        {}", summary.acceptance_passed);
         }
     }
 }

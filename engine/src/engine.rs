@@ -10,8 +10,10 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::convert::TryInto;
 
-pub const MAGIC_BYTES: &[u8; 4] = b"KRM1";
-pub const PACK_VERSION: u32 = 3;
+pub use crate::format::{
+    MAGIC_BYTES, MAX_BIGRAM_PREDICTIONS_PER_CONTEXT, MAX_TRIGRAM_PREDICTIONS_PER_CONTEXT,
+    PACK_VERSION, PROBABILITY_SCALE,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LexiconEntry {
@@ -27,6 +29,10 @@ pub struct LexiconEntry {
     pub frequency_metadata: FrequencyMetadata,
 }
 
+pub type TrigramContextKey = (usize, usize);
+pub type TrigramPredictionEntry = (usize, u64, u32);
+pub type TrigramIndex = HashMap<TrigramContextKey, Vec<TrigramPredictionEntry>>;
+
 #[derive(Default)]
 pub struct Engine {
     lexicon: Vec<LexiconEntry>,
@@ -35,6 +41,7 @@ pub struct Engine {
     #[allow(dead_code)]
     typo_map: HashMap<String, String>,
     bigram_index: HashMap<usize, Vec<(usize, u64, u32)>>,
+    trigram_index: TrigramIndex,
 }
 
 impl Engine {
@@ -68,7 +75,7 @@ impl Engine {
         self.typo_map = typos;
     }
 
-    /// Loads a compiled binary pack (.bin format v2) with strict header and SHA-256 checksum integrity verification.
+    /// Loads a compiled binary pack (.bin format v4) with strict header and SHA-256 checksum integrity verification.
     pub fn load_binary_pack(&mut self, bytes: &[u8]) -> Result<usize, String> {
         if bytes.len() < 12 {
             return Err("Binary pack file too short".to_string());
@@ -134,7 +141,7 @@ impl Engine {
             return Err("Binary pack corrupted: payload SHA-256 checksum mismatch".to_string());
         }
 
-        // 6. Decode Payload Entries into Staging Buffers (Version 2)
+        // 6. Decode Payload Entries into Staging Buffers
         let mut staged_lexicon = Vec::with_capacity(count as usize);
         let mut staged_trie = Trie::default();
         let mut staged_max_frequency = 0u64;
@@ -197,11 +204,8 @@ impl Engine {
                 sources.push(src);
             }
 
-            // Decode FrequencyMetadata (Version 2 layout: u64 token_count, u64 doc_count, u32 zipf_milli)
             if payload_cursor + 20 > payload_bytes.len() {
-                return Err(
-                    "Unexpected EOF reading frequency metadata in v2 binary pack".to_string(),
-                );
+                return Err("Unexpected EOF reading frequency metadata in binary pack".to_string());
             }
 
             let token_count = u64::from_le_bytes(
@@ -248,7 +252,7 @@ impl Engine {
             staged_lexicon.push(entry);
         }
 
-        // 7. Decode Bigram Section (Version 3 Extension - Lexicon Indices)
+        // 7. Decode Bigram Section (Section 2)
         if payload_cursor + 4 > payload_bytes.len() {
             return Err("Unexpected EOF reading bigram context count".to_string());
         }
@@ -306,10 +310,10 @@ impl Engine {
             if pred_count == 0 {
                 return Err(format!("Context index {} has zero predictions", ctx_idx));
             }
-            if pred_count > 16 {
+            if pred_count > MAX_BIGRAM_PREDICTIONS_PER_CONTEXT {
                 return Err(format!(
-                    "Context index {} has prediction count {} exceeding maximum 16",
-                    ctx_idx, pred_count
+                    "Context index {} has prediction count {} exceeding maximum {}",
+                    ctx_idx, pred_count, MAX_BIGRAM_PREDICTIONS_PER_CONTEXT
                 ));
             }
 
@@ -363,10 +367,10 @@ impl Engine {
                 );
                 payload_cursor += 4;
 
-                if prob > 1_000_000 {
+                if prob > PROBABILITY_SCALE {
                     return Err(format!(
-                        "Probability {} exceeds 1,000,000 for prediction index {} in context {}",
-                        prob, next_idx, ctx_idx
+                        "Probability {} exceeds {} for prediction index {} in context {}",
+                        prob, PROBABILITY_SCALE, next_idx, ctx_idx
                     ));
                 }
 
@@ -374,6 +378,152 @@ impl Engine {
             }
 
             staged_bigram_index.insert(ctx_idx, predictions);
+        }
+
+        // 8. Decode Trigram Section (Section 3)
+        if payload_cursor + 4 > payload_bytes.len() {
+            return Err("Unexpected EOF reading trigram context count".to_string());
+        }
+        let raw_trigram_context_count = u32::from_le_bytes(
+            payload_bytes[payload_cursor..payload_cursor + 4]
+                .try_into()
+                .unwrap(),
+        );
+        payload_cursor += 4;
+
+        let trigram_context_count = usize::try_from(raw_trigram_context_count)
+            .map_err(|_| "Invalid trigram context count representation".to_string())?;
+
+        let max_contexts = staged_lexicon
+            .len()
+            .checked_mul(staged_lexicon.len())
+            .ok_or_else(|| "Trigram context bound overflow".to_string())?;
+
+        if trigram_context_count > max_contexts {
+            return Err(format!(
+                "Trigram context count {} exceeds maximum possible pairs {}",
+                trigram_context_count, max_contexts
+            ));
+        }
+
+        let mut staged_trigram_index: TrigramIndex =
+            TrigramIndex::with_capacity(trigram_context_count);
+
+        for _ in 0..trigram_context_count {
+            if payload_cursor + 10 > payload_bytes.len() {
+                return Err("Unexpected EOF reading trigram context header".to_string());
+            }
+            let prev2_idx = u32::from_le_bytes(
+                payload_bytes[payload_cursor..payload_cursor + 4]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            payload_cursor += 4;
+
+            let prev1_idx = u32::from_le_bytes(
+                payload_bytes[payload_cursor..payload_cursor + 4]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            payload_cursor += 4;
+
+            if prev2_idx >= staged_lexicon.len() || prev1_idx >= staged_lexicon.len() {
+                return Err(format!(
+                    "Trigram context indices ({}, {}) out of lexicon bounds (count {})",
+                    prev2_idx,
+                    prev1_idx,
+                    staged_lexicon.len()
+                ));
+            }
+
+            if staged_trigram_index.contains_key(&(prev2_idx, prev1_idx)) {
+                return Err(format!(
+                    "Duplicate trigram context indices ({}, {}) in binary pack",
+                    prev2_idx, prev1_idx
+                ));
+            }
+
+            let pred_count = u16::from_le_bytes(
+                payload_bytes[payload_cursor..payload_cursor + 2]
+                    .try_into()
+                    .unwrap(),
+            ) as usize;
+            payload_cursor += 2;
+
+            if pred_count == 0 {
+                return Err(format!(
+                    "Trigram context indices ({}, {}) has zero predictions",
+                    prev2_idx, prev1_idx
+                ));
+            }
+            if pred_count > MAX_TRIGRAM_PREDICTIONS_PER_CONTEXT {
+                return Err(format!(
+                    "Trigram context indices ({}, {}) has prediction count {} exceeding maximum {}",
+                    prev2_idx, prev1_idx, pred_count, MAX_TRIGRAM_PREDICTIONS_PER_CONTEXT
+                ));
+            }
+
+            let mut predictions = Vec::with_capacity(pred_count);
+            let mut seen_next_indices = std::collections::HashSet::with_capacity(pred_count);
+
+            for _ in 0..pred_count {
+                if payload_cursor + 16 > payload_bytes.len() {
+                    return Err("Unexpected EOF reading trigram prediction entry".to_string());
+                }
+                let next_idx = u32::from_le_bytes(
+                    payload_bytes[payload_cursor..payload_cursor + 4]
+                        .try_into()
+                        .unwrap(),
+                ) as usize;
+                payload_cursor += 4;
+
+                if next_idx >= staged_lexicon.len() {
+                    return Err(format!(
+                        "Trigram next lexicon index {} out of lexicon bounds (count {})",
+                        next_idx,
+                        staged_lexicon.len()
+                    ));
+                }
+
+                if !seen_next_indices.insert(next_idx) {
+                    return Err(format!(
+                        "Duplicate next lexicon index {} in trigram context ({}, {})",
+                        next_idx, prev2_idx, prev1_idx
+                    ));
+                }
+
+                let count = u64::from_le_bytes(
+                    payload_bytes[payload_cursor..payload_cursor + 8]
+                        .try_into()
+                        .unwrap(),
+                );
+                payload_cursor += 8;
+
+                if count == 0 {
+                    return Err(format!(
+                        "Zero trigram count for prediction index {} in context ({}, {})",
+                        next_idx, prev2_idx, prev1_idx
+                    ));
+                }
+
+                let prob = u32::from_le_bytes(
+                    payload_bytes[payload_cursor..payload_cursor + 4]
+                        .try_into()
+                        .unwrap(),
+                );
+                payload_cursor += 4;
+
+                if prob > PROBABILITY_SCALE {
+                    return Err(format!(
+                        "Probability {} exceeds {} for trigram prediction index {} in context ({}, {})",
+                        prob, PROBABILITY_SCALE, next_idx, prev2_idx, prev1_idx
+                    ));
+                }
+
+                predictions.push((next_idx, count, prob));
+            }
+
+            staged_trigram_index.insert((prev2_idx, prev1_idx), predictions);
         }
 
         // Verify complete payload consumption
@@ -390,6 +540,7 @@ impl Engine {
         self.trie = staged_trie;
         self.max_frequency = staged_max_frequency;
         self.bigram_index = staged_bigram_index;
+        self.trigram_index = staged_trigram_index;
 
         Ok(loaded)
     }
@@ -419,7 +570,7 @@ impl Engine {
             return Vec::new();
         }
 
-        let ctx_idx = match self.lexicon.iter().position(|e| e.normalized == norm_prev) {
+        let ctx_idx = match self.find_lexicon_index(&norm_prev) {
             Some(idx) => idx,
             None => return Vec::new(),
         };
@@ -429,24 +580,88 @@ impl Engine {
             None => return Vec::new(),
         };
 
-        let mut results: Vec<NextWordPrediction> = preds
+        preds
             .iter()
-            .map(|(next_idx, count, prob)| NextWordPrediction {
-                word: self.lexicon[*next_idx].word.clone(),
-                count: *count,
-                probability_millionths: *prob,
+            .take(limit)
+            .map(|&(next_idx, count, prob)| NextWordPrediction {
+                word: self.lexicon[next_idx].word.clone(),
+                count,
+                probability_millionths: prob,
             })
-            .collect();
+            .collect()
+    }
 
-        results.sort_by(|a, b| {
-            b.probability_millionths
-                .cmp(&a.probability_millionths)
-                .then_with(|| b.count.cmp(&a.count))
-                .then_with(|| a.word.cmp(&b.word))
-        });
+    /// Predicts next word given two-word context (previous_2, previous_1) using deterministic hard backoff.
+    pub fn predict_next_with_context(
+        &self,
+        previous_2: &str,
+        previous_1: &str,
+        limit: usize,
+    ) -> crate::ranking::ContextPredictionResult {
+        if limit == 0 {
+            return crate::ranking::ContextPredictionResult {
+                source: None,
+                predictions: Vec::new(),
+            };
+        }
 
-        results.truncate(limit);
-        results
+        let norm_prev2 = normalize(previous_2);
+        let norm_prev1 = normalize(previous_1);
+
+        let p2_idx = self.find_lexicon_index(&norm_prev2);
+        let p1_idx = self.find_lexicon_index(&norm_prev1);
+
+        // Check trigram context existence first
+        if let (Some(idx2), Some(idx1)) = (p2_idx, p1_idx) {
+            if let Some(preds) = self.trigram_index.get(&(idx2, idx1)) {
+                let predictions = preds
+                    .iter()
+                    .take(limit)
+                    .map(|&(next_idx, count, prob)| NextWordPrediction {
+                        word: self.lexicon[next_idx].word.clone(),
+                        count,
+                        probability_millionths: prob,
+                    })
+                    .collect();
+
+                return crate::ranking::ContextPredictionResult {
+                    source: Some(crate::ranking::PredictionSource::Trigram),
+                    predictions,
+                };
+            }
+        }
+
+        // Fall back to bigram context for previous_1
+        if let Some(idx1) = p1_idx {
+            if let Some(preds) = self.bigram_index.get(&idx1) {
+                let predictions = preds
+                    .iter()
+                    .take(limit)
+                    .map(|&(next_idx, count, prob)| NextWordPrediction {
+                        word: self.lexicon[next_idx].word.clone(),
+                        count,
+                        probability_millionths: prob,
+                    })
+                    .collect();
+
+                return crate::ranking::ContextPredictionResult {
+                    source: Some(crate::ranking::PredictionSource::BigramBackoff),
+                    predictions,
+                };
+            }
+        }
+
+        crate::ranking::ContextPredictionResult {
+            source: None,
+            predictions: Vec::new(),
+        }
+    }
+
+    fn find_lexicon_index(&self, normalized: &str) -> Option<usize> {
+        if normalized.is_empty() {
+            return None;
+        }
+        self.lexicon.iter().position(|e| e.normalized == normalized)
     }
 
     /// Generates prefix completion candidates.

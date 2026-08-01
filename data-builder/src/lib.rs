@@ -19,10 +19,11 @@ pub use compile::{
 };
 pub use config::BuilderConfig;
 pub use corpus::{
-    build_corpus_bigrams, build_corpus_frequencies, import_corpus, join_frequencies_to_lexicon,
-    split_into_sentences, tokenize_text, BigramBuildStats, BigramRecord, CorpusImportSummaryReport,
-    CorpusRegistry, CorpusRegistryEntry, FrequencyBuildStats, FrequencyJoinSummaryReport,
-    FrequencyRecord, NgramSummaryReport,
+    build_corpus_bigrams, build_corpus_frequencies, build_corpus_ngrams, build_corpus_trigrams,
+    import_corpus, join_frequencies_to_lexicon, split_into_sentences, tokenize_text,
+    BigramBuildStats, BigramRecord, BigramSummaryReport, CorpusImportSummaryReport, CorpusRegistry,
+    CorpusRegistryEntry, FrequencyBuildStats, FrequencyJoinSummaryReport, FrequencyRecord,
+    NgramBuildStats, NgramConfig, TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
 };
 pub use eval::{evaluate_lexicon_impact, BenchmarkItem, EvaluationReport, LexiconMetrics};
 pub use eval_next_word::{run_next_word_evaluation, NextWordEvalSummaryReport};

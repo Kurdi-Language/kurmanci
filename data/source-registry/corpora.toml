@@ -15,4 +15,4 @@ notes = "Preserved line-delimited Kurmancî text corpus for building document an
 
 [[corpora.files]]
 path = "data/original/opensubtitles-kmr/corpus.txt"
-sha256 = "19c91373276a153f4477bb4ccf8fb171662b637d463372601b4800f19000bc54"
+sha256 = "a6cc3eed32feac79fb90c75e8daa42a15d46cd6460830d13b3112803af79b814"
