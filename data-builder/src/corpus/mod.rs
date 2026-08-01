@@ -12,7 +12,9 @@ pub use frequency::{build_corpus_frequencies, FrequencyBuildStats, FrequencyReco
 pub use importer::{import_corpus, CorpusImportSummaryReport};
 pub use join::{join_frequencies_to_lexicon, FrequencyJoinSummaryReport};
 pub use ngrams::{
-    build_corpus_bigrams, split_into_sentences, BigramBuildStats, BigramRecord, NgramSummaryReport,
+    build_corpus_bigrams, build_corpus_ngrams, build_corpus_trigrams, split_into_sentences,
+    BigramBuildStats, BigramRecord, BigramSummaryReport, NgramBuildStats, NgramConfig,
+    TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
 };
 pub use registry::{CorpusFile, CorpusRegistry, CorpusRegistryEntry};
 pub use tokenizer::tokenize_text;

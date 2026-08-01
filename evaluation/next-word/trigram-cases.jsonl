@@ -1,0 +1,7 @@
+{"context":["ez","ji"],"expected":["bo"],"forbidden":[],"category":"trigram-hit","expected_source":"trigram","notes":"Known in-lexicon trigram sequence from corpus"}
+{"context":["ji","bo"],"expected":["kurmancî"],"forbidden":[],"category":"trigram-preferred","expected_source":"trigram","notes":"Trigram preferred sequence when both trigram and bigram context exist"}
+{"context":["unknownword123","ji"],"expected":["bo"],"forbidden":[],"category":"bigram-backoff","expected_source":"bigram-backoff","notes":"Unknown prev2 word falls back to bigram for prev1"}
+{"context":["unknownword123","unknownword456"],"expected":[],"forbidden":[],"category":"unknown-context","expected_source":"none","notes":"Unknown context pair produces no predictions"}
+{"context":["ez","ji"],"expected":["bo"],"forbidden":["ku"],"category":"sentence-boundary","expected_source":"trigram","notes":"Sentence boundary context isolation test"}
+{"context":["hemûyan","rojbaş"],"expected":[],"forbidden":["heval"],"category":"document-boundary","expected_source":"none","notes":"Document boundary isolation test"}
+{"context":["ji","bo"],"expected":["kurmancî"],"forbidden":[],"category":"deterministic-tie","expected_source":"trigram","notes":"Deterministic tie breaker case"}

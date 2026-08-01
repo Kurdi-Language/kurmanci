@@ -37,29 +37,29 @@ fn test_sentence_segmentation_rules() {
     // Standard two-sentence split
     let s1 = split_into_sentences("Ez baş im. Tu çawa yî?");
     assert_eq!(s1.len(), 2);
-    assert_eq!(s1[0], vec!["ez", "baş", "im"]);
-    assert_eq!(s1[1], vec!["tu", "çawa", "yî"]);
+    assert_eq!(s1[0], "Ez baş im.");
+    assert_eq!(s1[1], "Tu çawa yî?");
 
     // Ellipsis collapsing
     let s2 = split_into_sentences("Ez baş im... Tu çawa yî?");
     assert_eq!(s2.len(), 2);
-    assert_eq!(s2[0], vec!["ez", "baş", "im"]);
-    assert_eq!(s2[1], vec!["tu", "çawa", "yî"]);
+    assert_eq!(s2[0], "Ez baş im...");
+    assert_eq!(s2[1], "Tu çawa yî?");
 
     // Leading punctuation
     let s3 = split_into_sentences("?! Ez baş im.");
     assert_eq!(s3.len(), 1);
-    assert_eq!(s3[0], vec!["ez", "baş", "im"]);
+    assert_eq!(s3[0], "Ez baş im.");
 
     // Trailing punctuation
     let s4 = split_into_sentences("Ez baş im!!!");
     assert_eq!(s4.len(), 1);
-    assert_eq!(s4[0], vec!["ez", "baş", "im"]);
+    assert_eq!(s4[0], "Ez baş im!!!");
 
     // Semicolon retention: Semicolon is NOT a sentence terminator
     let s5 = split_into_sentences("Ez baş im; tu çawa yî?");
     assert_eq!(s5.len(), 1);
-    assert_eq!(s5[0], vec!["ez", "baş", "im", "tu", "çawa", "yî"]);
+    assert_eq!(s5[0], "Ez baş im; tu çawa yî?");
 }
 
 #[test]
@@ -109,7 +109,7 @@ fn test_binary_pack_v3_lexicon_indices_and_engine_prediction() {
     // Header check
     assert_eq!(&pack_bytes[0..4], b"KRM1");
     let version = u32::from_le_bytes(pack_bytes[4..8].try_into().unwrap());
-    assert_eq!(version, 3);
+    assert_eq!(version, 4);
 
     let mut engine = Engine::new();
     let loaded = engine
@@ -220,7 +220,7 @@ fn test_dynamic_pruning_config_and_report_alignment() {
     let original_config = fs::read_to_string(&config_path).expect("Failed to read ngrams.toml");
 
     // Write custom pruning configuration with minimum_count = 3 and maximum_predictions_per_context = 8
-    let custom_config = r#"[pruning]
+    let custom_config = r#"[bigram]
 minimum_count = 3
 maximum_predictions_per_context = 8
 "#;

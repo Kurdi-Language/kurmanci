@@ -39,10 +39,11 @@ enum Commands {
         #[arg(long)]
         explain: bool,
     },
-    /// Predicts context-aware next word given previous word context
+    /// Predicts context-aware next word given previous word context (1 or 2 words)
     PredictNext {
-        /// Previous word context (e.g. 'ez')
-        context: String,
+        /// Previous word context(s), e.g. 'ez' or 'ez baş'
+        #[arg(required = true, num_args = 1..=2)]
+        words: Vec<String>,
 
         /// Maximum number of predictions to return
         #[arg(short, long, default_value_t = 5)]
@@ -143,12 +144,17 @@ fn main() {
             }
         }
         Commands::PredictNext {
-            context,
+            words,
             limit,
             pack,
             json,
             explain,
         } => {
+            if words.is_empty() || words.len() > 2 {
+                eprintln!("Error: predict-next requires exactly 1 or 2 positional context words");
+                std::process::exit(1);
+            }
+
             let mut engine = Engine::new();
 
             let bytes = fs::read(&pack).unwrap_or_else(|e| {
@@ -167,18 +173,36 @@ fn main() {
             }
 
             let start = Instant::now();
-            let predictions = engine.predict_next(&context, limit);
+            let context_label = words.join(" ");
+
+            let (predictions, source_name) = if words.len() == 2 {
+                let res = engine.predict_next_with_context(&words[0], &words[1], limit);
+                let src = match res.source {
+                    Some(kurmanci_engine::PredictionSource::Trigram) => "trigram",
+                    Some(kurmanci_engine::PredictionSource::BigramBackoff) => "bigram-backoff",
+                    None => "none",
+                };
+                (res.predictions, src.to_string())
+            } else {
+                let preds = engine.predict_next(&words[0], limit);
+                (preds, "bigram".to_string())
+            };
             let elapsed = start.elapsed();
 
             if json {
+                let output = serde_json::json!({
+                    "context": context_label,
+                    "model": source_name,
+                    "predictions": predictions,
+                });
                 println!(
                     "{}",
-                    serde_json::to_string_pretty(&predictions).unwrap_or_default()
+                    serde_json::to_string_pretty(&output).unwrap_or_default()
                 );
             } else if explain {
                 println!(
-                    "Predictions for '{}' (explained in {:.2?}):",
-                    context, elapsed
+                    "Predictions for '{}' [model: {}] (explained in {:.2?}):",
+                    context_label, source_name, elapsed
                 );
                 if predictions.is_empty() {
                     println!("  (no predictions found)");
@@ -196,8 +220,8 @@ fn main() {
                 }
             } else {
                 println!(
-                    "Predictions for '{}' (processed in {:.2?}):",
-                    context, elapsed
+                    "Predictions for '{}' [model: {}] (processed in {:.2?}):",
+                    context_label, source_name, elapsed
                 );
                 if predictions.is_empty() {
                     println!("  (no predictions found)");
