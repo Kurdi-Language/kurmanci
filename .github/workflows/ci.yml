@@ -80,6 +80,31 @@ jobs:
           diff /tmp/ci-check/review1/checksums.txt /tmp/ci-check/review2/checksums.txt
           echo "Review infrastructure 2-pass determinism verification passed."
 
+      - name: Build Controlled Packs (First Pass)
+        run: |
+          cargo run -p kurmanci-data-builder -- build-pack seed
+          cargo run -p kurmanci-data-builder -- build-pack reviewed
+          cargo run -p kurmanci-data-builder -- build-pack experimental-full
+
+      - name: Record Controlled Packs Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/packs1
+          find data/build/packs -type f -exec sha256sum {} + | sort > /tmp/ci-check/packs1/checksums.txt
+
+      - name: Build Controlled Packs (Second Pass - Determinism Verification)
+        run: |
+          cargo run -p kurmanci-data-builder -- build-pack seed
+          cargo run -p kurmanci-data-builder -- build-pack reviewed
+          cargo run -p kurmanci-data-builder -- build-pack experimental-full
+
+      - name: Verify Controlled Packs Determinism & Manifest Invariants
+        run: |
+          mkdir -p /tmp/ci-check/packs2
+          find data/build/packs -type f -exec sha256sum {} + | sort > /tmp/ci-check/packs2/checksums.txt
+          diff /tmp/ci-check/packs1/checksums.txt /tmp/ci-check/packs2/checksums.txt
+          cargo run -p kurmanci-data-builder -- validate-pack-manifest
+          echo "Controlled packs 2-pass determinism & manifest invariant verification passed."
+
       - name: Run 3C1 Pipeline (First Pass)
         run: |
           cargo run -p kurmanci-data-builder -- import-all-corpora
