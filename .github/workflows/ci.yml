@@ -58,6 +58,28 @@ jobs:
           diff /tmp/ci-check/audit1_hashes.txt /tmp/ci-check/audit2_hashes.txt
           echo "Quality audit report determinism verification passed."
 
+      - name: Run Review Infrastructure Pipeline (First Pass)
+        run: |
+          cargo run -p kurmanci-data-builder -- generate-review-queues kurdish-hunspell-kmr
+          cargo run -p kurmanci-data-builder -- validate-review-decisions kurdish-hunspell-kmr
+
+      - name: Record Review Infrastructure Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/review1
+          find data/review-queues/kurdish-hunspell-kmr data/reports/controlled-lexicon-review -type f -exec sha256sum {} + | sort > /tmp/ci-check/review1/checksums.txt
+
+      - name: Run Review Infrastructure Pipeline (Second Pass - Determinism Verification)
+        run: |
+          cargo run -p kurmanci-data-builder -- generate-review-queues kurdish-hunspell-kmr
+          cargo run -p kurmanci-data-builder -- validate-review-decisions kurdish-hunspell-kmr
+
+      - name: Verify Review Infrastructure Determinism
+        run: |
+          mkdir -p /tmp/ci-check/review2
+          find data/review-queues/kurdish-hunspell-kmr data/reports/controlled-lexicon-review -type f -exec sha256sum {} + | sort > /tmp/ci-check/review2/checksums.txt
+          diff /tmp/ci-check/review1/checksums.txt /tmp/ci-check/review2/checksums.txt
+          echo "Review infrastructure 2-pass determinism verification passed."
+
       - name: Run 3C1 Pipeline (First Pass)
         run: |
           cargo run -p kurmanci-data-builder -- import-all-corpora
