@@ -15,9 +15,18 @@ use crate::review::schema::{
 
 pub const CONTROLLED_REVIEW_REPORT_SCHEMA_VERSION: &str = "controlled-review-report-v1";
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReviewReportProvenance {
+    pub decisions_sha256: String,
+    pub queue_manifest_sha256: String,
+    pub source_revision: String,
+    pub imported_lexicon_sha256: String,
+}
+
 /// Summary report emitted when human review decisions are validated and joined.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReviewMergerSummary {
+    pub schema_version: String,
     pub source_id: String,
     pub total_decisions_count: usize,
     pub approved_count: usize,
@@ -27,6 +36,7 @@ pub struct ReviewMergerSummary {
     pub unresolved_count: usize,
     pub orphan_decisions_count: usize,
     pub decision_file_sha256: String,
+    pub provenance: ReviewReportProvenance,
 }
 
 fn remove_dir_or_file<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
@@ -38,6 +48,101 @@ fn remove_dir_or_file<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
     } else {
         Ok(())
     }
+}
+
+/// Verifies existing review queues, decisions, and report artifacts without regenerating reports.
+pub fn load_validated_review_snapshot<P: AsRef<Path>>(
+    source_id: &str,
+    root_dir: P,
+) -> Result<ReviewMergerSummary, String> {
+    let root = root_dir.as_ref();
+    let decisions_dir = root.join(format!("data/review-decisions/{}", source_id));
+    let decisions_file_path = decisions_dir.join("decisions.jsonl");
+
+    if !decisions_file_path.exists() {
+        return Err(format!(
+            "Review decisions file missing at {:?}. Initialize data/review-decisions/{}/decisions.jsonl first.",
+            decisions_file_path, source_id
+        ));
+    }
+
+    let queues_dir = root.join(format!("data/review-queues/{}", source_id));
+    if !queues_dir.exists() {
+        return Err(format!(
+            "Review queues directory missing at {:?}. Run generate-review-queues first.",
+            queues_dir
+        ));
+    }
+
+    // Verify queue manifest
+    let q_manifest = queues_dir.join("artifacts.sha256");
+    if !q_manifest.exists() {
+        return Err(format!("Queue manifest missing at {:?}", q_manifest));
+    }
+    let q_manifest_content = fs::read_to_string(&q_manifest).map_err(|e| e.to_string())?;
+    for line in q_manifest_content.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() != 2 {
+            return Err(format!("Malformed queue manifest line: {}", line));
+        }
+        let expected_hash = parts[0];
+        let rel_path = parts[1];
+        let actual_path = root.join(rel_path);
+        let actual_hash = format!(
+            "{:x}",
+            Sha256::digest(&fs::read(&actual_path).map_err(|e| e.to_string())?)
+        );
+        if actual_hash != expected_hash {
+            return Err(format!(
+                "Tampered queue file detected at {:?}: hash mismatch",
+                actual_path
+            ));
+        }
+    }
+
+    // Verify review report directory
+    let reports_dir = root.join("data/reports/controlled-lexicon-review");
+    let r_manifest = reports_dir.join("artifacts.sha256");
+    if !r_manifest.exists() {
+        return Err(format!(
+            "Controlled review report manifest missing at {:?}. Re-run validate-review-decisions.",
+            r_manifest
+        ));
+    }
+    let r_manifest_content = fs::read_to_string(&r_manifest).map_err(|e| e.to_string())?;
+    for line in r_manifest_content.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() != 2 {
+            return Err(format!("Malformed report manifest line: {}", line));
+        }
+        let expected_hash = parts[0];
+        let rel_path = parts[1];
+        let actual_path = root.join(rel_path);
+        let actual_hash = format!(
+            "{:x}",
+            Sha256::digest(&fs::read(&actual_path).map_err(|e| e.to_string())?)
+        );
+        if actual_hash != expected_hash {
+            return Err(format!(
+                "Tampered review report detected at {:?}: hash mismatch",
+                actual_path
+            ));
+        }
+    }
+
+    // Load summary
+    let summary_path = reports_dir.join("summary.json");
+    let summary_bytes = fs::read(&summary_path).map_err(|e| e.to_string())?;
+    let summary: ReviewMergerSummary =
+        serde_json::from_slice(&summary_bytes).map_err(|e| e.to_string())?;
+
+    Ok(summary)
 }
 
 /// Validates human review decisions in `data/review-decisions/<source-id>/decisions.jsonl`
@@ -414,7 +519,25 @@ pub fn validate_review_decisions<P: AsRef<Path>>(
         }
     }
 
+    let registry_path = root.join("data/source-registry/sources.toml");
+    let registry = crate::sources::SourceRegistry::load_from_file(&registry_path)?;
+    let src_entry = registry
+        .sources
+        .iter()
+        .find(|s| s.source_id == source_id)
+        .ok_or_else(|| format!("Source '{}' not found in sources.toml", source_id))?;
+    let source_revision = src_entry.version.clone();
+
+    let queue_manifest_path = queues_dir.join("artifacts.sha256");
+    let queue_manifest_bytes = fs::read(&queue_manifest_path).map_err(|e| e.to_string())?;
+    let queue_manifest_sha256 = format!("{:x}", Sha256::digest(&queue_manifest_bytes));
+
+    let imported_file_path = root.join(format!("data/imported/{}/lexicon.jsonl", source_id));
+    let imported_file_bytes = fs::read(&imported_file_path).map_err(|e| e.to_string())?;
+    let imported_lexicon_sha256 = format!("{:x}", Sha256::digest(&imported_file_bytes));
+
     let summary = ReviewMergerSummary {
+        schema_version: CONTROLLED_REVIEW_REPORT_SCHEMA_VERSION.to_string(),
         source_id: source_id.to_string(),
         total_decisions_count: approved_records.len()
             + metadata_change_records.len()
@@ -427,7 +550,13 @@ pub fn validate_review_decisions<P: AsRef<Path>>(
         experimental_only_count: experimental_records.len(),
         unresolved_count: unresolved_records.len(),
         orphan_decisions_count: orphan_records.len(),
-        decision_file_sha256,
+        decision_file_sha256: decision_file_sha256.clone(),
+        provenance: ReviewReportProvenance {
+            decisions_sha256: decision_file_sha256,
+            queue_manifest_sha256,
+            source_revision,
+            imported_lexicon_sha256,
+        },
     };
 
     let reports_dir = root.join("data/reports/controlled-lexicon-review");

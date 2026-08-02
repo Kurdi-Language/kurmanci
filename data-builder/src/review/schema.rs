@@ -41,6 +41,18 @@ pub struct ReplacementMetadata {
     pub part_of_speech: Option<String>,
 }
 
+/// Explicit resolution strategy for conflict-group decision records.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum GroupResolution {
+    SelectMember {
+        selected_entry_id: String,
+    },
+    ReplaceGroup {
+        replacement_metadata: ReplacementMetadata,
+    },
+}
+
 /// Human review decision record schema (`review-decision-v1`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReviewDecisionRecord {
@@ -59,6 +71,8 @@ pub struct ReviewDecisionRecord {
     pub evidence: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub replacement_metadata: Option<ReplacementMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group_resolution: Option<GroupResolution>,
 }
 
 /// Helper function to update a SHA-256 hasher with a u64 big-endian length-prefixed field.
@@ -222,6 +236,29 @@ pub fn validate_decision_record(record: &ReviewDecisionRecord) -> Result<(), Str
                 )
             })?;
             validate_review_date(date)?;
+        }
+    }
+
+    if record.target_type == ReviewTargetType::ConflictGroup {
+        if record.review_status == ReviewDecisionStatus::ApprovedWithMetadataChange {
+            return Err(
+                "Conflict group decisions must not use ApprovedWithMetadataChange; use Approved with GroupResolution::ReplaceGroup inside group_resolution instead"
+                    .to_string(),
+            );
+        }
+        if record.replacement_metadata.is_some() {
+            return Err(
+                "Conflict group decisions must not use top-level replacement_metadata; use GroupResolution::ReplaceGroup inside group_resolution instead"
+                    .to_string(),
+            );
+        }
+        if record.review_status == ReviewDecisionStatus::Approved
+            && record.group_resolution.is_none()
+        {
+            return Err(
+                "Conflict group approved decision must specify group_resolution (SelectMember or ReplaceGroup)"
+                    .to_string(),
+            );
         }
     }
 

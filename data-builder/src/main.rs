@@ -93,6 +93,13 @@ enum Commands {
         #[arg(index = 1, default_value = "kurdish-hunspell-kmr")]
         source_id: String,
     },
+    /// Builds a controlled language pack under data/build/packs/<pack_id>/
+    BuildPack {
+        #[arg(index = 1)]
+        pack_id: String,
+    },
+    /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
+    ValidatePackManifest,
 }
 
 fn main() {
@@ -498,6 +505,15 @@ fn main() {
         Commands::ValidateReviewDecisions { source_id } => {
             let _ = validate_review_decisions(&source_id, PathBuf::from("."))
                 .unwrap_or_else(|e| panic!("Decision validation failed: {}", e));
+        }
+        Commands::BuildPack { pack_id } => {
+            let _ = data_builder_lib::build_pack(&pack_id, PathBuf::from("."))
+                .unwrap_or_else(|e| panic!("Pack build failed: {}", e));
+        }
+        Commands::ValidatePackManifest => {
+            data_builder_lib::pack::manifest::validate_all_pack_manifests(PathBuf::from("."))
+                .unwrap_or_else(|e| panic!("Pack manifest validation failed: {}", e));
+            println!("⚡ PACK MANIFEST INVARIANTS VALIDATED SUCCESSFULLY!");
         }
     }
 }

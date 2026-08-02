@@ -12,10 +12,44 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CompilerModelConfig {
+    pub include_frequencies: bool,
+    pub include_bigrams: bool,
+    pub include_trigrams: bool,
+}
+
+impl CompilerModelConfig {
+    pub fn none() -> Self {
+        Self {
+            include_frequencies: false,
+            include_bigrams: false,
+            include_trigrams: false,
+        }
+    }
+
+    pub fn full() -> Self {
+        Self {
+            include_frequencies: true,
+            include_bigrams: true,
+            include_trigrams: true,
+        }
+    }
+}
+
 /// Compiles a set of validated lexicon entries and optional n-grams into a deterministic binary pack byte buffer.
 pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
     root_dir: P,
     entries: &[SourceLexiconEntry],
+) -> Result<Vec<u8>, String> {
+    compile_binary_pack_with_config(root_dir, entries, CompilerModelConfig::full())
+}
+
+/// Compiles a set of validated lexicon entries and n-grams using an explicit CompilerModelConfig.
+pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
+    root_dir: P,
+    entries: &[SourceLexiconEntry],
+    config: CompilerModelConfig,
 ) -> Result<Vec<u8>, String> {
     let root = root_dir.as_ref();
     let mut payload = Vec::new();
@@ -34,7 +68,22 @@ pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
             .map_err(|e| format!("Entry {}: 'normalized' field error: {}", i + 1, e))?;
         write_string(&mut payload, &entry.part_of_speech)
             .map_err(|e| format!("Entry {}: 'part_of_speech' field error: {}", i + 1, e))?;
-        payload.extend_from_slice(&entry.frequency.to_le_bytes());
+        // Encode FrequencyMetadata
+        let freq_meta = if config.include_frequencies {
+            entry
+                .frequency_metadata
+                .as_ref()
+                .cloned()
+                .unwrap_or_default()
+        } else {
+            Default::default()
+        };
+        let freq_val = if config.include_frequencies {
+            entry.frequency
+        } else {
+            0
+        };
+        payload.extend_from_slice(&freq_val.to_le_bytes());
         write_string(&mut payload, &entry.status)
             .map_err(|e| format!("Entry {}: 'status' field error: {}", i + 1, e))?;
 
@@ -72,12 +121,6 @@ pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
                 .map_err(|e| format!("Entry {}: 'source' field error: {}", i + 1, e))?;
         }
 
-        // Encode FrequencyMetadata
-        let freq_meta = entry
-            .frequency_metadata
-            .as_ref()
-            .cloned()
-            .unwrap_or_default();
         payload.extend_from_slice(&freq_meta.token_count.to_le_bytes());
         payload.extend_from_slice(&freq_meta.document_count.to_le_bytes());
         payload.extend_from_slice(&freq_meta.zipf_milli.to_le_bytes());
@@ -88,7 +131,7 @@ pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
     let mut bigram_groups: BTreeMap<u32, Vec<(u32, u64, u32, String)>> = BTreeMap::new();
     let mut seen_bigram_triples: BTreeSet<(String, String)> = BTreeSet::new();
 
-    if bigrams_path.exists() {
+    if config.include_bigrams && bigrams_path.exists() {
         let file = File::open(&bigrams_path)
             .map_err(|e| format!("Failed to open {:?}: {}", bigrams_path, e))?;
         let reader = BufReader::new(file);
@@ -200,7 +243,7 @@ pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
     let mut trigram_groups: TrigramGroupMap = BTreeMap::new();
     let mut seen_trigram_triples: BTreeSet<(String, String, String)> = BTreeSet::new();
 
-    if trigrams_path.exists() {
+    if config.include_trigrams && trigrams_path.exists() {
         let file = File::open(&trigrams_path)
             .map_err(|e| format!("Failed to open {:?}: {}", trigrams_path, e))?;
         let reader = BufReader::new(file);
@@ -357,6 +400,23 @@ fn write_string(buf: &mut Vec<u8>, s: &str) -> Result<(), String> {
 /// Convenience wrapper compiling binary pack for current workspace.
 pub fn compile_binary_pack(entries: &[SourceLexiconEntry]) -> Result<Vec<u8>, String> {
     compile_binary_pack_with_root(".", entries)
+}
+
+/// Compiles entries to lexicon.bin in target directory using an explicit CompilerModelConfig.
+pub fn compile_entries_to_directory<P1: AsRef<Path>, P2: AsRef<Path>>(
+    root_dir: P1,
+    entries: &[SourceLexiconEntry],
+    target_dir: P2,
+    config: CompilerModelConfig,
+) -> Result<std::path::PathBuf, String> {
+    let bytes = compile_binary_pack_with_config(root_dir, entries, config)?;
+    let target = target_dir.as_ref();
+    std::fs::create_dir_all(target)
+        .map_err(|e| format!("Failed to create target dir {:?}: {}", target, e))?;
+    let binary_path = target.join("lexicon.bin");
+    std::fs::write(&binary_path, &bytes)
+        .map_err(|e| format!("Failed to write binary pack to {:?}: {}", binary_path, e))?;
+    Ok(binary_path)
 }
 
 /// Calculates SHA-256 hex string for given bytes.

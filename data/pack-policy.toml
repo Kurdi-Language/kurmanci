@@ -1,0 +1,20 @@
+schema_version = "pack-policy-v1"
+default_pack = "seed"
+
+[packs.seed]
+description = "Manually reviewed seed lexicon only"
+opt_in = false
+allow_as_default = true
+model_profile = "none"
+
+[packs.reviewed]
+description = "Manual seed plus explicitly approved external entries"
+opt_in = false
+allow_as_default = true
+model_profile = "none"
+
+[packs.experimental-full]
+description = "Manual seed plus mechanically valid imported entries"
+opt_in = true
+allow_as_default = false
+model_profile = "none"

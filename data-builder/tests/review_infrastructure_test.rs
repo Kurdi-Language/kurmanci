@@ -149,6 +149,7 @@ fn test_review_decision_schema_validation() {
         review_notes: None,
         evidence: vec![],
         replacement_metadata: None,
+        group_resolution: None,
     };
     assert!(validate_decision_record(&valid_approved).is_ok());
 
@@ -163,6 +164,7 @@ fn test_review_decision_schema_validation() {
         review_notes: None,
         evidence: vec![],
         replacement_metadata: None,
+        group_resolution: None,
     };
     assert!(validate_decision_record(&invalid_unreviewed).is_err());
 }
