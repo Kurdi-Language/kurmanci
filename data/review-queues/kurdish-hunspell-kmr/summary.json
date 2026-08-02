@@ -1,0 +1,17 @@
+{
+  "source_id": "kurdish-hunspell-kmr",
+  "source_revision": "88131d6878ef7fa3ee114aa554adc385ff85b44c",
+  "total_imported_records": 41498,
+  "parser_rejections_count": 2,
+  "metadata_conflict_groups_count": 2196,
+  "suspicious_entries_count": 76,
+  "unusual_scripts_count": 0,
+  "mixed_scripts_count": 0,
+  "non_letter_tokens_count": 63,
+  "rare_code_points_count": 82,
+  "unexpected_code_points_count": 0,
+  "short_and_long_forms_count": 73,
+  "capitalization_anomalies_count": 5,
+  "multiword_entries_count": 0,
+  "hunspell_only_entries_count": 41498
+}

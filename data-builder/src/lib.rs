@@ -9,6 +9,7 @@ pub mod importers;
 pub mod merge;
 pub mod normalize;
 pub mod report;
+pub mod review;
 pub mod sources;
 pub mod validate;
 
@@ -38,5 +39,10 @@ pub use importers::{
 pub use merge::merge_and_deduplicate;
 pub use normalize::normalize_text;
 pub use report::{generate_and_save_report, BuildReport};
+pub use review::{
+    compute_conflict_group_id, compute_entry_id, generate_review_queues, validate_review_decisions,
+    ReviewDecisionRecord, ReviewDecisionStatus, ReviewMergerSummary, ReviewQueueSummary,
+    ReviewTargetType, REVIEW_DECISION_SCHEMA_VERSION,
+};
 pub use sources::{SourceRegistry, SourceRegistryEntry};
 pub use validate::{validate_entry, FrequencyMetadata, SourceLexiconEntry};

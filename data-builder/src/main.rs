@@ -2,10 +2,11 @@ use clap::{Parser, Subcommand};
 use data_builder_lib::{
     audit_corpora, build_corpus_frequencies, build_corpus_ngrams, calculate_sha256,
     compile_binary_pack, evaluate_lexicon_impact, generate_and_save_report,
-    generate_corpus_inventory, import_all_corpora, import_corpus, import_hunspell_dic,
-    join_frequencies_to_lexicon, merge_and_deduplicate, normalize_text, partition_corpora,
-    run_quality_audit, run_ranking_evaluation, validate_entry, write_artifacts, BuildReport,
-    BuilderConfig, ReleaseManifest, SourceLexiconEntry, SourceRegistry,
+    generate_corpus_inventory, generate_review_queues, import_all_corpora, import_corpus,
+    import_hunspell_dic, join_frequencies_to_lexicon, merge_and_deduplicate, normalize_text,
+    partition_corpora, run_quality_audit, run_ranking_evaluation, validate_entry,
+    validate_review_decisions, write_artifacts, BuildReport, BuilderConfig, ReleaseManifest,
+    SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -82,6 +83,16 @@ enum Commands {
     EvaluateRanking,
     /// Evaluates context-aware next-word prediction accuracy
     EvaluateNextWord,
+    /// Generates mechanical review queues for a source ID under data/review-queues/
+    GenerateReviewQueues {
+        #[arg(index = 1, default_value = "kurdish-hunspell-kmr")]
+        source_id: String,
+    },
+    /// Validates human review decisions and generates merged audit reports under data/reports/controlled-lexicon-review/
+    ValidateReviewDecisions {
+        #[arg(index = 1, default_value = "kurdish-hunspell-kmr")]
+        source_id: String,
+    },
 }
 
 fn main() {
@@ -479,6 +490,14 @@ fn main() {
                 summary.model_quality_passed
             );
             println!("  Acceptance Passed:        {}", summary.acceptance_passed);
+        }
+        Commands::GenerateReviewQueues { source_id } => {
+            let _ = generate_review_queues(&source_id, PathBuf::from("."))
+                .unwrap_or_else(|e| panic!("Queue generation failed: {}", e));
+        }
+        Commands::ValidateReviewDecisions { source_id } => {
+            let _ = validate_review_decisions(&source_id, PathBuf::from("."))
+                .unwrap_or_else(|e| panic!("Decision validation failed: {}", e));
         }
     }
 }
