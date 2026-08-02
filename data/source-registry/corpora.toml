@@ -12,6 +12,7 @@ version = "1.0.0"
 description = "OpenSubtitles Kurmanji dialogue text corpus for frequency modeling."
 attribution = "OpenSubtitles project contributors and Kurdi-Language maintainers"
 notes = "Preserved line-delimited Kurmancî text corpus for building document and token frequency tables."
+document_format = "one-document-per-line"
 
 [[corpora.files]]
 path = "data/original/opensubtitles-kmr/corpus.txt"

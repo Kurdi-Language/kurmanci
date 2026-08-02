@@ -1,6 +1,6 @@
 # Kurmancî Language Platform
 
-Early-stage offline Kurmancî (`ku-Latn`) language engine and deterministic lexicon compiler written in Rust. Current capabilities include prefix completion, ranked correction candidates, compiled binary language-pack loading, and a CLI demonstration. Prediction models, mobile SDKs, and custom keyboards are planned.
+Early-stage offline Kurmancî (`ku-Latn`) language engine and deterministic lexicon compiler written in Rust. Current capabilities include prefix completion, ranked correction candidates, bigram and trigram context prediction models, compiled binary language-pack loading, and a CLI demonstration. Mobile SDKs and custom keyboards are planned.
 
 Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://github.com/Kurdi-Language/kurmanci)
 
@@ -10,13 +10,13 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 
 ### Current Capabilities
 - [x] **Rust Core Engine** (`kurmanci-engine`): Fast Trie prefix autocomplete, weighted Damerau-Levenshtein distance, and diacritic-sensitive candidate ranking (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
-- [x] **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`) with embedded SHA-256 payload validation and a deterministic release manifest.
-- [x] **CLI Demonstration** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration for completions and corrections.
+- [x] **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`, pack format v4) with embedded SHA-256 payload validation and a deterministic release manifest.
+- [x] **CLI Demonstration** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration and `predict-next` context prediction.
 - [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
-- [x] **Deterministic Hunspell Importer** (`kurmanci-data-builder import-hunspell`): Parses preserved `.dic` files into provenanced lexicon JSONLs and reports (`.aff` affix expansion remains planned).
+- [x] **Deterministic Corpus & N-Gram Pipeline**: Implements bigram and trigram extraction, fixed-point integer probabilities, configurable pruning, pack format v4 encoding, and strict trigram-to-bigram backoff prediction.
+- [x] **Corpus Infrastructure & Partitioning** *(Milestone 3C1 - Active)*: Format-sensitive registry validation, canonical JSONL document ingestion, atomic staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning.
 
 ### Planned Features
-- [ ] **N-Grams & Next-Word Prediction** *(Planned)*: Probabilistic context-aware prediction models.
 - [ ] **Mobile SDKs & Keyboards** *(Planned)*: Swift SDK (iOS), Kotlin SDK (Android), and custom keyboard extensions.
 - [ ] **WebAssembly Bindings** *(Planned)*: Browser and WebAssembly client library target.
 

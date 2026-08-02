@@ -1,10 +1,11 @@
 use clap::{Parser, Subcommand};
 use data_builder_lib::{
-    build_corpus_frequencies, build_corpus_ngrams, calculate_sha256, compile_binary_pack,
-    evaluate_lexicon_impact, generate_and_save_report, import_corpus, import_hunspell_dic,
-    join_frequencies_to_lexicon, merge_and_deduplicate, normalize_text, run_quality_audit,
-    run_ranking_evaluation, validate_entry, write_artifacts, BuildReport, BuilderConfig,
-    ReleaseManifest, SourceLexiconEntry, SourceRegistry,
+    audit_corpora, build_corpus_frequencies, build_corpus_ngrams, calculate_sha256,
+    compile_binary_pack, evaluate_lexicon_impact, generate_and_save_report,
+    generate_corpus_inventory, import_all_corpora, import_corpus, import_hunspell_dic,
+    join_frequencies_to_lexicon, merge_and_deduplicate, normalize_text, partition_corpora,
+    run_quality_audit, run_ranking_evaluation, validate_entry, write_artifacts, BuildReport,
+    BuilderConfig, ReleaseManifest, SourceLexiconEntry, SourceRegistry,
 };
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -65,6 +66,14 @@ enum Commands {
         #[arg(index = 1)]
         corpus_id: String,
     },
+    /// Atomically imports all registered text corpora into canonical JSONL format
+    ImportAllCorpora,
+    /// Generates corpus inventory statistics report across all canonical corpora
+    InventoryCorpora,
+    /// Audits canonical corpora for script/language validity and file/document/sentence duplicates
+    AuditCorpora,
+    /// Partitions canonical corpora into leakage-free train, development, and evaluation splits
+    PartitionCorpora,
     /// Builds word and document frequencies across all imported text corpora
     BuildFrequencies,
     /// Builds deterministic bigram statistics across all imported text corpora
@@ -339,6 +348,20 @@ fn main() {
             println!("  Corpus Name: {}", summary.corpus_name);
             println!("  Files Count: {}", summary.imported_files_count);
             println!("  Total Bytes: {} B", summary.total_bytes);
+        }
+        Commands::ImportAllCorpora => {
+            import_all_corpora(".")
+                .unwrap_or_else(|e| panic!("Atomic import of all corpora failed: {}", e));
+        }
+        Commands::InventoryCorpora => {
+            generate_corpus_inventory(".")
+                .unwrap_or_else(|e| panic!("Inventory corpora failed: {}", e));
+        }
+        Commands::AuditCorpora => {
+            audit_corpora(".").unwrap_or_else(|e| panic!("Corpus audit failed: {}", e));
+        }
+        Commands::PartitionCorpora => {
+            partition_corpora(".").unwrap_or_else(|e| panic!("Corpus partitioning failed: {}", e));
         }
         Commands::BuildFrequencies => {
             println!("=== Kurmancî Corpus Frequency Builder ===");
