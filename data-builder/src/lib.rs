@@ -19,11 +19,14 @@ pub use compile::{
 };
 pub use config::BuilderConfig;
 pub use corpus::{
-    build_corpus_bigrams, build_corpus_frequencies, build_corpus_ngrams, build_corpus_trigrams,
-    import_corpus, join_frequencies_to_lexicon, split_into_sentences, tokenize_text,
-    BigramBuildStats, BigramRecord, BigramSummaryReport, CorpusImportSummaryReport, CorpusRegistry,
-    CorpusRegistryEntry, FrequencyBuildStats, FrequencyJoinSummaryReport, FrequencyRecord,
-    NgramBuildStats, NgramConfig, TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
+    audit_corpora, build_corpus_bigrams, build_corpus_frequencies, build_corpus_ngrams,
+    build_corpus_trigrams, generate_corpus_inventory, import_all_corpora, import_corpus,
+    join_frequencies_to_lexicon, partition_corpora, split_into_sentences, tokenize_text,
+    validate_registry_relative_path, BigramBuildStats, BigramRecord, BigramSummaryReport,
+    CanonicalDocumentRecord, CorpusAuditSummary, CorpusImportSummaryReport, CorpusInventorySummary,
+    CorpusRegistry, CorpusRegistryEntry, FrequencyBuildStats, FrequencyJoinSummaryReport,
+    FrequencyRecord, NgramBuildStats, NgramConfig, PartitionSummary, TrigramBuildStats,
+    TrigramRecord, TrigramSummaryReport,
 };
 pub use eval::{evaluate_lexicon_impact, BenchmarkItem, EvaluationReport, LexiconMetrics};
 pub use eval_next_word::{run_next_word_evaluation, NextWordEvalSummaryReport};

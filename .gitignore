@@ -2,8 +2,10 @@
 /target/
 **/target/
 
-# Generated language packs
+# Generated language packs & imported datasets
 /data/build/
+/data/imported/
+/data/imported-canonical/
 
 # Generated reports
 /data/reports/
