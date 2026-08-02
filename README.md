@@ -15,9 +15,11 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
 - [x] **Deterministic Corpus & N-Gram Pipeline**: Implements bigram and trigram extraction, fixed-point integer probabilities, configurable pruning, pack format v4 encoding, and strict trigram-to-bigram backoff prediction.
 - [x] **Corpus Infrastructure & Partitioning** *(Milestone 3C1)*: Format-sensitive registry validation, canonical JSONL document ingestion, atomic staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning.
-- [x] **Controlled Review Infrastructure** *(Milestone 4A.1 - Active)*: Length-prefixed SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
+- [x] **Controlled Review Infrastructure** *(Milestone 4A.1)*: Length-prefixed SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
+- [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: `pack-policy.toml` configuration, `seed`, `reviewed`, and `experimental-full` multi-pack builds, model-profile separation, pack manifests, and licensing attribution.
 
 ### Planned Features
+- [ ] **Human-Reviewed Evaluation & Comparison** *(Milestone 4B - Active)*: Human-reviewed benchmark dataset (`draft-cases.jsonl` vs `reviewed-cases.jsonl`) and three-pack comparison engine.
 - [ ] **Mobile SDKs & Keyboards** *(Planned)*: Swift SDK (iOS), Kotlin SDK (Android), and custom keyboard extensions.
 - [ ] **WebAssembly Bindings** *(Planned)*: Browser and WebAssembly client library target.
 
@@ -75,11 +77,13 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 ### Compiling Language Packs (`data-builder`)
 
 ```bash
-# Execute deterministic language data compiler
-cargo run -p kurmanci-data-builder -- build
+# Build controlled language packs (Milestone 4A.2)
+cargo run -p kurmanci-data-builder -- build-pack seed
+cargo run -p kurmanci-data-builder -- build-pack reviewed
+cargo run -p kurmanci-data-builder -- build-pack experimental-full
 
-# Output binary pack: data/build/lexicon.bin
-# Output manifest:    data/build/manifest.json
+# Validate pack manifests and invariants
+cargo run -p kurmanci-data-builder -- validate-pack-manifest
 ```
 
 ### Command-Line Querying (`cli`)
