@@ -102,6 +102,17 @@ enum Commands {
     ValidatePackManifest,
     /// Validates evaluation benchmark cases and generates provenance overlap analysis
     ValidateEvalCases,
+    /// Validates a base-to-candidate benchmark review transition from explicit snapshots
+    ValidateEvalTransition {
+        #[arg(long)]
+        base_draft: PathBuf,
+        #[arg(long)]
+        base_reviewed: PathBuf,
+        #[arg(long)]
+        candidate_draft: PathBuf,
+        #[arg(long)]
+        candidate_reviewed: PathBuf,
+    },
     /// Evaluates seed, reviewed, and experimental-full packs against reviewed cases
     EvaluatePacks,
 }
@@ -549,6 +560,39 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error validating benchmark cases: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::ValidateEvalTransition {
+            base_draft,
+            base_reviewed,
+            candidate_draft,
+            candidate_reviewed,
+        } => {
+            println!("=== Kurmancî Benchmark Snapshot Transition Validator ===");
+            match data_builder_lib::evaluation::transition::validate_evaluation_transition(
+                &base_draft,
+                &base_reviewed,
+                &candidate_draft,
+                &candidate_reviewed,
+            ) {
+                Ok(summary) => {
+                    println!("⚡ BENCHMARK TRANSITION VALIDATED SUCCESSFULLY!");
+                    println!("  Base Draft Cases:        {}", summary.base_draft_cases);
+                    println!("  Base Reviewed Cases:     {}", summary.base_reviewed_cases);
+                    println!(
+                        "  Candidate Draft Cases:   {}",
+                        summary.candidate_draft_cases
+                    );
+                    println!(
+                        "  Candidate Reviewed:      {}",
+                        summary.candidate_reviewed_cases
+                    );
+                    println!("  Promoted Cases:          {}", summary.promoted_cases);
+                }
+                Err(error) => {
+                    eprintln!("Error validating benchmark transition: {}", error);
                     std::process::exit(1);
                 }
             }
