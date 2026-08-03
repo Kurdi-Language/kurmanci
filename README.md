@@ -18,8 +18,8 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
 - [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
 - [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
-- [ ] **Benchmark Review Governance** *(Milestone 4B.3A - Active)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone adds no benchmark cases.
-- [ ] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Planned)*: A separate data-review milestone for a small authoritative dataset reviewed by real Kurmancî speakers.
+- [x] **Benchmark Review Governance** *(Milestone 4B.3A - Completed)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone added no benchmark cases.
+- [ ] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Active)*: The first explicitly AI-assisted, non-authoritative draft proposal batch is awaiting genuine human linguistic review before any metadata-only promotion.
 
 ### Experimental Capabilities
 > [!NOTE]
