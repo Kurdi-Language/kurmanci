@@ -33,15 +33,24 @@ data/
 
 ---
 
-## 🛠️ How to Run the Data Builder
+## 🛠️ How to Build Controlled Packs
 
 ```bash
-# Compile reviewed lexicon sources into production binary pack
-cargo run -p kurmanci-data-builder -- build
+# Build controlled language packs
+cargo run -p kurmanci-data-builder -- build-pack seed
+cargo run -p kurmanci-data-builder -- build-pack reviewed
+cargo run -p kurmanci-data-builder -- build-pack experimental-full
 
-# Output binary pack: data/build/lexicon.bin
-# Output manifest:    data/build/manifest.json
+# Validate pack manifests and invariants
+cargo run -p kurmanci-data-builder -- validate-pack-manifest
+
+# Output binary packs: data/build/packs/<pack_id>/lexicon.bin
+# Output manifests:    data/build/packs/<pack_id>/manifest.json
 ```
+
+> [!NOTE]
+> **Language Model Status**: Engineering implemented; linguistic validation pending.
+> All production controlled packs currently enforce `model_profile = "none"` to evaluate lexical quality in isolation.
 
 ---
 

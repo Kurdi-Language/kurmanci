@@ -13,13 +13,19 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`, pack format v4) with embedded SHA-256 payload validation and a deterministic release manifest.
 - [x] **CLI Demonstration** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration and `predict-next` context prediction.
 - [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
-- [x] **Deterministic Corpus & N-Gram Pipeline**: Implements bigram and trigram extraction, fixed-point integer probabilities, configurable pruning, pack format v4 encoding, and strict trigram-to-bigram backoff prediction.
 - [x] **Corpus Infrastructure & Partitioning** *(Milestone 3C1)*: Format-sensitive registry validation, canonical JSONL document ingestion, atomic staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning.
-- [x] **Controlled Review Infrastructure** *(Milestone 4A.1)*: Length-prefixed SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
-- [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: `pack-policy.toml` configuration, `seed`, `reviewed`, and `experimental-full` multi-pack builds, model-profile separation, pack manifests, and licensing attribution.
+- [x] **Controlled Review Infrastructure** *(Milestone 4A.1)*: Length-prefixed u64 SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
+- [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
+- [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
+- [ ] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Active)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
+- [ ] **Human-Reviewed Dataset** *(Milestone 4B.3 - Planned)*: Authoritative human-reviewed Kurmancî evaluation cases across 16 categories, validated by native linguists.
+
+### Experimental Capabilities
+> [!NOTE]
+> **Statistical & Language Models Status**: Engineering implemented; linguistic validation pending.
+> Frequency tables, bigrams, and trigrams are experimental. They are disabled in current production packs (`model_profile = "none"`).
 
 ### Planned Features
-- [ ] **Human-Reviewed Evaluation & Comparison** *(Milestone 4B - Active)*: Human-reviewed benchmark dataset (`draft-cases.jsonl` vs `reviewed-cases.jsonl`) and three-pack comparison engine.
 - [ ] **Mobile SDKs & Keyboards** *(Planned)*: Swift SDK (iOS), Kotlin SDK (Android), and custom keyboard extensions.
 - [ ] **WebAssembly Bindings** *(Planned)*: Browser and WebAssembly client library target.
 
