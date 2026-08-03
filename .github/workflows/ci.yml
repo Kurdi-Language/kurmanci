@@ -24,20 +24,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Protect Benchmark Data During Milestone 4B.3A
-        if: github.event_name == 'pull_request'
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          git diff --exit-code "$BASE_SHA" HEAD -- \
-            evaluation/spelling/draft-cases.jsonl \
-            evaluation/spelling/reviewed-cases.jsonl
-
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.85.0'
           components: rustfmt, clippy
+
+      - name: Validate benchmark transition
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          BASE_DIR="$RUNNER_TEMP/evaluation-base"
+
+          mkdir -p "$BASE_DIR"
+
+          git show "$BASE_SHA:evaluation/spelling/draft-cases.jsonl" \
+            > "$BASE_DIR/draft-cases.jsonl"
+
+          git show "$BASE_SHA:evaluation/spelling/reviewed-cases.jsonl" \
+            > "$BASE_DIR/reviewed-cases.jsonl"
+
+          cargo run -p kurmanci-data-builder -- validate-eval-transition \
+            --base-draft "$BASE_DIR/draft-cases.jsonl" \
+            --base-reviewed "$BASE_DIR/reviewed-cases.jsonl" \
+            --candidate-draft evaluation/spelling/draft-cases.jsonl \
+            --candidate-reviewed evaluation/spelling/reviewed-cases.jsonl
 
       - name: Cargo Formatting Check
         run: cargo fmt --all --check
