@@ -20,7 +20,18 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Protect Benchmark Data During Milestone 4B.3A
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git diff --exit-code "$BASE_SHA" HEAD -- \
+            evaluation/spelling/draft-cases.jsonl \
+            evaluation/spelling/reviewed-cases.jsonl
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -103,8 +114,6 @@ jobs:
           find data/build/packs -type f -exec sha256sum {} + | sort > /tmp/ci-check/packs2/checksums.txt
           diff /tmp/ci-check/packs1/checksums.txt /tmp/ci-check/packs2/checksums.txt
           cargo run -p kurmanci-data-builder -- validate-pack-manifest
-          test ! -s evaluation/spelling/reviewed-cases.jsonl || (echo "reviewed-cases.jsonl must remain empty until human review" && exit 1)
-          test ! -s evaluation/spelling/draft-cases.jsonl || (echo "draft-cases.jsonl must remain empty" && exit 1)
           cargo run -p kurmanci-data-builder -- validate-eval-cases
           test -f data/reports/evaluation-provenance/artifacts.sha256
           echo "Controlled packs & evaluation case validator verification passed."
@@ -279,4 +288,3 @@ jobs:
           cargo run -p kurmanci-cli -- suggest rojb
           cargo run -p kurmanci-cli -- predict-next ez --explain
           cargo run -p kurmanci-cli -- predict-next ez ji --explain
-

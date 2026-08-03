@@ -45,11 +45,18 @@ pub fn validate_benchmark_case_set<P: AsRef<Path>>(
     let root = root_dir.as_ref();
     let draft_path = root.join("evaluation/spelling/draft-cases.jsonl");
     let reviewed_path = root.join("evaluation/spelling/reviewed-cases.jsonl");
+    validate_benchmark_case_files(&draft_path, &reviewed_path)
+}
 
+/// Validates an explicitly provided draft/reviewed benchmark snapshot.
+pub fn validate_benchmark_case_files(
+    draft_path: &Path,
+    reviewed_path: &Path,
+) -> Result<BenchmarkValidationResult, String> {
     let mut all_records = Vec::new();
 
     if draft_path.exists() {
-        let draft_records = load_benchmark_cases(&draft_path)?;
+        let draft_records = load_benchmark_cases(draft_path)?;
         for rec in draft_records {
             if rec.review_status != BenchmarkReviewStatus::Draft {
                 return Err(format!(
@@ -62,7 +69,7 @@ pub fn validate_benchmark_case_set<P: AsRef<Path>>(
     }
 
     if reviewed_path.exists() {
-        let reviewed_records = load_benchmark_cases(&reviewed_path)?;
+        let reviewed_records = load_benchmark_cases(reviewed_path)?;
         for rec in reviewed_records {
             if rec.review_status != BenchmarkReviewStatus::HumanReviewed {
                 return Err(format!(

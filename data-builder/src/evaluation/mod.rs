@@ -4,4 +4,5 @@ pub mod comparison;
 pub mod provenance;
 pub mod reports;
 pub mod schema;
+pub mod transition;
 pub mod validator;

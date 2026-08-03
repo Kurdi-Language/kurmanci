@@ -6,6 +6,17 @@ use unicode_normalization::UnicodeNormalization;
 
 pub const BENCHMARK_CASE_SCHEMA_VERSION: &str = "benchmark-case-v1";
 pub const BENCHMARK_CASE_DOMAIN_TAG: &str = "kurmanci-spelling-case-v1";
+pub const BENCHMARK_SOURCE_PROVENANCE_DOMAIN_TAG: &str = "kurmanci-benchmark-source-provenance-v1";
+
+const RESERVED_REVIEWER_ID_SEGMENTS: &[&str] = &[
+    "ai",
+    "assistant",
+    "auto",
+    "automatic",
+    "bot",
+    "chatgpt",
+    "system",
+];
 
 /// The specific engine task being evaluated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -117,6 +128,17 @@ pub enum BenchmarkSourceKind {
     AiAssistedDraft,
 }
 
+impl BenchmarkSourceKind {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            BenchmarkSourceKind::Manual => "manual",
+            BenchmarkSourceKind::HeldOutCorpus => "held-out-corpus",
+            BenchmarkSourceKind::MechanicalDraft => "mechanical-draft",
+            BenchmarkSourceKind::AiAssistedDraft => "ai-assisted-draft",
+        }
+    }
+}
+
 /// Provenance metadata detailing origin of the case.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -190,6 +212,17 @@ fn encode_canonical_field(field_bytes: &[u8]) -> Result<Vec<u8>, String> {
 
 fn encode_canonical_str(s: &str) -> Result<Vec<u8>, String> {
     encode_canonical_field(s.as_bytes())
+}
+
+fn encode_canonical_opt_str(value: Option<&str>) -> Result<Vec<u8>, String> {
+    match value {
+        None => Ok(vec![0x00]),
+        Some(value) => {
+            let mut encoded = vec![0x01];
+            encoded.extend(encode_canonical_str(value)?);
+            Ok(encoded)
+        }
+    }
 }
 
 fn encode_canonical_str_array(items: &[String]) -> Result<Vec<u8>, String> {
@@ -268,33 +301,108 @@ pub fn compute_canonical_case_id(
     Ok(format!("{:x}", Sha256::digest(&payload)))
 }
 
-fn validate_review_date(date_str: &str) -> Result<(), String> {
-    let parts: Vec<&str> = date_str.split('-').collect();
-    if parts.len() != 3 {
+/// Computes a deterministic fingerprint of the immutable source provenance.
+pub fn compute_source_provenance_sha256(source: &BenchmarkSourceInfo) -> Result<String, String> {
+    let mut payload = Vec::new();
+    payload.extend(encode_canonical_str(
+        BENCHMARK_SOURCE_PROVENANCE_DOMAIN_TAG,
+    )?);
+    payload.extend(encode_canonical_str(source.kind.as_str())?);
+    payload.extend(encode_canonical_opt_str(source.source_id.as_deref())?);
+    payload.extend(encode_canonical_opt_str(
+        source.source_document_id.as_deref(),
+    )?);
+    payload.extend(encode_canonical_opt_str(source.source_record.as_deref())?);
+    Ok(format!("{:x}", Sha256::digest(&payload)))
+}
+
+/// Validates a stable reviewer identifier without claiming that it represents a real person.
+pub fn validate_reviewer_id(reviewer_id: &str) -> Result<(), String> {
+    let len = reviewer_id.len();
+    if !(3..=64).contains(&len) {
+        return Err(format!(
+            "Invalid reviewer_id '{}': expected 3 to 64 ASCII bytes",
+            reviewer_id
+        ));
+    }
+    if !reviewer_id.is_ascii() {
+        return Err(format!(
+            "Invalid reviewer_id '{}': expected lowercase ASCII letters, digits, and segmented hyphens",
+            reviewer_id
+        ));
+    }
+
+    let segments: Vec<&str> = reviewer_id.split('-').collect();
+    if segments.iter().any(|segment| {
+        segment.is_empty()
+            || !segment
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+    }) {
+        return Err(format!(
+            "Invalid reviewer_id '{}': expected ^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            reviewer_id
+        ));
+    }
+    if !reviewer_id.bytes().any(|byte| byte.is_ascii_lowercase()) {
+        return Err(format!(
+            "Invalid reviewer_id '{}': at least one lowercase ASCII letter is required",
+            reviewer_id
+        ));
+    }
+    if let Some(segment) = segments
+        .iter()
+        .find(|segment| RESERVED_REVIEWER_ID_SEGMENTS.contains(segment))
+    {
+        return Err(format!(
+            "Invalid reviewer_id '{}': reserved automation segment '{}' is not permitted",
+            reviewer_id, segment
+        ));
+    }
+
+    Ok(())
+}
+
+/// Validates an exact proleptic Gregorian review date from 0001-01-01 to 9999-12-31.
+pub fn validate_review_date(date_str: &str) -> Result<(), String> {
+    let bytes = date_str.as_bytes();
+    if bytes.len() != 10
+        || bytes[4] != b'-'
+        || bytes[7] != b'-'
+        || !bytes[..4].iter().all(u8::is_ascii_digit)
+        || !bytes[5..7].iter().all(u8::is_ascii_digit)
+        || !bytes[8..].iter().all(u8::is_ascii_digit)
+    {
         return Err(format!(
             "Invalid date format '{}': expected YYYY-MM-DD",
             date_str
         ));
     }
-    let year: i32 = parts[0]
+
+    let year: u32 = date_str[..4]
         .parse()
         .map_err(|_| format!("Invalid year in date '{}'", date_str))?;
-    let month: u32 = parts[1]
+    let month: u32 = date_str[5..7]
         .parse()
         .map_err(|_| format!("Invalid month in date '{}'", date_str))?;
-    let day: u32 = parts[2]
+    let day: u32 = date_str[8..]
         .parse()
         .map_err(|_| format!("Invalid day in date '{}'", date_str))?;
 
-    if !(2020..=2100).contains(&year) {
-        return Err(format!("Year out of range in date '{}'", date_str));
+    if !(1..=9999).contains(&year) {
+        return Err(format!(
+            "Year out of range in date '{}': expected 0001 through 9999",
+            date_str
+        ));
     }
     if !(1..=12).contains(&month) {
         return Err(format!("Invalid month in date '{}'", date_str));
     }
     let max_days = match month {
         2 => {
-            if (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) {
+            let is_leap_year =
+                (year.rem_euclid(4) == 0 && year.rem_euclid(100) != 0) || year.rem_euclid(400) == 0;
+            if is_leap_year {
                 29
             } else {
                 28
@@ -556,9 +664,9 @@ pub fn validate_case_record(record: &BenchmarkCaseRecord) -> Result<(), String> 
     match record.review_status {
         BenchmarkReviewStatus::HumanReviewed => {
             let reviewer = record.reviewer_id.as_deref().unwrap_or("");
-            if reviewer.trim().is_empty() {
-                return Err("Human-reviewed status requires a non-empty reviewer_id".to_string());
-            }
+            validate_reviewer_id(reviewer).map_err(|error| {
+                format!("Human-reviewed status requires a valid reviewer_id: {error}")
+            })?;
             let date = record.review_date.as_deref().ok_or_else(|| {
                 "Human-reviewed status requires review_date (YYYY-MM-DD)".to_string()
             })?;

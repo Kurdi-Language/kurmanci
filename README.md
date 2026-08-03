@@ -18,7 +18,8 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
 - [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
 - [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
-- [ ] **Human-Reviewed Dataset** *(Milestone 4B.3 - Active)*: Initial authoritative human-reviewed Kurmancî evaluation cases, added only after explicit review by real Kurmancî speakers.
+- [ ] **Benchmark Review Governance** *(Milestone 4B.3A - Active)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone adds no benchmark cases.
+- [ ] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Planned)*: A separate data-review milestone for a small authoritative dataset reviewed by real Kurmancî speakers.
 
 ### Experimental Capabilities
 > [!NOTE]
@@ -91,6 +92,21 @@ cargo run -p kurmanci-data-builder -- build-pack experimental-full
 # Validate pack manifests and invariants
 cargo run -p kurmanci-data-builder -- validate-pack-manifest
 ```
+
+### Evaluation Governance and Validation
+
+```bash
+# Validate the current draft and reviewed benchmark files
+cargo run -p kurmanci-data-builder -- validate-eval-cases
+
+# Evaluate controlled packs against authoritative reviewed cases
+cargo run -p kurmanci-data-builder -- evaluate-packs
+
+# Show the explicit snapshot-transition validator interface
+cargo run -p kurmanci-data-builder -- validate-eval-transition --help
+```
+
+Benchmark promotion policy, evidence standards, and reviewer responsibilities are documented in [`docs/benchmark-review.md`](docs/benchmark-review.md).
 
 ### Command-Line Querying (`cli`)
 
