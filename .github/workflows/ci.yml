@@ -103,7 +103,11 @@ jobs:
           find data/build/packs -type f -exec sha256sum {} + | sort > /tmp/ci-check/packs2/checksums.txt
           diff /tmp/ci-check/packs1/checksums.txt /tmp/ci-check/packs2/checksums.txt
           cargo run -p kurmanci-data-builder -- validate-pack-manifest
-          echo "Controlled packs 2-pass determinism & manifest invariant verification passed."
+          test ! -s evaluation/spelling/reviewed-cases.jsonl || (echo "reviewed-cases.jsonl must remain empty until human review" && exit 1)
+          test ! -s evaluation/spelling/draft-cases.jsonl || (echo "draft-cases.jsonl must remain empty" && exit 1)
+          cargo run -p kurmanci-data-builder -- validate-eval-cases
+          test -f data/reports/evaluation-provenance/artifacts.sha256
+          echo "Controlled packs & evaluation case validator verification passed."
 
       - name: Run 3C1 Pipeline (First Pass)
         run: |

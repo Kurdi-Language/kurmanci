@@ -5,6 +5,7 @@ pub mod corpus;
 pub mod eval;
 pub mod eval_next_word;
 pub mod eval_ranking;
+pub mod evaluation;
 pub mod importers;
 pub mod merge;
 pub mod normalize;
