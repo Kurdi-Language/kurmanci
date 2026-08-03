@@ -801,17 +801,19 @@ fn test_regression_no_tests_modify_authoritative_evaluation_data() {
     let draft_path = root.join("evaluation/spelling/draft-cases.jsonl");
     let reviewed_path = root.join("evaluation/spelling/reviewed-cases.jsonl");
 
-    let draft_meta_before = fs::metadata(&draft_path).expect("draft-cases.jsonl missing");
-    let reviewed_meta_before = fs::metadata(&reviewed_path).expect("reviewed-cases.jsonl missing");
+    let draft_before = include_bytes!("../../evaluation/spelling/draft-cases.jsonl");
+    let reviewed_before = include_bytes!("../../evaluation/spelling/reviewed-cases.jsonl");
+    let draft_after = fs::read(&draft_path).expect("failed to read draft-cases.jsonl");
+    let reviewed_after = fs::read(&reviewed_path).expect("failed to read reviewed-cases.jsonl");
 
     assert_eq!(
-        draft_meta_before.len(),
-        0,
-        "draft-cases.jsonl must be empty in repo"
+        draft_after.as_slice(),
+        draft_before,
+        "tests must not modify draft-cases.jsonl"
     );
     assert_eq!(
-        reviewed_meta_before.len(),
-        0,
-        "reviewed-cases.jsonl must be empty in repo until human review"
+        reviewed_after.as_slice(),
+        reviewed_before,
+        "tests must not modify reviewed-cases.jsonl"
     );
 }

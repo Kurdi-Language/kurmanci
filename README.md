@@ -17,8 +17,8 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Controlled Review Infrastructure** *(Milestone 4A.1)*: Length-prefixed u64 SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
 - [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
 - [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
-- [ ] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Active)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
-- [ ] **Human-Reviewed Dataset** *(Milestone 4B.3 - Planned)*: Authoritative human-reviewed Kurmancî evaluation cases across 16 categories, validated by native linguists.
+- [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
+- [ ] **Human-Reviewed Dataset** *(Milestone 4B.3 - Active)*: Initial authoritative human-reviewed Kurmancî evaluation cases, added only after explicit review by real Kurmancî speakers.
 
 ### Experimental Capabilities
 > [!NOTE]
