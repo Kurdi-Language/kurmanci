@@ -109,6 +109,24 @@ jobs:
           test -f data/reports/evaluation-provenance/artifacts.sha256
           echo "Controlled packs & evaluation case validator verification passed."
 
+      - name: Run Three-Pack Comparison Engine (First Pass)
+        run: cargo run -p kurmanci-data-builder -- evaluate-packs
+
+      - name: Record Three-Pack Comparison Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/comp1
+          find data/reports/pack-comparison -type f -exec sha256sum {} + | sort > /tmp/ci-check/comp1/checksums.txt
+
+      - name: Run Three-Pack Comparison Engine (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- evaluate-packs
+
+      - name: Verify Three-Pack Comparison Determinism
+        run: |
+          mkdir -p /tmp/ci-check/comp2
+          find data/reports/pack-comparison -type f -exec sha256sum {} + | sort > /tmp/ci-check/comp2/checksums.txt
+          diff /tmp/ci-check/comp1/checksums.txt /tmp/ci-check/comp2/checksums.txt
+          echo "Three-pack comparison report 2-pass determinism verification passed."
+
       - name: Run 3C1 Pipeline (First Pass)
         run: |
           cargo run -p kurmanci-data-builder -- import-all-corpora

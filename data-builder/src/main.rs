@@ -102,6 +102,8 @@ enum Commands {
     ValidatePackManifest,
     /// Validates evaluation benchmark cases and generates provenance overlap analysis
     ValidateEvalCases,
+    /// Evaluates seed, reviewed, and experimental-full packs against reviewed cases
+    EvaluatePacks,
 }
 
 fn main() {
@@ -547,6 +549,23 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error validating benchmark cases: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::EvaluatePacks => {
+            println!("=== Kurmancî Three-Pack Benchmark Comparison Engine ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::evaluation::comparison::evaluate_packs(&root) {
+                Ok(summary) => {
+                    println!("⚡ PACK COMPARISON COMPLETED SUCCESSFULLY!");
+                    println!("  Benchmark Ready:       {}", summary.benchmark_ready);
+                    println!("  Total Reviewed Cases:  {}", summary.total_reviewed_cases);
+                    println!("  Report Directory:      data/reports/pack-comparison/");
+                    println!("  Pairwise Summaries:    {:?}", summary.pairwise_summaries);
+                }
+                Err(e) => {
+                    eprintln!("Error evaluating packs: {}", e);
                     std::process::exit(1);
                 }
             }
