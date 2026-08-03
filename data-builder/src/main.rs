@@ -100,6 +100,8 @@ enum Commands {
     },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
+    /// Validates evaluation benchmark cases and generates provenance overlap analysis
+    ValidateEvalCases,
 }
 
 fn main() {
@@ -514,6 +516,40 @@ fn main() {
             data_builder_lib::pack::manifest::validate_all_pack_manifests(PathBuf::from("."))
                 .unwrap_or_else(|e| panic!("Pack manifest validation failed: {}", e));
             println!("⚡ PACK MANIFEST INVARIANTS VALIDATED SUCCESSFULLY!");
+        }
+        Commands::ValidateEvalCases => {
+            println!("=== Kurmancî Benchmark Case Set Validator ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::evaluation::validator::validate_benchmark_case_set(&root) {
+                Ok(res) => {
+                    println!("⚡ BENCHMARK CASES VALIDATED SUCCESSFULLY!");
+                    println!("  Total Cases:         {}", res.total_cases);
+                    println!("  Human-Reviewed:      {}", res.human_reviewed_cases);
+                    println!("  Draft Cases:         {}", res.draft_cases);
+                    println!("  Benchmark Ready:     {}", res.benchmark_ready);
+                    println!("  Task Breakdown:      {:?}", res.task_counts);
+                    println!("  Category Breakdown:  {:?}", res.category_counts);
+
+                    match data_builder_lib::evaluation::provenance::generate_provenance_report(
+                        &root,
+                    ) {
+                        Ok(p_sum) => {
+                            println!("⚡ PROVENANCE OVERLAP REPORT GENERATED!");
+                            println!("  Report Dir: data/reports/evaluation-provenance/");
+                            println!("  Manual Seed Overlap: {}", p_sum.manual_seed_overlap_count);
+                            println!("  Hunspell Overlap:    {}", p_sum.hunspell_overlap_count);
+                        }
+                        Err(e) => {
+                            eprintln!("Error generating evaluation provenance report: {}", e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error validating benchmark cases: {}", e);
+                    std::process::exit(1);
+                }
+            }
         }
     }
 }
