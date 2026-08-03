@@ -1013,9 +1013,7 @@ fn test_nonempty_deterministic_report_generation() {
     );
 }
 
-/// Asserts that authoritative benchmark files remain empty until genuine human-reviewed cases are added in Milestone 4B.3.
-/// Note: While 4B.3 is planned, both files must remain 0 bytes. When native linguists populate reviewed-cases.jsonl in 4B.3,
-/// this test will transition to a before/after byte comparison.
+/// Asserts that comparison tests do not modify authoritative benchmark files.
 #[test]
 fn test_authoritative_benchmark_files_unchanged() {
     let root = std::env::var("CARGO_MANIFEST_DIR")
@@ -1024,13 +1022,19 @@ fn test_authoritative_benchmark_files_unchanged() {
     let draft_path = root.join("evaluation/spelling/draft-cases.jsonl");
     let reviewed_path = root.join("evaluation/spelling/reviewed-cases.jsonl");
 
-    let draft_meta = fs::metadata(&draft_path).expect("draft-cases.jsonl missing");
-    let reviewed_meta = fs::metadata(&reviewed_path).expect("reviewed-cases.jsonl missing");
+    let draft_before = include_bytes!("../../evaluation/spelling/draft-cases.jsonl");
+    let reviewed_before = include_bytes!("../../evaluation/spelling/reviewed-cases.jsonl");
+    let draft_after = fs::read(&draft_path).expect("failed to read draft-cases.jsonl");
+    let reviewed_after = fs::read(&reviewed_path).expect("failed to read reviewed-cases.jsonl");
 
-    assert_eq!(draft_meta.len(), 0, "draft-cases.jsonl must remain empty");
     assert_eq!(
-        reviewed_meta.len(),
-        0,
-        "reviewed-cases.jsonl must remain empty until human review"
+        draft_after.as_slice(),
+        draft_before,
+        "comparison tests must not modify draft-cases.jsonl"
+    );
+    assert_eq!(
+        reviewed_after.as_slice(),
+        reviewed_before,
+        "comparison tests must not modify reviewed-cases.jsonl"
     );
 }
