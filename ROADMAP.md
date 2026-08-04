@@ -20,7 +20,9 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Evaluation Schema & Workflow (4B.1)** | Completed | Typed benchmark schema (`benchmark-case-v1`), length-prefixed domain-separated SHA-256 `case_id` generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`. |
 | **Three-Pack Comparison Engine (4B.2)** | Completed | Deterministic comparison engine (`evaluate-packs`) simultaneously evaluates `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`). |
 | **Benchmark Review Governance (4B.3A)** | Completed | Reviewer/date validation, metadata-only promotion semantics, filesystem snapshot transition validation, evidence standards, governance, tests, and PR-scoped benchmark-data protection. Added no benchmark cases. |
-| **Initial Human-Reviewed Dataset (4B.3B)** | Active | The first explicitly AI-assisted draft proposal batch is being prepared for genuine human linguistic review; no proposal is authoritative until metadata-only promotion in a later PR. |
+| **Initial Human-Reviewed Dataset (4B.3B)** | Completed | Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules. |
+| **Pack Quality Assessment & Lexicon Enrichment (4C)** | Active | Initial controlled-pack quality assessment (4C.1), targeted human review of imported lexical entries (4C.2), reviewed-pack rebuild & re-evaluation (4C.3), and explicit default-pack decision (4C.4). |
+
 | **Train-Only Model Binding (3C2)** | Planned | Binding model builders to train partition only, provenance configuration hashes, and evaluation profile pack builds. |
 | **Swift SDK** | Planned | Native Apple SDK wrapper around `kurmanci-engine` Rust core. |
 | **iOS Reference Keyboard** | Planned | Custom iOS keyboard extension using `ku-Latn` layout and native engine bindings. |
