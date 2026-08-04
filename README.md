@@ -19,7 +19,9 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
 - [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
 - [x] **Benchmark Review Governance** *(Milestone 4B.3A - Completed)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone added no benchmark cases.
-- [ ] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Active)*: The first explicitly AI-assisted, non-authoritative draft proposal batch is awaiting genuine human linguistic review before any metadata-only promotion.
+- [x] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Completed)*: Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules.
+- [ ] **Pack Quality Assessment & Lexicon Enrichment** *(Milestone 4C - Active)*: Initial controlled-pack quality assessment (`docs/evaluation/initial-pack-quality-assessment.md`), targeted human review of imported lexical entries, and benchmark-driven pack enrichment.
+
 
 ### Experimental Capabilities
 > [!NOTE]
