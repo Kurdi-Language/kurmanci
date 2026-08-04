@@ -150,7 +150,11 @@ jobs:
           diff /tmp/ci-check/comp1/checksums.txt /tmp/ci-check/comp2/checksums.txt
           echo "Three-pack comparison report 2-pass determinism verification passed."
 
+      - name: Verify 4C.2A Regression Review Worksheet
+        run: python3 scripts/verify_4c2a_regression_worksheet.py
+
       - name: Run 3C1 Pipeline (First Pass)
+
         run: |
           cargo run -p kurmanci-data-builder -- import-all-corpora
           cargo run -p kurmanci-data-builder -- inventory-corpora
