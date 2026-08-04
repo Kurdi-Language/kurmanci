@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Deterministic verifier for Milestone 4C.2A Regression Entry Review Worksheet.
+"""Deterministic verifier for Milestone 4C.2C Regression Entry Review Worksheet & Decisions.
 
 Verifies schema, exact canonical entry identity, review queue structured resolution,
 conflict-group membership, source registry pinned revision & license ID, comparison constants,
-ranking logic, field emptiness, line ending/BOM invariants, NFC normalization, compact JSON,
-and deterministic record ordering. Includes a self-test mode (--self-test).
+ranking logic, human decision field alignment with decisions.jsonl, line ending/BOM invariants,
+NFC normalization, compact JSON, and deterministic record ordering. Includes self-test (--self-test).
 """
+
 
 import csv
 import hashlib
@@ -117,9 +118,10 @@ def verify_worksheet(worksheet_path: Path) -> None:
     if len(lines) != 14:
         sys.exit(f"FAIL: Expected 14 physical lines (1 header + 13 rows), got {len(lines)}")
 
-    reader = list(csv.DictReader(lines))
+    reader = list(csv.DictReader(io.StringIO(raw_text)))
     if len(reader) != 13:
         sys.exit(f"FAIL: Expected 13 record rows, got {len(reader)}")
+
 
     # 1. Header & Column order check
     actual_headers = list(reader[0].keys())
@@ -309,12 +311,20 @@ def verify_worksheet(worksheet_path: Path) -> None:
         if r["candidate_is_ahead_of_expected"] != "true":
             sys.exit(f"Row {idx}: candidate_is_ahead_of_expected must be 'true'")
 
-        # 9. Emptiness checks
-        for hf in HUMAN_FIELDS:
-            if r[hf] != "":
-                sys.exit(f"Row {idx}: Human field '{hf}' must be empty, got '{r[hf]}'")
-        if r[TRIAGE_FIELD] != "":
-            sys.exit(f"Row {idx}: Triage field '{TRIAGE_FIELD}' must be empty, got '{r[TRIAGE_FIELD]}'")
+        # 9. Human decision field validation (Milestone 4C.2C populated state)
+        h_status = r["human_lexical_decision"]
+        if h_status not in ("approved", "approved_with_metadata_change", "rejected_from_default_pack", "experimental_only", "needs_linguist", "needs_source_investigation"):
+            sys.exit(f"Row {idx}: Invalid human_lexical_decision '{h_status}'")
+        if not r["reviewer_id"] or not r["reviewer_id"].strip():
+            sys.exit(f"Row {idx}: reviewer_id must be populated")
+        if not r["review_date"] or not r["review_date"].strip():
+            sys.exit(f"Row {idx}: review_date must be populated")
+        if not r["evidence_or_reference"] or not r["evidence_or_reference"].strip():
+            sys.exit(f"Row {idx}: evidence_or_reference must be populated")
+        if not r["review_notes"] or not r["review_notes"].strip():
+            sys.exit(f"Row {idx}: review_notes must be populated")
+        if r["ranking_policy_followup_needed"] not in ("yes", "no"):
+            sys.exit(f"Row {idx}: ranking_policy_followup_needed must be 'yes' or 'no', got '{r['ranking_policy_followup_needed']}'")
 
         # 10. NFC & Path hygiene
         for k, v in r.items():
@@ -332,7 +342,59 @@ def verify_worksheet(worksheet_path: Path) -> None:
     if seen_sort_keys != expected_sorted:
         sys.exit("FAIL: Worksheet rows are not deterministically sorted by (regression_case_id, experimental_rank, entry_id)")
 
-    print("⚡ Milestone 4C.2A Worksheet Verification PASSED successfully!")
+    # 12. Exact 1-to-1 Correspondence & Schema Validation for decisions.jsonl
+    decisions_path = Path("data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl")
+    if not decisions_path.exists():
+        sys.exit(f"FAIL: Decisions file '{decisions_path}' does not exist")
+
+    dec_lines = decisions_path.read_text(encoding="utf-8").splitlines()
+    dec_records = [json.loads(l) for l in dec_lines if l.strip()]
+
+    if len(dec_records) != 13:
+        sys.exit(f"FAIL: Expected 13 decision records in {decisions_path}, found {len(dec_records)}")
+
+    seen_target_ids = set()
+    dec_map_by_target = {}
+    for d in dec_records:
+        tid = d.get("target_id")
+        if not tid:
+            sys.exit(f"FAIL: Decision record missing target_id: {d}")
+        if tid in seen_target_ids:
+            sys.exit(f"FAIL: Duplicate target_id '{tid}' in {decisions_path}")
+        seen_target_ids.add(tid)
+        dec_map_by_target[tid] = d
+
+        # Validate schema, target_type, and source_id
+        if d.get("schema_version") != "review-decision-v1":
+            sys.exit(f"FAIL: Invalid schema_version '{d.get('schema_version')}' for target_id '{tid}'")
+        if d.get("target_type") != "entry":
+            sys.exit(f"FAIL: Invalid target_type '{d.get('target_type')}' for target_id '{tid}'")
+        if d.get("source_id") != "kurdish-hunspell-kmr":
+            sys.exit(f"FAIL: Invalid source_id '{d.get('source_id')}' for target_id '{tid}'")
+
+    csv_eids = set(r["entry_id"] for r in reader)
+    if set(dec_map_by_target.keys()) != csv_eids:
+        sys.exit("FAIL: Mismatch between decision record target_ids and worksheet entry_ids")
+
+    for r in reader:
+        eid = r["entry_id"]
+        d = dec_map_by_target[eid]
+
+        if r["human_lexical_decision"] != d["review_status"]:
+            sys.exit(f"Mismatched status for entry {eid}: CSV '{r['human_lexical_decision']}' != JSONL '{d['review_status']}'")
+        if r["reviewer_id"] != d.get("reviewer_id"):
+            sys.exit(f"Mismatched reviewer_id for entry {eid}: CSV '{r['reviewer_id']}' != JSONL '{d.get('reviewer_id')}'")
+        if r["review_date"] != d.get("review_date"):
+            sys.exit(f"Mismatched review_date for entry {eid}: CSV '{r['review_date']}' != JSONL '{d.get('review_date')}'")
+        if r["review_notes"] != d.get("review_notes"):
+            sys.exit(f"Mismatched review_notes for entry {eid}: CSV '{r['review_notes']}' != JSONL '{d.get('review_notes')}'")
+
+        expected_ev = [line.strip() for line in r["evidence_or_reference"].splitlines() if line.strip()]
+        if expected_ev != d.get("evidence", []):
+            sys.exit(f"Mismatched evidence for entry {eid}: CSV '{expected_ev}' != JSONL '{d.get('evidence')}'")
+
+    print("⚡ Milestone 4C.2C Decision & Worksheet Verification PASSED successfully!")
+
 
 
 def run_self_test(worksheet_path: Path) -> None:
