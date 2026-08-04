@@ -21,7 +21,9 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Three-Pack Comparison Engine (4B.2)** | Completed | Deterministic comparison engine (`evaluate-packs`) simultaneously evaluates `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`). |
 | **Benchmark Review Governance (4B.3A)** | Completed | Reviewer/date validation, metadata-only promotion semantics, filesystem snapshot transition validation, evidence standards, governance, tests, and PR-scoped benchmark-data protection. Added no benchmark cases. |
 | **Initial Human-Reviewed Dataset (4B.3B)** | Completed | Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules. |
-| **Pack Quality Assessment & Lexicon Enrichment (4C)** | Active | Initial controlled-pack quality assessment (4C.1), 4C.2A regression entry review packet prepared (human review pending), reviewed-pack rebuild & re-evaluation (4C.3), and explicit default-pack decision (4C.4). |
+| **Pack Quality Assessment & Lexicon Enrichment (4C)** | Active | Initial controlled-pack quality assessment (4C.1), 4C.2A regression review packet (completed), 4C.2B human lexical review guide prepared (human review pending), 4C.2C human lexical decisions (pending), reviewed-pack rebuild & re-evaluation (4C.3), and explicit default-pack decision (4C.4). |
+
+
 
 
 | **Train-Only Model Binding (3C2)** | Planned | Binding model builders to train partition only, provenance configuration hashes, and evaluation profile pack builds. |

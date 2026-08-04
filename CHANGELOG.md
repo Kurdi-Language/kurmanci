@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial Human-Reviewed Benchmark Dataset (Milestone 4B.3B) with 20 authoritative human-reviewed benchmark cases, verified metadata-only draft promotion rules, snapshot transition validation, and 0 draft cases remaining.
 - Initial Controlled-Pack Quality Assessment (Milestone 4C.1) establishing tracked baseline report (`docs/evaluation/initial-pack-quality-assessment.md`) across `seed`, `reviewed`, and `experimental-full` language packs, detailed metric breakdown with case counts, exact regression analysis (`pirt`, `rojb`, `şe`, `welad`), licensing attribution consequences, benchmark limitations, and default pack policy recommendation (`default_pack = seed`).
 - Benchmark-Driven Regression Entry Review Packet (Milestone 4C.2A) establishing deterministic review worksheet (`evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.csv`) and documentation packet (`evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.README.md`) for all 13 imported entries ranked ahead of expected candidates across the four observed experimental-full regressions. All human decision and engineering triage fields remain unpopulated pending human review.
+- Human Lexical Review Guide (Milestone 4C.2B) establishing operational guide (`docs/evaluation/4c2b-human-lexical-review-guide.md`) and documentation verifier (`scripts/verify_4c2b_review_guide.py`) for the 13 imported entries ranked ahead of expected candidates. All human decision and engineering triage fields remain unpopulated pending human review.
+
 
 
 
