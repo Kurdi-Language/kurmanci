@@ -157,7 +157,9 @@ fn evaluate_entries(
 
     let start_load = Instant::now();
     let mut engine = Engine::new();
-    engine.load_binary_pack(&binary_bytes)?;
+    engine
+        .load_binary_pack(&binary_bytes)
+        .map_err(|e| e.to_string())?;
     let load_time_us = start_load.elapsed().as_micros() as u64;
 
     let mut top_1_correct = 0;

@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
-use kurmanci_engine::{Engine, SuggestionKind};
-use std::fs;
+use kurmanci_engine::{
+    KurmanciEngine, PredictionOptions, PredictionSource, SuggestOptions, SuggestionKind,
+};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -74,25 +75,20 @@ fn main() {
             json,
             explain,
         } => {
-            let mut engine = Engine::new();
-
-            let bytes = fs::read(&pack).unwrap_or_else(|e| {
-                panic!(
-                    "Failed to open binary language pack file '{:?}': {}",
-                    pack, e
-                )
+            let engine = KurmanciEngine::from_pack_file(&pack).unwrap_or_else(|e| {
+                panic!("Failed to load binary pack '{:?}': {}", pack, e);
             });
 
-            let count = engine
-                .load_binary_pack(&bytes)
-                .unwrap_or_else(|e| panic!("Failed to parse binary pack '{:?}': {}", pack, e));
-
             if !json {
-                eprintln!("[info] Loaded {} lexicon entries from {:?}", count, pack);
+                let info = engine.pack_info();
+                eprintln!(
+                    "[info] Loaded {} lexicon entries (pack tag: {}, format v{}) from {:?}",
+                    info.entry_count, info.language_tag, info.format_version, pack
+                );
             }
 
             let start = Instant::now();
-            let suggestions = engine.suggest(&query, limit);
+            let suggestions = engine.suggest(&query, SuggestOptions { limit });
             let elapsed = start.elapsed();
 
             if json {
@@ -109,11 +105,20 @@ fn main() {
                     println!("  (no suggestions found)");
                 } else {
                     for (i, sug) in suggestions.iter().enumerate() {
-                        println!("  {}. {}", i + 1, sug.text);
-                        println!("     edit_cost: {}", sug.edit_cost);
-                        println!("     zipf_milli: {}", sug.zipf_milli);
-                        println!("     document_count: {}", sug.document_count);
-                        println!("     ranking_reason: {}", sug.ranking_reason);
+                        let kind_str = match sug.kind {
+                            SuggestionKind::Exact => "exact",
+                            SuggestionKind::Completion => "completion",
+                            SuggestionKind::Correction => "correction",
+                            SuggestionKind::DiacriticCorrection => "diacritic_correction",
+                            SuggestionKind::NextWord => "next_word",
+                        };
+                        println!(
+                            "  {}. {:<15} [type: {:<20} edit_cost: {}]",
+                            i + 1,
+                            sug.text,
+                            kind_str,
+                            sug.edit_cost
+                        );
                     }
                 }
             } else {
@@ -133,11 +138,11 @@ fn main() {
                             SuggestionKind::NextWord => "next_word",
                         };
                         println!(
-                            "  {}. {:<15} [type: {:<20} score: {:.2}]",
+                            "  {}. {:<15} [type: {:<20} edit_cost: {}]",
                             i + 1,
                             sug.text,
                             kind_str,
-                            sug.score
+                            sug.edit_cost
                         );
                     }
                 }
@@ -155,39 +160,34 @@ fn main() {
                 std::process::exit(1);
             }
 
-            let mut engine = Engine::new();
-
-            let bytes = fs::read(&pack).unwrap_or_else(|e| {
-                panic!(
-                    "Failed to open binary language pack file '{:?}': {}",
-                    pack, e
-                )
+            let engine = KurmanciEngine::from_pack_file(&pack).unwrap_or_else(|e| {
+                panic!("Failed to load binary pack '{:?}': {}", pack, e);
             });
 
-            let count = engine
-                .load_binary_pack(&bytes)
-                .unwrap_or_else(|e| panic!("Failed to parse binary pack '{:?}': {}", pack, e));
-
             if !json {
-                eprintln!("[info] Loaded {} lexicon entries from {:?}", count, pack);
+                let info = engine.pack_info();
+                eprintln!(
+                    "[info] Loaded {} lexicon entries (pack tag: {}, format v{}) from {:?}",
+                    info.entry_count, info.language_tag, info.format_version, pack
+                );
             }
 
             let start = Instant::now();
             let context_label = words.join(" ");
+            let ctx_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
 
-            let (predictions, source_name) = if words.len() == 2 {
-                let res = engine.predict_next_with_context(&words[0], &words[1], limit);
-                let src = match res.source {
-                    Some(kurmanci_engine::PredictionSource::Trigram) => "trigram",
-                    Some(kurmanci_engine::PredictionSource::BigramBackoff) => "bigram-backoff",
-                    None => "none",
-                };
-                (res.predictions, src.to_string())
-            } else {
-                let preds = engine.predict_next(&words[0], limit);
-                (preds, "bigram".to_string())
-            };
+            let predictions = engine.predict_next(&ctx_refs, PredictionOptions { limit });
             let elapsed = start.elapsed();
+
+            let source_name = predictions
+                .first()
+                .map(|p| match p.source {
+                    PredictionSource::Trigram => "trigram",
+                    PredictionSource::BigramBackoff => "bigram-backoff",
+                    PredictionSource::Bigram => "bigram",
+                    PredictionSource::None => "none",
+                })
+                .unwrap_or("none");
 
             if json {
                 let output = serde_json::json!({
@@ -209,7 +209,7 @@ fn main() {
                 } else {
                     for (i, pred) in predictions.iter().enumerate() {
                         let pct = pred.probability_millionths as f64 / 10000.0;
-                        println!("  {}. {}", i + 1, pred.word);
+                        println!("  {}. {}", i + 1, pred.text);
                         println!("     count: {}", pred.count);
                         println!(
                             "     probability_millionths: {}",
@@ -231,7 +231,7 @@ fn main() {
                         println!(
                             "  {}. {:<15} (probability: {:.1}%, count: {})",
                             i + 1,
-                            pred.word,
+                            pred.text,
                             pct,
                             pred.count
                         );

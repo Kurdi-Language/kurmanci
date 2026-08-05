@@ -30,6 +30,8 @@ pub struct NextWordPrediction {
 pub enum PredictionSource {
     Trigram,
     BigramBackoff,
+    Bigram,
+    None,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
