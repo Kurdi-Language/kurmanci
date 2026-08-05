@@ -114,6 +114,7 @@ jobs:
       - name: Record Controlled Packs Pass 1 Checksums
         run: |
           mkdir -p /tmp/ci-check/packs1
+          cp -r data/build/packs /tmp/ci-check/pass1_packs
           find data/build/packs -type f -exec sha256sum {} + | sort > /tmp/ci-check/packs1/checksums.txt
 
       - name: Build Controlled Packs (Second Pass - Determinism Verification)
@@ -125,6 +126,7 @@ jobs:
       - name: Verify Controlled Packs Determinism & Manifest Invariants
         run: |
           mkdir -p /tmp/ci-check/packs2
+          cp -r data/build/packs /tmp/ci-check/pass2_packs
           find data/build/packs -type f -exec sha256sum {} + | sort > /tmp/ci-check/packs2/checksums.txt
           diff /tmp/ci-check/packs1/checksums.txt /tmp/ci-check/packs2/checksums.txt
           cargo run -p kurmanci-data-builder -- validate-pack-manifest
@@ -150,10 +152,12 @@ jobs:
           diff /tmp/ci-check/comp1/checksums.txt /tmp/ci-check/comp2/checksums.txt
           echo "Three-pack comparison report 2-pass determinism verification passed."
 
-      - name: Verify 4C.2A Regression Review Worksheet & 4C.2B Review Guide
+      - name: Verify 4C Review Infrastructure & 4C.3 Reviewed Pack
         run: |
           python3 scripts/verify_4c2a_regression_worksheet.py
           python3 scripts/verify_4c2b_review_guide.py
+          python3 scripts/verify_4c3_reviewed_pack.py --candidate-root . --compare-root-a /tmp/ci-check/pass1_packs --compare-root-b /tmp/ci-check/pass2_packs
+          python3 scripts/verify_4c3_reviewed_pack.py --self-test
 
 
       - name: Run 3C1 Pipeline (First Pass)

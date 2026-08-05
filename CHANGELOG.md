@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Milestone 4C.3 Reviewed-Pack Rebuild & Re-evaluation: Rebuilt `reviewed` language pack incorporating 13 authoritative human lexical review decisions, increasing entry count to 35 (33 seed + 2 approved external entries `şeq`, `şer`). Documented `sê` conflict-group non-selection, observed `şe` prefix-completion benchmark ranking regression, and 2-pass determinism verifications in `docs/evaluation/4c3-reviewed-pack-reassessment.md` and `scripts/verify_4c3_reviewed_pack.py`.
 - Initial Rust core language engine (`kurmanci-engine`) with Trie prefix autocomplete, weighted Damerau-Levenshtein edit distance, and diacritic-sensitive scoring (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
 - Reproducible binary data-builder compiler (`kurmanci-data-builder`) generating serialized `.bin` language packs and release manifests.
 - Command-line interface (`kurmanci` binary) supporting `suggest`, `complete`, `correct`, `contains`, and `benchmark` commands.
