@@ -309,6 +309,17 @@ jobs:
           RUSTDOCFLAGS="-D warnings" cargo doc --no-deps --package kurmanci-engine
           cargo bench --no-run --package kurmanci-engine
 
+      - name: Build C ABI Library & Run C/C++ Header Syntax Checks
+        run: |
+          cargo build -p kurmanci-ffi
+          gcc -std=c99 -Wall -Wextra -Werror -pedantic -I ffi/include -c ffi/tests/include_c.c -o /dev/null
+          g++ -std=c++11 -Wall -Wextra -Werror -pedantic -I ffi/include -c ffi/tests/include_cpp.cpp -o /dev/null
+
+      - name: Compile and Run C ABI Smoke Test
+        run: |
+          gcc -std=c99 -Wall -Wextra -Werror -pedantic -I ffi/include ffi/tests/c_smoke_test.c -L target/debug -lkurmanci_ffi -o target/debug/c_smoke_test
+          LD_LIBRARY_PATH=target/debug DYLD_LIBRARY_PATH=target/debug ./target/debug/c_smoke_test data/build/packs/seed/lexicon.bin
+
       - name: Verify Repository Cleanliness
         run: |
           git diff --exit-code

@@ -1,0 +1,16 @@
+[package]
+name = "kurmanci-ffi"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Stable C ABI and FFI bindings for the Kurmancî spelling and prediction engine"
+
+[lib]
+name = "kurmanci_ffi"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+kurmanci-engine = { path = "../engine" }

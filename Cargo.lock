@@ -689,6 +689,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "kurmanci-ffi"
+version = "0.1.0"
+dependencies = [
+ "kurmanci-engine",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"

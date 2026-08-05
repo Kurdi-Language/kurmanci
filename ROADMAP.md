@@ -22,7 +22,8 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Benchmark Review Governance (4B.3A)** | Completed | Reviewer/date validation, metadata-only promotion semantics, filesystem snapshot transition validation, evidence standards, governance, tests, and PR-scoped benchmark-data protection. Added no benchmark cases. |
 | **Initial Human-Reviewed Dataset (4B.3B)** | Completed | Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules. |
 | **Pack Quality Assessment & Lexicon Enrichment (4C)** | Completed | Initial controlled-pack quality assessment (4C.1), 4C.2A regression review packet (completed), 4C.2B human lexical review guide (completed), 4C.2C initial human review and triage (completed), 4C.3 reviewed-pack rebuild and re-evaluation (completed), and explicit default-pack decision (4C.4). |
-| **Integration-Ready Engine API (5A)** | Active | High-level, thread-safe, immutable public Rust API (`KurmanciEngine`), typed errors (`EngineError`), `PackInfo` metadata, options, consolidated DTOs (`SuggestionResult`, `Prediction`), CLI migration, benchmarks, embedding example — implemented in this change; pending merge. |
+| **Integration-Ready Engine API (5A)** | Completed | High-level, thread-safe, immutable public Rust API (`KurmanciEngine`), typed errors (`EngineError`), `PackInfo` metadata, options, consolidated DTOs (`SuggestionResult`, `Prediction`), CLI migration, benchmarks, and embedding example. |
+| **Stable C ABI & FFI Bindings (5B)** | Active | Stable C ABI (`kurmanci-ffi`), panic containment (`catch_unwind`), C99/C++11 header (`kurmanci.h`), status codes (`kmr_status`), C smoke test, Rust ABI unit test suite — implemented in this change; pending merge. |
 
 
 
