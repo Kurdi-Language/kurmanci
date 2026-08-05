@@ -236,7 +236,8 @@ pub fn run_next_word_evaluation<P: AsRef<Path>>(
             let src_str = match res.source {
                 Some(PredictionSource::Trigram) => "trigram",
                 Some(PredictionSource::BigramBackoff) => "bigram-backoff",
-                None => "none",
+                Some(PredictionSource::Bigram) => "bigram",
+                Some(PredictionSource::None) | None => "none",
             };
             (res.predictions, src_str.to_string())
         } else if case.context.len() == 1 {

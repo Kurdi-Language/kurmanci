@@ -238,7 +238,10 @@ fn test_binary_pack_v3_roundtrip_and_version_rejection() {
     v2_bytes[4..8].copy_from_slice(&2u32.to_le_bytes()); // Force version 2
     let res = engine.load_binary_pack(&v2_bytes);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Unsupported format version 2"));
+    assert!(res
+        .unwrap_err()
+        .to_string()
+        .contains("unsupported language-pack version"));
 }
 
 // ─── Integration & Evaluation Suite Tests ─────────────────────────────────

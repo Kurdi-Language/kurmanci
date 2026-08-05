@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct TrieNode {
     pub children: HashMap<char, TrieNode>,
     pub is_terminal: bool,
@@ -8,7 +8,7 @@ pub struct TrieNode {
     pub frequency: u64,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Trie {
     root: TrieNode,
 }

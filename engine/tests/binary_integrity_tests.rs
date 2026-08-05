@@ -55,7 +55,7 @@ fn test_invalid_magic_bytes() {
     bad_bytes[0..4].copy_from_slice(b"WRNG");
     let res = engine.load_binary_pack(&bad_bytes);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Invalid magic bytes"));
+    assert!(res.unwrap_err().to_string().contains("magic bytes"));
 }
 
 #[test]
@@ -66,7 +66,10 @@ fn test_unsupported_version() {
     bad_bytes[4..8].copy_from_slice(&999u32.to_le_bytes());
     let res = engine.load_binary_pack(&bad_bytes);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Unsupported format version"));
+    assert!(res
+        .unwrap_err()
+        .to_string()
+        .contains("unsupported language-pack version"));
 }
 
 #[test]
@@ -75,14 +78,14 @@ fn test_truncated_header() {
     let short_bytes = b"KRM1";
     let res = engine.load_binary_pack(short_bytes);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Binary pack file too short"));
+    assert!(res.unwrap_err().to_string().contains("too short"));
 }
 
 #[test]
 fn test_checksum_corruption() {
-    let pack_path = std::path::Path::new("data/build/lexicon.bin");
+    let pack_path = std::path::Path::new("data/build/packs/seed/lexicon.bin");
     if !pack_path.exists() {
-        eprintln!("Skipping test_checksum_corruption: data/build/lexicon.bin not found");
+        eprintln!("Skipping test_checksum_corruption: seed lexicon.bin not found");
         return;
     }
 
@@ -96,7 +99,7 @@ fn test_checksum_corruption() {
 
     let res = engine.load_binary_pack(&corrupted);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("checksum mismatch"));
+    assert!(res.unwrap_err().to_string().contains("checksum mismatch"));
 }
 
 #[test]
@@ -110,7 +113,10 @@ fn test_one_trailing_byte() {
     let pack = build_test_pack(1, &payload);
     let res = engine.load_binary_pack(&pack);
     assert!(res.is_err());
-    assert!(res.unwrap_err().contains("Trailing payload bytes"));
+    assert!(res
+        .unwrap_err()
+        .to_string()
+        .contains("Trailing payload bytes"));
 }
 
 #[test]

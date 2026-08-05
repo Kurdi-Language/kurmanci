@@ -1,4 +1,5 @@
 use crate::distance::weighted_damerau_levenshtein;
+use crate::errors::PackLoadError;
 use crate::normalization::{normalize, strip_diacritics};
 use crate::ranking::{
     calculate_score, FrequencyMetadata, NextWordPrediction, RankedCandidate, RankingConfig,
@@ -33,7 +34,7 @@ pub type TrigramContextKey = (usize, usize);
 pub type TrigramPredictionEntry = (usize, u64, u32);
 pub type TrigramIndex = HashMap<TrigramContextKey, Vec<TrigramPredictionEntry>>;
 
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Engine {
     lexicon: Vec<LexiconEntry>,
     trie: Trie,
@@ -76,20 +77,20 @@ impl Engine {
     }
 
     /// Loads a compiled binary pack (.bin format v4) with strict header and SHA-256 checksum integrity verification.
-    pub fn load_binary_pack(&mut self, bytes: &[u8]) -> Result<usize, String> {
+    pub fn load_binary_pack(&mut self, bytes: &[u8]) -> Result<usize, PackLoadError> {
         if bytes.len() < 12 {
-            return Err("Binary pack file too short".to_string());
+            return Err(PackLoadError::TooShort(bytes.len()));
         }
 
         // 1. Magic Bytes Check
         if &bytes[0..4] != MAGIC_BYTES {
-            return Err("Invalid magic bytes in binary pack".to_string());
+            return Err(PackLoadError::InvalidMagicBytes);
         }
 
         // 2. Format Version Check
         let version = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
         if version != PACK_VERSION {
-            return Err(format!("Unsupported format version {}", version));
+            return Err(PackLoadError::UnsupportedVersion { found: version });
         }
 
         let mut cursor = 8;
@@ -98,15 +99,12 @@ impl Engine {
         let (lang_tag, new_cursor) = read_string(bytes, cursor)?;
         cursor = new_cursor;
         if lang_tag != "ku-Latn" {
-            return Err(format!(
-                "Incompatible language tag '{}' (expected 'ku-Latn')",
-                lang_tag
-            ));
+            return Err(PackLoadError::IncompatibleLanguage { found: lang_tag });
         }
 
         // 4. Entry Count & Payload Length
         if cursor + 12 > bytes.len() {
-            return Err("Truncated binary pack header".to_string());
+            return Err(PackLoadError::TruncatedPayload);
         }
         let count = u32::from_le_bytes(bytes[cursor..cursor + 4].try_into().unwrap());
         cursor += 4;
@@ -114,23 +112,27 @@ impl Engine {
         let payload_len = usize::try_from(u64::from_le_bytes(
             bytes[cursor..cursor + 8].try_into().unwrap(),
         ))
-        .map_err(|_| "Payload length does not fit this platform")?;
+        .map_err(|_| PackLoadError::InvalidPayload {
+            message: "Payload length overflow".to_string(),
+        })?;
         cursor += 8;
 
         // 5. Payload Checksum Verification
         if cursor + 32 > bytes.len() {
-            return Err("Truncated checksum in binary header".to_string());
+            return Err(PackLoadError::TruncatedPayload);
         }
         let stored_checksum: [u8; 32] = bytes[cursor..cursor + 32].try_into().unwrap();
         cursor += 32;
 
         let payload_bytes = &bytes[cursor..];
         if payload_bytes.len() != payload_len {
-            return Err(format!(
-                "Payload size mismatch: expected {} bytes, found {}",
-                payload_len,
-                payload_bytes.len()
-            ));
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Payload size mismatch: expected {} bytes, found {}",
+                    payload_len,
+                    payload_bytes.len()
+                ),
+            });
         }
 
         let mut hasher = Sha256::new();
@@ -138,7 +140,7 @@ impl Engine {
         let computed_checksum: [u8; 32] = hasher.finalize().into();
 
         if stored_checksum != computed_checksum {
-            return Err("Binary pack corrupted: payload SHA-256 checksum mismatch".to_string());
+            return Err(PackLoadError::ChecksumMismatch);
         }
 
         // 6. Decode Payload Entries into Staging Buffers
@@ -158,7 +160,7 @@ impl Engine {
             payload_cursor = new_c;
 
             if payload_cursor + 8 > payload_bytes.len() {
-                return Err("Unexpected EOF reading entry frequency".to_string());
+                return Err(PackLoadError::TruncatedPayload);
             }
             let frequency = u64::from_le_bytes(
                 payload_bytes[payload_cursor..payload_cursor + 8]
@@ -171,7 +173,7 @@ impl Engine {
             payload_cursor = new_c;
 
             if payload_cursor + 2 > payload_bytes.len() {
-                return Err("Unexpected EOF reading regions count".to_string());
+                return Err(PackLoadError::TruncatedPayload);
             }
             let regions_count = u16::from_le_bytes(
                 payload_bytes[payload_cursor..payload_cursor + 2]
@@ -188,7 +190,7 @@ impl Engine {
             }
 
             if payload_cursor + 2 > payload_bytes.len() {
-                return Err("Unexpected EOF reading sources count".to_string());
+                return Err(PackLoadError::TruncatedPayload);
             }
             let sources_count = u16::from_le_bytes(
                 payload_bytes[payload_cursor..payload_cursor + 2]
@@ -205,7 +207,7 @@ impl Engine {
             }
 
             if payload_cursor + 20 > payload_bytes.len() {
-                return Err("Unexpected EOF reading frequency metadata in binary pack".to_string());
+                return Err(PackLoadError::TruncatedPayload);
             }
 
             let token_count = u64::from_le_bytes(
@@ -254,7 +256,7 @@ impl Engine {
 
         // 7. Decode Bigram Section (Section 2)
         if payload_cursor + 4 > payload_bytes.len() {
-            return Err("Unexpected EOF reading bigram context count".to_string());
+            return Err(PackLoadError::TruncatedPayload);
         }
         let bigram_context_count = u32::from_le_bytes(
             payload_bytes[payload_cursor..payload_cursor + 4]
@@ -264,11 +266,13 @@ impl Engine {
         payload_cursor += 4;
 
         if bigram_context_count > staged_lexicon.len() {
-            return Err(format!(
-                "Bigram context count {} exceeds lexicon count {}",
-                bigram_context_count,
-                staged_lexicon.len()
-            ));
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Bigram context count {} exceeds lexicon count {}",
+                    bigram_context_count,
+                    staged_lexicon.len()
+                ),
+            });
         }
 
         let mut staged_bigram_index: HashMap<usize, Vec<(usize, u64, u32)>> =
@@ -276,7 +280,7 @@ impl Engine {
 
         for _ in 0..bigram_context_count {
             if payload_cursor + 6 > payload_bytes.len() {
-                return Err("Unexpected EOF reading bigram context header".to_string());
+                return Err(PackLoadError::TruncatedPayload);
             }
             let ctx_idx = u32::from_le_bytes(
                 payload_bytes[payload_cursor..payload_cursor + 4]
@@ -286,18 +290,19 @@ impl Engine {
             payload_cursor += 4;
 
             if ctx_idx >= staged_lexicon.len() {
-                return Err(format!(
-                    "Context index {} out of lexicon bounds (lexicon count {})",
-                    ctx_idx,
-                    staged_lexicon.len()
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!(
+                        "Context index {} out of lexicon bounds (lexicon count {})",
+                        ctx_idx,
+                        staged_lexicon.len()
+                    ),
+                });
             }
 
             if staged_bigram_index.contains_key(&ctx_idx) {
-                return Err(format!(
-                    "Duplicate context index {} in binary pack",
-                    ctx_idx
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!("Duplicate context index {} in binary pack", ctx_idx),
+                });
             }
 
             let pred_count = u16::from_le_bytes(
@@ -308,13 +313,17 @@ impl Engine {
             payload_cursor += 2;
 
             if pred_count == 0 {
-                return Err(format!("Context index {} has zero predictions", ctx_idx));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!("Context index {} has zero predictions", ctx_idx),
+                });
             }
             if pred_count > MAX_BIGRAM_PREDICTIONS_PER_CONTEXT {
-                return Err(format!(
-                    "Context index {} has prediction count {} exceeding maximum {}",
-                    ctx_idx, pred_count, MAX_BIGRAM_PREDICTIONS_PER_CONTEXT
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!(
+                        "Context index {} has prediction count {} exceeding maximum {}",
+                        ctx_idx, pred_count, MAX_BIGRAM_PREDICTIONS_PER_CONTEXT
+                    ),
+                });
             }
 
             let mut predictions = Vec::with_capacity(pred_count);
@@ -322,7 +331,7 @@ impl Engine {
 
             for _ in 0..pred_count {
                 if payload_cursor + 16 > payload_bytes.len() {
-                    return Err("Unexpected EOF reading bigram prediction entry".to_string());
+                    return Err(PackLoadError::TruncatedPayload);
                 }
                 let next_idx = u32::from_le_bytes(
                     payload_bytes[payload_cursor..payload_cursor + 4]
@@ -332,18 +341,22 @@ impl Engine {
                 payload_cursor += 4;
 
                 if next_idx >= staged_lexicon.len() {
-                    return Err(format!(
-                        "Next lexicon index {} out of lexicon bounds (lexicon count {})",
-                        next_idx,
-                        staged_lexicon.len()
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Next lexicon index {} out of lexicon bounds (lexicon count {})",
+                            next_idx,
+                            staged_lexicon.len()
+                        ),
+                    });
                 }
 
                 if !seen_next_indices.insert(next_idx) {
-                    return Err(format!(
-                        "Duplicate next lexicon index {} in context {}",
-                        next_idx, ctx_idx
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Duplicate next lexicon index {} in context {}",
+                            next_idx, ctx_idx
+                        ),
+                    });
                 }
 
                 let count = u64::from_le_bytes(
@@ -354,10 +367,12 @@ impl Engine {
                 payload_cursor += 8;
 
                 if count == 0 {
-                    return Err(format!(
-                        "Zero bigram count for prediction index {} in context {}",
-                        next_idx, ctx_idx
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Zero bigram count for prediction index {} in context {}",
+                            next_idx, ctx_idx
+                        ),
+                    });
                 }
 
                 let prob = u32::from_le_bytes(
@@ -368,10 +383,12 @@ impl Engine {
                 payload_cursor += 4;
 
                 if prob > PROBABILITY_SCALE {
-                    return Err(format!(
-                        "Probability {} exceeds {} for prediction index {} in context {}",
-                        prob, PROBABILITY_SCALE, next_idx, ctx_idx
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Probability {} exceeds {} for prediction index {} in context {}",
+                            prob, PROBABILITY_SCALE, next_idx, ctx_idx
+                        ),
+                    });
                 }
 
                 predictions.push((next_idx, count, prob));
@@ -382,7 +399,7 @@ impl Engine {
 
         // 8. Decode Trigram Section (Section 3)
         if payload_cursor + 4 > payload_bytes.len() {
-            return Err("Unexpected EOF reading trigram context count".to_string());
+            return Err(PackLoadError::TruncatedPayload);
         }
         let raw_trigram_context_count = u32::from_le_bytes(
             payload_bytes[payload_cursor..payload_cursor + 4]
@@ -391,19 +408,26 @@ impl Engine {
         );
         payload_cursor += 4;
 
-        let trigram_context_count = usize::try_from(raw_trigram_context_count)
-            .map_err(|_| "Invalid trigram context count representation".to_string())?;
+        let trigram_context_count = usize::try_from(raw_trigram_context_count).map_err(|_| {
+            PackLoadError::InvalidPayload {
+                message: "Invalid trigram context count representation".to_string(),
+            }
+        })?;
 
         let max_contexts = staged_lexicon
             .len()
             .checked_mul(staged_lexicon.len())
-            .ok_or_else(|| "Trigram context bound overflow".to_string())?;
+            .ok_or_else(|| PackLoadError::InvalidPayload {
+                message: "Trigram context bound overflow".to_string(),
+            })?;
 
         if trigram_context_count > max_contexts {
-            return Err(format!(
-                "Trigram context count {} exceeds maximum possible pairs {}",
-                trigram_context_count, max_contexts
-            ));
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Trigram context count {} exceeds maximum possible pairs {}",
+                    trigram_context_count, max_contexts
+                ),
+            });
         }
 
         let mut staged_trigram_index: TrigramIndex =
@@ -411,7 +435,7 @@ impl Engine {
 
         for _ in 0..trigram_context_count {
             if payload_cursor + 10 > payload_bytes.len() {
-                return Err("Unexpected EOF reading trigram context header".to_string());
+                return Err(PackLoadError::TruncatedPayload);
             }
             let prev2_idx = u32::from_le_bytes(
                 payload_bytes[payload_cursor..payload_cursor + 4]
@@ -428,19 +452,23 @@ impl Engine {
             payload_cursor += 4;
 
             if prev2_idx >= staged_lexicon.len() || prev1_idx >= staged_lexicon.len() {
-                return Err(format!(
-                    "Trigram context indices ({}, {}) out of lexicon bounds (count {})",
-                    prev2_idx,
-                    prev1_idx,
-                    staged_lexicon.len()
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!(
+                        "Trigram context indices ({}, {}) out of lexicon bounds (count {})",
+                        prev2_idx,
+                        prev1_idx,
+                        staged_lexicon.len()
+                    ),
+                });
             }
 
             if staged_trigram_index.contains_key(&(prev2_idx, prev1_idx)) {
-                return Err(format!(
-                    "Duplicate trigram context indices ({}, {}) in binary pack",
-                    prev2_idx, prev1_idx
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!(
+                        "Duplicate trigram context indices ({}, {}) in binary pack",
+                        prev2_idx, prev1_idx
+                    ),
+                });
             }
 
             let pred_count = u16::from_le_bytes(
@@ -451,16 +479,20 @@ impl Engine {
             payload_cursor += 2;
 
             if pred_count == 0 {
-                return Err(format!(
-                    "Trigram context indices ({}, {}) has zero predictions",
-                    prev2_idx, prev1_idx
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!(
+                        "Trigram context indices ({}, {}) has zero predictions",
+                        prev2_idx, prev1_idx
+                    ),
+                });
             }
             if pred_count > MAX_TRIGRAM_PREDICTIONS_PER_CONTEXT {
-                return Err(format!(
-                    "Trigram context indices ({}, {}) has prediction count {} exceeding maximum {}",
-                    prev2_idx, prev1_idx, pred_count, MAX_TRIGRAM_PREDICTIONS_PER_CONTEXT
-                ));
+                return Err(PackLoadError::InvalidPayload {
+                    message: format!(
+                        "Trigram context indices ({}, {}) has prediction count {} exceeding maximum {}",
+                        prev2_idx, prev1_idx, pred_count, MAX_TRIGRAM_PREDICTIONS_PER_CONTEXT
+                    ),
+                });
             }
 
             let mut predictions = Vec::with_capacity(pred_count);
@@ -468,7 +500,7 @@ impl Engine {
 
             for _ in 0..pred_count {
                 if payload_cursor + 16 > payload_bytes.len() {
-                    return Err("Unexpected EOF reading trigram prediction entry".to_string());
+                    return Err(PackLoadError::TruncatedPayload);
                 }
                 let next_idx = u32::from_le_bytes(
                     payload_bytes[payload_cursor..payload_cursor + 4]
@@ -478,18 +510,22 @@ impl Engine {
                 payload_cursor += 4;
 
                 if next_idx >= staged_lexicon.len() {
-                    return Err(format!(
-                        "Trigram next lexicon index {} out of lexicon bounds (count {})",
-                        next_idx,
-                        staged_lexicon.len()
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Trigram next lexicon index {} out of lexicon bounds (count {})",
+                            next_idx,
+                            staged_lexicon.len()
+                        ),
+                    });
                 }
 
                 if !seen_next_indices.insert(next_idx) {
-                    return Err(format!(
-                        "Duplicate next lexicon index {} in trigram context ({}, {})",
-                        next_idx, prev2_idx, prev1_idx
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Duplicate next lexicon index {} in trigram context ({}, {})",
+                            next_idx, prev2_idx, prev1_idx
+                        ),
+                    });
                 }
 
                 let count = u64::from_le_bytes(
@@ -500,10 +536,12 @@ impl Engine {
                 payload_cursor += 8;
 
                 if count == 0 {
-                    return Err(format!(
-                        "Zero trigram count for prediction index {} in context ({}, {})",
-                        next_idx, prev2_idx, prev1_idx
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Zero trigram count for prediction index {} in context ({}, {})",
+                            next_idx, prev2_idx, prev1_idx
+                        ),
+                    });
                 }
 
                 let prob = u32::from_le_bytes(
@@ -514,10 +552,12 @@ impl Engine {
                 payload_cursor += 4;
 
                 if prob > PROBABILITY_SCALE {
-                    return Err(format!(
-                        "Probability {} exceeds {} for trigram prediction index {} in context ({}, {})",
-                        prob, PROBABILITY_SCALE, next_idx, prev2_idx, prev1_idx
-                    ));
+                    return Err(PackLoadError::InvalidPayload {
+                        message: format!(
+                            "Probability {} exceeds {} for trigram prediction index {} in context ({}, {})",
+                            prob, PROBABILITY_SCALE, next_idx, prev2_idx, prev1_idx
+                        ),
+                    });
                 }
 
                 predictions.push((next_idx, count, prob));
@@ -528,10 +568,12 @@ impl Engine {
 
         // Verify complete payload consumption
         if payload_cursor != payload_bytes.len() {
-            return Err(format!(
-                "Trailing payload bytes: {} bytes remain",
-                payload_bytes.len() - payload_cursor
-            ));
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Trailing payload bytes: {} bytes remain",
+                    payload_bytes.len() - payload_cursor
+                ),
+            });
         }
 
         // Atomically replace engine state upon 100% successful parsing
@@ -829,18 +871,20 @@ impl Engine {
     }
 }
 
-fn read_string(bytes: &[u8], cursor: usize) -> Result<(String, usize), String> {
+fn read_string(bytes: &[u8], cursor: usize) -> Result<(String, usize), PackLoadError> {
     if cursor + 2 > bytes.len() {
-        return Err("Unexpected EOF reading string length".to_string());
+        return Err(PackLoadError::TruncatedPayload);
     }
     let len = u16::from_le_bytes(bytes[cursor..cursor + 2].try_into().unwrap()) as usize;
     let start = cursor + 2;
     let end = start + len;
     if end > bytes.len() {
-        return Err("Unexpected EOF reading string content".to_string());
+        return Err(PackLoadError::TruncatedPayload);
     }
     let s = std::str::from_utf8(&bytes[start..end])
-        .map_err(|e| format!("UTF-8 error: {}", e))?
+        .map_err(|e| PackLoadError::InvalidPayload {
+            message: format!("UTF-8 error: {}", e),
+        })?
         .to_string();
     Ok((s, end))
 }
