@@ -9,7 +9,7 @@ This script is a read-only verifier for Milestone 4C.3. It:
 4. Asserts that sê, all non-approved entries, and all members of sê's conflict group are absent from reviewed.
 5. Cross-checks computed additions against manifest counts.
 6. Optionally compares two build output trees for byte determinism (--compare-root-a / --compare-root-b).
-7. Runs an extended self-test suite against mutated temporary fixtures (--self-test).
+7. Runs an extended self-test suite against isolated mutated temporary fixtures (--self-test).
 """
 
 import sys
@@ -22,7 +22,6 @@ from typing import Dict, Set, Any, List, Tuple
 
 SE_TARGET_ID = "09b9615e18bca7b64270de5df9ca439415f4fec996f01f07bf7676ee8655be8e"
 SE_GROUP_ID = "ce6da264f7c9c318282532121fbdd7cf300ee1273f7549e555518525d35e838f"
-KNOWN_SEED_BINARY_SHA256 = "4e186130f1d00893f12d3cb7684945fe55c4414a1b31f910571c84ce5a12a8f1"
 
 
 def parse_args():
@@ -150,8 +149,6 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
     decisions = derived["decisions"]
     approved_decs = derived["approved_decisions"]
     non_approved_decs = derived["non_approved_decisions"]
-    seed_entries = derived["seed_entries"]
-    rev_entries = derived["rev_entries"]
     rev_manifest = derived["rev_manifest"]
     ext_additions = derived["external_additions"]
     target_to_norm = derived["target_to_norm"]
@@ -232,66 +229,82 @@ def verify_tree_determinism(root_a: Path, root_b: Path):
 
 
 def run_self_tests(candidate_root: Path):
-    print("Running verifier self-test suite against mutated fixtures...")
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = Path(tmp_dir)
+    print("Running verifier self-test suite against isolated mutated fixtures...")
+
+    def create_fixture_root(tmp_parent: Path, index: int) -> Path:
+        fixture_path = tmp_parent / f"fixture_{index}"
+        fixture_path.mkdir(parents=True, exist_ok=True)
         for d in ["data/review-decisions", "data/review-queues", "data/reviewed", "data/build/packs"]:
             src = candidate_root / d
-            dst = tmp_path / d
+            dst = fixture_path / d
             if src.exists():
                 shutil.copytree(src, dst)
+        return fixture_path
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_parent = Path(tmp_dir)
 
         # Self-Test 1: Mutate decisions count
-        dec_file = tmp_path / "data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl"
+        f1 = create_fixture_root(tmp_parent, 1)
+        dec_file = f1 / "data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl"
         dec_lines = dec_file.read_text(encoding="utf-8").splitlines()
         dec_file.write_text("\n".join(dec_lines[:-1]) + "\n", encoding="utf-8")
         try:
-            d = derive_selection(tmp_path)
-            validate_policy_invariants(d, tmp_path)
+            d = derive_selection(f1)
+            validate_policy_invariants(d, f1)
             raise RuntimeError("Self-test 1 failed: expected decision count assertion error!")
         except AssertionError as e:
+            assert "Expected 13 review decisions" in str(e), f"Unexpected error in Self-test 1: {e}"
             print(f"✅ Self-test 1 passed (caught missing decision): {e}")
-        dec_file.write_text("\n".join(dec_lines) + "\n", encoding="utf-8")
 
         # Self-Test 2: Mutate manifest external approved count
-        man_file = tmp_path / "data/build/packs/reviewed/manifest.json"
-        man_data = json.loads(man_file.read_text())
+        f2 = create_fixture_root(tmp_parent, 2)
+        man_file = f2 / "data/build/packs/reviewed/manifest.json"
+        man_data = json.loads(man_file.read_text(encoding="utf-8"))
         man_data["external_approved_selected_count"] = 3
         man_file.write_text(json.dumps(man_data), encoding="utf-8")
         try:
-            d = derive_selection(tmp_path)
-            validate_policy_invariants(d, tmp_path)
-            raise RuntimeError("Self-test 2 failed: expected external approved count assertion error!")
+            d = derive_selection(f2)
+            validate_policy_invariants(d, f2)
+            raise RuntimeError("Self-test 2 failed: expected manifest count assertion error!")
         except AssertionError as e:
+            assert "Computed external additions count" in str(e), f"Unexpected error in Self-test 2: {e}"
             print(f"✅ Self-test 2 passed (caught manifest count mismatch): {e}")
 
-        # Self-Test 3: Inject unresolved entry (e.g. wela) into reviewed pack
-        # We simulate this by mutating manifest / binary or mock derived additions
-        d = derive_selection(tmp_path)
-        d["external_additions"].add("wela")
+        # Self-Test 3: Inject unresolved entry ('wela') into external additions (with manifest set to 3)
+        f3 = create_fixture_root(tmp_parent, 3)
+        d3 = derive_selection(f3)
+        d3["rev_manifest"]["external_approved_selected_count"] = 3
+        d3["external_additions"].add("wela")
         try:
-            validate_policy_invariants(d, tmp_path)
+            validate_policy_invariants(d3, f3)
             raise RuntimeError("Self-test 3 failed: expected non-approved entry injection error!")
         except AssertionError as e:
+            assert "Expected external reviewed additions to be" in str(e) or "Non-approved entry" in str(e), f"Unexpected error in Self-test 3: {e}"
             print(f"✅ Self-test 3 passed (caught injected unresolved entry 'wela'): {e}")
 
-        # Self-Test 4: Replace şeq with another entry (e.g. azadî) while count remains 2
-        d = derive_selection(tmp_path)
-        d["external_additions"].remove("şeq")
-        d["external_additions"].add("azadî")
+        # Self-Test 4: Replace şeq with another entry ('azadî') while count remains 2
+        f4 = create_fixture_root(tmp_parent, 4)
+        d4 = derive_selection(f4)
+        d4["external_additions"].remove("şeq")
+        d4["external_additions"].add("azadî")
         try:
-            validate_policy_invariants(d, tmp_path)
+            validate_policy_invariants(d4, f4)
             raise RuntimeError("Self-test 4 failed: expected wrong addition error!")
         except AssertionError as e:
+            assert "Expected external reviewed additions to be" in str(e), f"Unexpected error in Self-test 4: {e}"
             print(f"✅ Self-test 4 passed (caught replaced entry 'azadî'): {e}")
 
-        # Self-Test 5: Include sê in reviewed additions while unresolved
-        d = derive_selection(tmp_path)
-        d["external_additions"].add("sê")
+        # Self-Test 5: Include sê in external additions while unresolved (with manifest set to 3)
+        f5 = create_fixture_root(tmp_parent, 5)
+        d5 = derive_selection(f5)
+        d5["rev_manifest"]["external_approved_selected_count"] = 3
+        d5["external_additions"].add("sê")
         try:
-            validate_policy_invariants(d, tmp_path)
+            validate_policy_invariants(d5, f5)
             raise RuntimeError("Self-test 5 failed: expected unselected sê error!")
         except AssertionError as e:
+            assert "Expected external reviewed additions to be" in str(e) or "Approved sê entry" in str(e), f"Unexpected error in Self-test 5: {e}"
             print(f"✅ Self-test 5 passed (caught sê in external additions): {e}")
 
     print("⚡ Extended verifier self-test suite PASSED successfully!")
