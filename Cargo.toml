@@ -4,6 +4,7 @@ members = [
     "engine",
     "data-builder",
     "cli",
+    "ffi",
 ]
 
 [workspace.package]
