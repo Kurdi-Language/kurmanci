@@ -77,7 +77,46 @@ fn test_public_api_malformed_pack_rejection() {
         }))
     ));
 
-    // 4. Missing pack file
+    // 4. Incompatible language tag
+    let mut bad_lang = vec![0u8; 32];
+    bad_lang[0..4].copy_from_slice(b"KRM1");
+    bad_lang[4..8].copy_from_slice(&4u32.to_le_bytes());
+    bad_lang[8..10].copy_from_slice(&2u16.to_le_bytes());
+    bad_lang[10..12].copy_from_slice(b"en");
+    let res_lang = KurmanciEngine::from_pack_bytes(&bad_lang);
+    assert!(matches!(
+        res_lang,
+        Err(EngineError::PackLoad(PackLoadError::IncompatibleLanguage {
+            found
+        })) if found == "en"
+    ));
+
+    // 5. Checksum mismatch on corrupted seed pack bytes
+    let seed_path = get_pack_path("seed");
+    let mut corrupted = std::fs::read(&seed_path).expect("seed pack must exist");
+    if let Some(last) = corrupted.last_mut() {
+        *last ^= 0xFF;
+    }
+    let res_chk = KurmanciEngine::from_pack_bytes(&corrupted);
+    assert!(matches!(
+        res_chk,
+        Err(EngineError::PackLoad(PackLoadError::ChecksumMismatch))
+    ));
+
+    // 6. Truncated payload
+    let mut trunc_pack = vec![0u8; 32];
+    trunc_pack[0..4].copy_from_slice(b"KRM1");
+    trunc_pack[4..8].copy_from_slice(&4u32.to_le_bytes());
+    trunc_pack[8..10].copy_from_slice(&7u16.to_le_bytes());
+    trunc_pack[10..17].copy_from_slice(b"ku-Latn");
+    let res_trunc = KurmanciEngine::from_pack_bytes(&trunc_pack);
+    assert!(matches!(
+        res_trunc,
+        Err(EngineError::PackLoad(PackLoadError::TruncatedPayload))
+            | Err(EngineError::PackLoad(PackLoadError::InvalidPayload { .. }))
+    ));
+
+    // 7. Missing pack file
     let missing_path = PathBuf::from("non_existent_pack.bin");
     let res4 = KurmanciEngine::from_pack_file(&missing_path);
     assert!(matches!(res4, Err(EngineError::Io(_))));
@@ -99,6 +138,40 @@ fn test_public_api_is_known_word_and_nfc_normalization() {
 
     // Unknown word
     assert!(!engine.is_known_word("nonexistentword123"));
+}
+
+#[test]
+fn test_public_api_unicode_nfc_nfd_equivalence() {
+    let engine =
+        KurmanciEngine::from_pack_file(get_pack_path("seed")).expect("Failed to load seed pack");
+
+    let nfc_prefix = "rojbaş";
+    let nfd_prefix = "rojbas\u{0327}";
+    assert_eq!(
+        engine.complete(nfc_prefix, CompletionOptions::default()),
+        engine.complete(nfd_prefix, CompletionOptions::default())
+    );
+
+    let nfc_suggest = "şeq";
+    let nfd_suggest = "s\u{0327}eq";
+    assert_eq!(
+        engine.suggest(nfc_suggest, SuggestOptions::default()),
+        engine.suggest(nfd_suggest, SuggestOptions::default())
+    );
+
+    let nfc_correct = "bijî";
+    let nfd_correct = "biji\u{0302}";
+    assert_eq!(
+        engine.correct(nfc_correct, CorrectionOptions::default()),
+        engine.correct(nfd_correct, CorrectionOptions::default())
+    );
+
+    let nfc_ctx = ["ez", "diçim"];
+    let nfd_ctx = ["ez", "dic\u{0327}im"];
+    assert_eq!(
+        engine.predict_next(&nfc_ctx, PredictionOptions::default()),
+        engine.predict_next(&nfd_ctx, PredictionOptions::default())
+    );
 }
 
 #[test]
@@ -140,27 +213,21 @@ fn test_public_api_limit_clamping() {
 
 #[test]
 fn test_public_api_predict_next_context_rules() {
-    let pack_path = PathBuf::from("data/build/lexicon.bin");
-    if !pack_path.exists() {
-        eprintln!(
-            "Skipping test_public_api_predict_next_context_rules: data/build/lexicon.bin not found"
-        );
-        return;
-    }
-
-    let engine = KurmanciEngine::from_pack_file(&pack_path).expect("Failed to load compiled pack");
+    let seed_path = get_pack_path("seed");
+    let engine = KurmanciEngine::from_pack_file(&seed_path)
+        .expect("seed pack must exist; CI builds controlled packs before tests");
 
     // 0 context words -> empty
     let p0 = engine.predict_next(&[], PredictionOptions { limit: 5 });
     assert!(p0.is_empty());
 
-    // 1 context word -> bigram prediction
+    // 1 context word -> bigram prediction (empty in model_profile=none, but query executes infallibly)
     let p1 = engine.predict_next(&["ez"], PredictionOptions { limit: 5 });
-    assert!(!p1.is_empty());
+    assert_eq!(p1, Vec::new());
 
-    // 2 context words -> trigram with bigram backoff
+    // 2 context words -> trigram/backoff prediction
     let p2 = engine.predict_next(&["ez", "diçim"], PredictionOptions { limit: 5 });
-    assert!(!p2.is_empty());
+    assert_eq!(p2, Vec::new());
 
     // 3 context words -> uses final two words ("ez", "diçim")
     let p3 = engine.predict_next(&["min", "ez", "diçim"], PredictionOptions { limit: 5 });

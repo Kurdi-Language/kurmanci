@@ -13,33 +13,37 @@ fn get_pack_path(name: &str) -> PathBuf {
 
 fn bench_engine_operations(c: &mut Criterion) {
     let seed_path = get_pack_path("seed");
-    let seed_bytes = std::fs::read(&seed_path).unwrap_or_default();
+    let exp_path = get_pack_path("experimental-full");
 
-    if !seed_bytes.is_empty() {
-        c.bench_function("engine_load_seed_bytes", |b| {
-            b.iter(|| KurmanciEngine::from_pack_bytes(black_box(&seed_bytes)).unwrap())
-        });
+    let seed_bytes = std::fs::read(&seed_path).expect("Seed pack file must exist for benchmarks");
+    let exp_bytes =
+        std::fs::read(&exp_path).expect("Experimental pack file must exist for benchmarks");
 
-        let engine = KurmanciEngine::from_pack_bytes(&seed_bytes).unwrap();
+    c.bench_function("engine_load_seed_bytes", |b| {
+        b.iter(|| KurmanciEngine::from_pack_bytes(black_box(&seed_bytes)).unwrap())
+    });
 
-        c.bench_function("is_known_word_seed", |b| {
-            b.iter(|| engine.is_known_word(black_box("welat")))
-        });
+    c.bench_function("engine_load_experimental_bytes", |b| {
+        b.iter(|| KurmanciEngine::from_pack_bytes(black_box(&exp_bytes)).unwrap())
+    });
 
-        c.bench_function("correct_seed", |b| {
-            b.iter(|| engine.correct(black_box("spaz"), CorrectionOptions { limit: 5 }))
-        });
+    let engine = KurmanciEngine::from_pack_bytes(&seed_bytes).unwrap();
 
-        c.bench_function("complete_seed", |b| {
-            b.iter(|| engine.complete(black_box("roj"), CompletionOptions { limit: 5 }))
-        });
+    c.bench_function("is_known_word_seed", |b| {
+        b.iter(|| engine.is_known_word(black_box("welat")))
+    });
 
-        c.bench_function("predict_next_seed", |b| {
-            b.iter(|| {
-                engine.predict_next(black_box(&["ez", "diçim"]), PredictionOptions { limit: 5 })
-            })
-        });
-    }
+    c.bench_function("correct_seed", |b| {
+        b.iter(|| engine.correct(black_box("spaz"), CorrectionOptions { limit: 5 }))
+    });
+
+    c.bench_function("complete_seed", |b| {
+        b.iter(|| engine.complete(black_box("roj"), CompletionOptions { limit: 5 }))
+    });
+
+    c.bench_function("predict_next_seed", |b| {
+        b.iter(|| engine.predict_next(black_box(&["ez", "diçim"]), PredictionOptions { limit: 5 }))
+    });
 }
 
 criterion_group!(benches, bench_engine_operations);

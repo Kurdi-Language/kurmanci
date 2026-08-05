@@ -2,7 +2,7 @@ use crate::engine::{Engine, MAGIC_BYTES, PACK_VERSION};
 use crate::errors::{EngineError, PackLoadError};
 use crate::normalization::normalize;
 use crate::ranking::{NextWordPrediction, PredictionSource, SuggestionKind};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
@@ -18,7 +18,7 @@ fn clamp_limit(limit: usize) -> usize {
 }
 
 /// Metadata extracted directly from a loaded binary language pack.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PackInfo {
     pub language_tag: String,
     pub format_version: u32,
@@ -26,7 +26,7 @@ pub struct PackInfo {
 }
 
 /// Options for spelling correction queries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct CorrectionOptions {
     pub limit: usize,
 }
@@ -40,7 +40,7 @@ impl Default for CorrectionOptions {
 }
 
 /// Options for prefix completion queries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct CompletionOptions {
     pub limit: usize,
 }
@@ -54,7 +54,7 @@ impl Default for CompletionOptions {
 }
 
 /// Options for combined suggestion queries (exact, completion, and correction).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct SuggestOptions {
     pub limit: usize,
 }
@@ -68,7 +68,7 @@ impl Default for SuggestOptions {
 }
 
 /// Options for next-word prediction queries.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct PredictionOptions {
     pub limit: usize,
 }
@@ -82,7 +82,7 @@ impl Default for PredictionOptions {
 }
 
 /// Structured spelling or completion suggestion item.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct SuggestionResult {
     pub text: String,
     pub kind: SuggestionKind,
@@ -90,7 +90,7 @@ pub struct SuggestionResult {
 }
 
 /// Structured next-word prediction item.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Prediction {
     pub text: String,
     pub count: u64,

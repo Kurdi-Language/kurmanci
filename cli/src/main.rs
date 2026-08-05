@@ -76,7 +76,8 @@ fn main() {
             explain,
         } => {
             let engine = KurmanciEngine::from_pack_file(&pack).unwrap_or_else(|e| {
-                panic!("Failed to load binary pack '{:?}': {}", pack, e);
+                eprintln!("Error: failed to load binary pack '{:?}': {}", pack, e);
+                std::process::exit(1);
             });
 
             if !json {
@@ -161,7 +162,8 @@ fn main() {
             }
 
             let engine = KurmanciEngine::from_pack_file(&pack).unwrap_or_else(|e| {
-                panic!("Failed to load binary pack '{:?}': {}", pack, e);
+                eprintln!("Error: failed to load binary pack '{:?}': {}", pack, e);
+                std::process::exit(1);
             });
 
             if !json {
