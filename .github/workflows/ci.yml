@@ -320,6 +320,15 @@ jobs:
           gcc -std=c99 -Wall -Wextra -Werror -pedantic -I ffi/include ffi/tests/c_smoke_test.c -L target/debug -lkurmanci_ffi -o target/debug/c_smoke_test
           LD_LIBRARY_PATH=target/debug DYLD_LIBRARY_PATH=target/debug ./target/debug/c_smoke_test data/build/packs/seed/lexicon.bin
 
+      - name: Verify Swift Header Synchronization & Test Suite
+        run: |
+          cmp ffi/include/kurmanci.h swift/Sources/CKurmanci/include/kurmanci.h
+          LD_LIBRARY_PATH="$PWD/target/debug" DYLD_LIBRARY_PATH="$PWD/target/debug" swift test --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug"
+
+      - name: Run Swift Command-Line Example
+        run: |
+          LD_LIBRARY_PATH="$PWD/target/debug" DYLD_LIBRARY_PATH="$PWD/target/debug" swift run --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug" KurmanciExample data/build/packs/seed/lexicon.bin
+
       - name: Verify Repository Cleanliness
         run: |
           git diff --exit-code
@@ -330,4 +339,39 @@ jobs:
           cargo run -p kurmanci-cli -- suggest rojb
           cargo run -p kurmanci-cli -- predict-next ez --explain
           cargo run -p kurmanci-cli -- predict-next ez ji --explain
+
+  swift-macos:
+    name: Swift Package on macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.85.0'
+
+      - name: Build seed pack and native library
+        run: |
+          cargo run -p kurmanci-data-builder -- build-pack seed
+          cargo build -p kurmanci-ffi
+
+      - name: Verify synchronized header
+        run: |
+          cmp ffi/include/kurmanci.h swift/Sources/CKurmanci/include/kurmanci.h
+
+      - name: Test Swift package
+        run: |
+          DYLD_LIBRARY_PATH="$PWD/target/debug" swift test --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug"
+
+      - name: Run Swift example
+        run: |
+          DYLD_LIBRARY_PATH="$PWD/target/debug" swift run --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug" KurmanciExample data/build/packs/seed/lexicon.bin
+
+      - name: Build Swift package in release mode
+        run: |
+          DYLD_LIBRARY_PATH="$PWD/target/debug" swift build --package-path swift -c release -Xlinker -L -Xlinker "$PWD/target/debug"
+
 

@@ -20,17 +20,19 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
 - [x] **Benchmark Review Governance** *(Milestone 4B.3A - Completed)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone added no benchmark cases.
 - [x] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Completed)*: Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules.
-- [ ] **Pack Quality Assessment & Lexicon Enrichment** *(Milestone 4C - Active)*: Initial controlled-pack quality assessment (`docs/evaluation/initial-pack-quality-assessment.md`), targeted human review of imported lexical entries, and benchmark-driven pack enrichment.
+- [x] **Pack Quality Assessment & Lexicon Enrichment** (*Milestone 4C - Completed*): Initial controlled-pack quality assessment (`docs/evaluation/initial-pack-quality-assessment.md`), targeted human review of imported lexical entries, and benchmark-driven pack enrichment.
 
 
-### Experimental Capabilities
+### Experimental & Integration Capabilities
 > [!NOTE]
 > **Statistical & Language Models Status**: Engineering implemented; linguistic validation pending.
 > Frequency tables, bigrams, and trigrams are experimental. They are disabled in current production packs (`model_profile = "none"`).
 
-- [ ] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python — implemented in Milestone 5B; available after PR #28 merges.
-- [ ] **Mobile SDKs & Keyboards** *(Planned)*: Swift SDK (iOS), Kotlin SDK (Android), and custom keyboard extensions.
-- [ ] **WebAssembly Bindings** *(Planned)*: Browser and WebAssembly client library target.
+- [x] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python.
+- [x] **Repository-Local Swift Wrapper Foundation** (`swift/`): Safe Swift API (`KurmanciEngine`) validated on macOS and Linux against a locally built `kurmanci-ffi` library — implemented in Milestone 5C.1; pending merge.
+- [ ] **Distributable Apple SDK & XCFramework Packaging** (*Milestone 5C.2 - Planned*): Precompiled XCFramework packaging and SwiftPM binary target integration.
+- [ ] **Mobile SDKs & Keyboards** (*Planned*): Kotlin SDK (Android) and custom reference keyboard extensions.
+- [ ] **WebAssembly Bindings** (*Planned*): Browser and WebAssembly client library target.
 
 ---
 
@@ -124,6 +126,22 @@ cargo run -p kurmanci-cli -- suggest spaz
 
 # Diagnostic ranking explanation
 cargo run -p kurmanci-cli -- suggest spaz --explain
+```
+
+### Swift Package SDK (`swift/`)
+
+```bash
+# Build native C ABI library first
+cargo build -p kurmanci-ffi
+
+# Run Swift Package test suite
+LD_LIBRARY_PATH="$PWD/target/debug" DYLD_LIBRARY_PATH="$PWD/target/debug" \
+swift test --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug"
+
+# Run Swift Command-Line Example
+LD_LIBRARY_PATH="$PWD/target/debug" DYLD_LIBRARY_PATH="$PWD/target/debug" \
+swift run --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug" \
+KurmanciExample data/build/packs/seed/lexicon.bin
 ```
 
 ---
