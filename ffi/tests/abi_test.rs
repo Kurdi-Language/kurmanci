@@ -192,3 +192,183 @@ fn test_c_abi_repeated_create_query_destroy_memory_cycle() {
         }
     }
 }
+
+#[test]
+fn test_c_abi_create_from_bytes_success() {
+    unsafe {
+        let seed_path = get_pack_path("seed");
+        let bytes = std::fs::read(&seed_path).expect("seed pack file must exist");
+        let mut engine: *mut kmr_engine = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_create_from_bytes(bytes.as_ptr(), bytes.len(), &mut engine),
+            KMR_OK
+        );
+        assert!(!engine.is_null());
+
+        let mut info = kmr_pack_info {
+            language_tag: std::ptr::null(),
+            format_version: 0,
+            entry_count: 0,
+        };
+        assert_eq!(kmr_engine_get_info(engine, &mut info), KMR_OK);
+        assert_eq!(info.format_version, 4);
+        assert_eq!(info.entry_count, 33);
+
+        kmr_engine_destroy(engine);
+    }
+}
+
+#[test]
+fn test_c_abi_suggest() {
+    unsafe {
+        let seed_path = get_pack_path("seed");
+        let c_path = CString::new(seed_path.to_str().unwrap()).unwrap();
+        let mut engine: *mut kmr_engine = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_create_from_file(c_path.as_ptr(), &mut engine),
+            KMR_OK
+        );
+
+        let c_input = CString::new("spaz").unwrap();
+        let mut suggestions: *mut kmr_suggestion_list = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_suggest(engine, c_input.as_ptr(), 5, &mut suggestions),
+            KMR_OK
+        );
+        assert!(!suggestions.is_null());
+
+        let mut len = 0;
+        assert_eq!(kmr_suggestion_list_len(suggestions, &mut len), KMR_OK);
+        assert!(len > 0);
+
+        let mut item = kmr_suggestion_item {
+            text: std::ptr::null(),
+            kind: 0,
+            edit_cost: 0,
+        };
+        assert_eq!(kmr_suggestion_list_get(suggestions, 0, &mut item), KMR_OK);
+        assert!(!item.text.is_null());
+        let text_str = std::ffi::CStr::from_ptr(item.text).to_str().unwrap();
+        assert_eq!(text_str, "spas");
+
+        kmr_suggestion_list_destroy(suggestions);
+        kmr_engine_destroy(engine);
+    }
+}
+
+#[test]
+fn test_c_abi_prediction_inspection() {
+    unsafe {
+        let seed_path = get_pack_path("seed");
+        let c_path = CString::new(seed_path.to_str().unwrap()).unwrap();
+        let mut engine: *mut kmr_engine = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_create_from_file(c_path.as_ptr(), &mut engine),
+            KMR_OK
+        );
+
+        let w1 = CString::new("ez").unwrap();
+        let w2 = CString::new("diçim").unwrap();
+        let context = [w1.as_ptr(), w2.as_ptr()];
+
+        let mut predictions: *mut kmr_prediction_list = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_predict_next(engine, context.as_ptr(), 2, 5, &mut predictions),
+            KMR_OK
+        );
+        assert!(!predictions.is_null());
+
+        let mut len = 0;
+        assert_eq!(kmr_prediction_list_len(predictions, &mut len), KMR_OK);
+        // Seed pack model profile is none, so length is 0
+        assert_eq!(len, 0);
+
+        kmr_prediction_list_destroy(predictions);
+        kmr_engine_destroy(engine);
+    }
+}
+
+#[test]
+fn test_c_abi_limits() {
+    unsafe {
+        let seed_path = get_pack_path("seed");
+        let c_path = CString::new(seed_path.to_str().unwrap()).unwrap();
+        let mut engine: *mut kmr_engine = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_create_from_file(c_path.as_ptr(), &mut engine),
+            KMR_OK
+        );
+
+        let c_input = CString::new("spaz").unwrap();
+
+        // Limit 0 returns empty list
+        let mut empty_results: *mut kmr_suggestion_list = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_correct(engine, c_input.as_ptr(), 0, &mut empty_results),
+            KMR_OK
+        );
+        let mut len0 = 999;
+        assert_eq!(kmr_suggestion_list_len(empty_results, &mut len0), KMR_OK);
+        assert_eq!(len0, 0);
+        kmr_suggestion_list_destroy(empty_results);
+
+        // Large limit succeeds and is clamped to max 50
+        let mut large_results: *mut kmr_suggestion_list = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_correct(engine, c_input.as_ptr(), 100, &mut large_results),
+            KMR_OK
+        );
+        let mut len_large = 0;
+        assert_eq!(
+            kmr_suggestion_list_len(large_results, &mut len_large),
+            KMR_OK
+        );
+        assert!(len_large > 0 && len_large <= 50);
+        kmr_suggestion_list_destroy(large_results);
+
+        kmr_engine_destroy(engine);
+    }
+}
+
+#[test]
+fn test_c_abi_null_context_validation() {
+    unsafe {
+        let seed_path = get_pack_path("seed");
+        let c_path = CString::new(seed_path.to_str().unwrap()).unwrap();
+        let mut engine: *mut kmr_engine = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_create_from_file(c_path.as_ptr(), &mut engine),
+            KMR_OK
+        );
+
+        // context_words_utf8 == NULL with context_count == 0 must succeed
+        let mut predictions: *mut kmr_prediction_list = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_predict_next(engine, std::ptr::null(), 0, 5, &mut predictions),
+            KMR_OK
+        );
+        assert!(!predictions.is_null());
+        kmr_prediction_list_destroy(predictions);
+
+        // context_words_utf8 == NULL with context_count > 0 must fail with KMR_ERROR_INVALID_ARGUMENT
+        let mut bad_predictions: *mut kmr_prediction_list = std::ptr::null_mut();
+        assert_eq!(
+            kmr_engine_predict_next(engine, std::ptr::null(), 2, 5, &mut bad_predictions),
+            KMR_ERROR_INVALID_ARGUMENT
+        );
+        assert!(bad_predictions.is_null());
+
+        kmr_engine_destroy(engine);
+    }
+}
+
+#[test]
+fn test_c_abi_panic_containment() {
+    let status = test_panic_guard();
+    assert_eq!(status, KMR_ERROR_INTERNAL);
+
+    let err_ptr = unsafe { kmr_last_error_message() };
+    assert!(!err_ptr.is_null());
+    let err_str = unsafe { std::ffi::CStr::from_ptr(err_ptr).to_str().unwrap() };
+    assert!(err_str.contains("test panic containment"));
+}

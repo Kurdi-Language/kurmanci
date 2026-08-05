@@ -28,7 +28,7 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 > **Statistical & Language Models Status**: Engineering implemented; linguistic validation pending.
 > Frequency tables, bigrams, and trigrams are experimental. They are disabled in current production packs (`model_profile = "none"`).
 
-- [x] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python.
+- [ ] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python — implemented in Milestone 5B; available after PR #28 merges.
 - [ ] **Mobile SDKs & Keyboards** *(Planned)*: Swift SDK (iOS), Kotlin SDK (Android), and custom keyboard extensions.
 - [ ] **WebAssembly Bindings** *(Planned)*: Browser and WebAssembly client library target.
 

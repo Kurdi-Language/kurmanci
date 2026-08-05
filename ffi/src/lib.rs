@@ -183,6 +183,16 @@ fn parse_c_str(ptr: *const c_char, name: &str) -> Result<&str, FfiError> {
         .map_err(|_| FfiError::InvalidArgument(format!("Invalid UTF-8 string passed for {}", name)))
 }
 
+fn to_c_string(value: String) -> Result<CString, FfiError> {
+    CString::new(value)
+        .map_err(|_| FfiError::Internal("engine result contained an interior NUL byte".to_string()))
+}
+
+#[doc(hidden)]
+pub fn test_panic_guard() -> kmr_status {
+    ffi_guard(|| panic!("test panic containment"))
+}
+
 #[no_mangle]
 pub extern "C" fn kmr_abi_version_major() -> u32 {
     KMR_ABI_VERSION_MAJOR
@@ -357,18 +367,20 @@ pub unsafe extern "C" fn kmr_engine_correct(
 
         let items = results
             .into_iter()
-            .map(|r| OwnedSuggestionItem {
-                text: CString::new(r.text).unwrap_or_default(),
-                kind: match r.kind {
-                    SuggestionKind::Exact => KMR_SUGGESTION_EXACT,
-                    SuggestionKind::Completion => KMR_SUGGESTION_COMPLETION,
-                    SuggestionKind::Correction => KMR_SUGGESTION_CORRECTION,
-                    SuggestionKind::DiacriticCorrection => KMR_SUGGESTION_DIACRITIC_CORRECTION,
-                    SuggestionKind::NextWord => KMR_SUGGESTION_NEXT_WORD,
-                },
-                edit_cost: r.edit_cost,
+            .map(|r| {
+                Ok(OwnedSuggestionItem {
+                    text: to_c_string(r.text)?,
+                    kind: match r.kind {
+                        SuggestionKind::Exact => KMR_SUGGESTION_EXACT,
+                        SuggestionKind::Completion => KMR_SUGGESTION_COMPLETION,
+                        SuggestionKind::Correction => KMR_SUGGESTION_CORRECTION,
+                        SuggestionKind::DiacriticCorrection => KMR_SUGGESTION_DIACRITIC_CORRECTION,
+                        SuggestionKind::NextWord => KMR_SUGGESTION_NEXT_WORD,
+                    },
+                    edit_cost: r.edit_cost,
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, FfiError>>()?;
 
         *out_results = Box::into_raw(Box::new(kmr_suggestion_list { items }));
         Ok(())
@@ -404,18 +416,20 @@ pub unsafe extern "C" fn kmr_engine_complete(
 
         let items = results
             .into_iter()
-            .map(|r| OwnedSuggestionItem {
-                text: CString::new(r.text).unwrap_or_default(),
-                kind: match r.kind {
-                    SuggestionKind::Exact => KMR_SUGGESTION_EXACT,
-                    SuggestionKind::Completion => KMR_SUGGESTION_COMPLETION,
-                    SuggestionKind::Correction => KMR_SUGGESTION_CORRECTION,
-                    SuggestionKind::DiacriticCorrection => KMR_SUGGESTION_DIACRITIC_CORRECTION,
-                    SuggestionKind::NextWord => KMR_SUGGESTION_NEXT_WORD,
-                },
-                edit_cost: r.edit_cost,
+            .map(|r| {
+                Ok(OwnedSuggestionItem {
+                    text: to_c_string(r.text)?,
+                    kind: match r.kind {
+                        SuggestionKind::Exact => KMR_SUGGESTION_EXACT,
+                        SuggestionKind::Completion => KMR_SUGGESTION_COMPLETION,
+                        SuggestionKind::Correction => KMR_SUGGESTION_CORRECTION,
+                        SuggestionKind::DiacriticCorrection => KMR_SUGGESTION_DIACRITIC_CORRECTION,
+                        SuggestionKind::NextWord => KMR_SUGGESTION_NEXT_WORD,
+                    },
+                    edit_cost: r.edit_cost,
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, FfiError>>()?;
 
         *out_results = Box::into_raw(Box::new(kmr_suggestion_list { items }));
         Ok(())
@@ -449,18 +463,20 @@ pub unsafe extern "C" fn kmr_engine_suggest(
 
         let items = results
             .into_iter()
-            .map(|r| OwnedSuggestionItem {
-                text: CString::new(r.text).unwrap_or_default(),
-                kind: match r.kind {
-                    SuggestionKind::Exact => KMR_SUGGESTION_EXACT,
-                    SuggestionKind::Completion => KMR_SUGGESTION_COMPLETION,
-                    SuggestionKind::Correction => KMR_SUGGESTION_CORRECTION,
-                    SuggestionKind::DiacriticCorrection => KMR_SUGGESTION_DIACRITIC_CORRECTION,
-                    SuggestionKind::NextWord => KMR_SUGGESTION_NEXT_WORD,
-                },
-                edit_cost: r.edit_cost,
+            .map(|r| {
+                Ok(OwnedSuggestionItem {
+                    text: to_c_string(r.text)?,
+                    kind: match r.kind {
+                        SuggestionKind::Exact => KMR_SUGGESTION_EXACT,
+                        SuggestionKind::Completion => KMR_SUGGESTION_COMPLETION,
+                        SuggestionKind::Correction => KMR_SUGGESTION_CORRECTION,
+                        SuggestionKind::DiacriticCorrection => KMR_SUGGESTION_DIACRITIC_CORRECTION,
+                        SuggestionKind::NextWord => KMR_SUGGESTION_NEXT_WORD,
+                    },
+                    edit_cost: r.edit_cost,
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, FfiError>>()?;
 
         *out_results = Box::into_raw(Box::new(kmr_suggestion_list { items }));
         Ok(())
@@ -511,20 +527,22 @@ pub unsafe extern "C" fn kmr_engine_predict_next(
 
         let items = results
             .into_iter()
-            .map(|p| OwnedPredictionItem {
-                text: CString::new(p.text).unwrap_or_default(),
-                count: p.count,
-                probability_millionths: p.probability_millionths,
-                source: match p.source {
-                    kurmanci_engine::PredictionSource::Trigram => KMR_PREDICTION_TRIGRAM,
-                    kurmanci_engine::PredictionSource::BigramBackoff => {
-                        KMR_PREDICTION_BIGRAM_BACKOFF
-                    }
-                    kurmanci_engine::PredictionSource::Bigram => KMR_PREDICTION_BIGRAM,
-                    kurmanci_engine::PredictionSource::None => KMR_PREDICTION_NONE,
-                },
+            .map(|p| {
+                Ok(OwnedPredictionItem {
+                    text: to_c_string(p.text)?,
+                    count: p.count,
+                    probability_millionths: p.probability_millionths,
+                    source: match p.source {
+                        kurmanci_engine::PredictionSource::Trigram => KMR_PREDICTION_TRIGRAM,
+                        kurmanci_engine::PredictionSource::BigramBackoff => {
+                            KMR_PREDICTION_BIGRAM_BACKOFF
+                        }
+                        kurmanci_engine::PredictionSource::Bigram => KMR_PREDICTION_BIGRAM,
+                        kurmanci_engine::PredictionSource::None => KMR_PREDICTION_NONE,
+                    },
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, FfiError>>()?;
 
         *out_results = Box::into_raw(Box::new(kmr_prediction_list { items }));
         Ok(())

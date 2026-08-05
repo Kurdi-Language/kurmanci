@@ -88,6 +88,23 @@ int main(int argc, char **argv) {
     printf("✅ Completions for 'roj': %zu results\n", comp_len);
     kmr_suggestion_list_destroy(completions);
 
+    /* 6b. Test combined suggestions */
+    kmr_suggestion_list *suggestions = NULL;
+    status = kmr_engine_suggest(engine, "şeq", 5, &suggestions);
+    if (status != KMR_OK || suggestions == NULL) {
+        fprintf(stderr, "kmr_engine_suggest failed: %u\n", status);
+        return 1;
+    }
+    size_t sug_len = 0;
+    kmr_suggestion_list_len(suggestions, &sug_len);
+    printf("✅ Combined suggestions for 'şeq': %zu results\n", sug_len);
+    if (sug_len > 0) {
+        kmr_suggestion_item item;
+        kmr_suggestion_list_get(suggestions, 0, &item);
+        printf("  Top suggestion: %s (cost: %u, kind: %u)\n", item.text, item.edit_cost, item.kind);
+    }
+    kmr_suggestion_list_destroy(suggestions);
+
     /* 7. Test predictions */
     const char *context[2] = {"ez", "diçim"};
     kmr_prediction_list *predictions = NULL;
