@@ -1,0 +1,4 @@
+module CKurmanci {
+    header "kurmanci.h"
+    export *
+}

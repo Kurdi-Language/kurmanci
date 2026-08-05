@@ -24,6 +24,12 @@ fn test_c_abi_version_and_error_message() {
 }
 
 #[test]
+fn test_c_abi_engine_handle_is_send_and_sync() {
+    fn assert_send_sync<T: Send + Sync>() {}
+    assert_send_sync::<EngineHandle>();
+}
+
+#[test]
 fn test_c_abi_null_pointer_validation_and_out_param_zeroing() {
     unsafe {
         let mut engine_ptr: *mut kmr_engine = 0x12345 as *mut kmr_engine;

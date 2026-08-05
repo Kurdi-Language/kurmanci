@@ -23,15 +23,10 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Initial Human-Reviewed Dataset (4B.3B)** | Completed | Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules. |
 | **Pack Quality Assessment & Lexicon Enrichment (4C)** | Completed | Initial controlled-pack quality assessment (4C.1), 4C.2A regression review packet (completed), 4C.2B human lexical review guide (completed), 4C.2C initial human review and triage (completed), 4C.3 reviewed-pack rebuild and re-evaluation (completed), and explicit default-pack decision (4C.4). |
 | **Integration-Ready Engine API (5A)** | Completed | High-level, thread-safe, immutable public Rust API (`KurmanciEngine`), typed errors (`EngineError`), `PackInfo` metadata, options, consolidated DTOs (`SuggestionResult`, `Prediction`), CLI migration, benchmarks, and embedding example. |
-| **Stable C ABI & FFI Bindings (5B)** | Active | Stable C ABI (`kurmanci-ffi`), panic containment (`catch_unwind`), C99/C++11 header (`kurmanci.h`), status codes (`kmr_status`), C smoke test, Rust ABI unit test suite — implemented in this change; pending merge. |
-
-
-
-
-
-
+| **Stable C ABI & FFI Bindings (5B)** | Completed | Stable C ABI (`kurmanci-ffi`), panic containment (`catch_unwind`), C99/C++11 header (`kurmanci.h`), status codes (`kmr_status`), C smoke test, and Rust ABI unit test suite. |
+| **Repository-Local Swift Wrapper Foundation (5C.1)** | Completed | Safe Swift API validated on macOS and Linux against a locally built `kurmanci-ffi` library (`swift/` Package), typed Swift errors (`KurmanciError`), Swift-owned DTOs, limit validation, `defer` handle cleanup, thread safety (`@unchecked Sendable`), embedded NUL validation, non-empty prediction test fixture, `swift test` suite, and command-line example — implemented in this change; pending merge. |
+| **Distributable Apple SDK & XCFramework Packaging (5C.2)** | Planned | Precompiled XCFramework packaging, SwiftPM binary target integration, and iOS device/simulator target support. |
 | **Train-Only Model Binding (3C2)** | Planned | Binding model builders to train partition only, provenance configuration hashes, and evaluation profile pack builds. |
-| **Swift SDK** | Planned | Native Apple SDK wrapper around `kurmanci-engine` Rust core. |
 | **iOS Reference Keyboard** | Planned | Custom iOS keyboard extension using `ku-Latn` layout and native engine bindings. |
 | **Kotlin SDK** | Planned | Native Android/JVM SDK wrapper for Android applications. |
 | **Android Reference Keyboard** | Planned | Custom Android IME keyboard layout implementation. |

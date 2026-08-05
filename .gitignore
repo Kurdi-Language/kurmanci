@@ -28,3 +28,7 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+
+# SwiftPM
+/swift/.build/
+**/swift/.build/
