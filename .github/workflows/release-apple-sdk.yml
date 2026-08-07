@@ -13,6 +13,7 @@ jobs:
   build-verify-publish-release:
     name: Build, Validate, Publish & Tag Distributable Apple SDK
     runs-on: macos-latest
+    timeout-minutes: 20
     permissions:
       contents: write
 
@@ -67,6 +68,59 @@ jobs:
             LICENSE
             NOTICE
 
+      - name: Step D.1 — Preflight Verification of Binary Asset Downloadability
+        shell: bash
+        run: |
+          echo "Verifying public accessibility of uploaded release asset at final URL..."
+          ASSET_URL="https://github.com/Kurdi-Language/kurmanci/releases/download/swift-v${VERSION}/KurmanciFFI-v${VERSION}.xcframework.zip"
+          LOCAL_ZIP="dist/KurmanciFFI-v${VERSION}.xcframework.zip"
+          DOWNLOAD_ZIP="/tmp/KurmanciFFI-verify.zip"
+          rm -f "$DOWNLOAD_ZIP"
+
+          for attempt in {1..5}; do
+            echo "Asset availability attempt ${attempt}/5"
+
+            HTTP_CODE=$(curl -sS -L \
+              -o "$DOWNLOAD_ZIP" \
+              -w "%{http_code}" \
+              --connect-timeout 15 \
+              --max-time 60 \
+              "$ASSET_URL") || HTTP_CODE="curl_error"
+
+            if [[ "$HTTP_CODE" == "200" && -s "$DOWNLOAD_ZIP" ]]; then
+              echo "✅ Asset is publicly downloadable."
+              break
+            fi
+
+            echo "Got HTTP/result: ${HTTP_CODE}"
+
+            if [[ "$HTTP_CODE" == "401" || "$HTTP_CODE" == "403" ]]; then
+              echo "❌ Error: asset is not publicly accessible (HTTP ${HTTP_CODE})." >&2
+              exit 1
+            fi
+
+            rm -f "$DOWNLOAD_ZIP"
+
+            if [[ "$attempt" -eq 5 ]]; then
+              echo "❌ Error: asset did not become downloadable after 5 attempts." >&2
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          EXPECTED_SHA=$(shasum -a 256 "$LOCAL_ZIP" | awk '{print $1}')
+          DOWNLOAD_SHA=$(shasum -a 256 "$DOWNLOAD_ZIP" | awk '{print $1}')
+
+          if [[ "$EXPECTED_SHA" != "$DOWNLOAD_SHA" ]]; then
+            echo "❌ Error: checksum mismatch." >&2
+            echo "  Expected: $EXPECTED_SHA" >&2
+            echo "  Got:      $DOWNLOAD_SHA" >&2
+            exit 1
+          fi
+
+          echo "✅ Release binary asset is publicly downloadable and checksum matched ($DOWNLOAD_SHA)."
+
       - name: Step E — Generate Remote Swift Package Manifest
         run: |
           ./scripts/apple/generate-release-package.sh --version "${VERSION}" --commit "${COMMIT_SHA}"
@@ -114,6 +168,8 @@ jobs:
 
       - name: Step G — Validate Clean Remote Consumers Against Distribution Commit (macOS & iOS)
         shell: bash
+        env:
+          GIT_TERMINAL_PROMPT: 0
         run: |
           # 1. macOS Remote Consumer against DIST_COMMIT
           TEST_DIR="/tmp/remote-commit-consumer"
@@ -223,6 +279,8 @@ jobs:
 
       - name: Step I — Validate Clean Remote Consumers Against Immutable Version Tag (macOS & iOS)
         shell: bash
+        env:
+          GIT_TERMINAL_PROMPT: 0
         run: |
           # 1. macOS Remote Consumer against semantic VERSION tag
           TEST_DIR="/tmp/remote-tag-consumer-macos"
