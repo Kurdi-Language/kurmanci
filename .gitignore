@@ -32,3 +32,8 @@ Thumbs.db
 # SwiftPM
 /swift/.build/
 **/swift/.build/
+.build/
+
+# Distribution & XCFramework build outputs
+/dist/
+

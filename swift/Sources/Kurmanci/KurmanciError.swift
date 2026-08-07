@@ -1,5 +1,4 @@
 import Foundation
-import CKurmanci
 
 public enum KurmanciError: Error, Equatable, CustomStringConvertible {
     case invalidArgument(String)

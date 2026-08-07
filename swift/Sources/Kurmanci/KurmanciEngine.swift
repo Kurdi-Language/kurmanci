@@ -1,5 +1,4 @@
 import Foundation
-import CKurmanci
 
 public final class KurmanciEngine: @unchecked Sendable {
     private let handle: OpaquePointer

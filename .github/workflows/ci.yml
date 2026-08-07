@@ -341,7 +341,7 @@ jobs:
           cargo run -p kurmanci-cli -- predict-next ez ji --explain
 
   swift-macos:
-    name: Swift Package on macOS
+    name: Local Swift Package on macOS (5C.1)
     runs-on: macos-latest
 
     steps:
@@ -362,7 +362,7 @@ jobs:
         run: |
           cmp ffi/include/kurmanci.h swift/Sources/CKurmanci/include/kurmanci.h
 
-      - name: Test Swift package
+      - name: Test local Swift package (5C.1)
         run: |
           DYLD_LIBRARY_PATH="$PWD/target/debug" swift test --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug"
 
@@ -373,5 +373,144 @@ jobs:
       - name: Build Swift package in release mode
         run: |
           DYLD_LIBRARY_PATH="$PWD/target/debug" swift build --package-path swift -c release -Xlinker -L -Xlinker "$PWD/target/debug"
+
+  apple-artifact-build:
+    name: Build Apple XCFramework & Package (5C.2)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.85.0'
+          targets: 'aarch64-apple-darwin, x86_64-apple-darwin, aarch64-apple-ios, aarch64-apple-ios-sim, x86_64-apple-ios'
+
+      - name: Build seed pack
+        run: cargo run -p kurmanci-data-builder -- build-pack seed
+
+      - name: Build XCFramework
+        run: ./scripts/apple/build-xcframework.sh --version 0.1.0
+
+      - name: Verify XCFramework
+        run: ./scripts/apple/verify-xcframework.sh
+
+      - name: Create Release Archive
+        run: ./scripts/apple/create-release-archive.sh --version 0.1.0
+
+      - name: Generate Release Package
+        run: ./scripts/apple/generate-release-package.sh --version 0.1.0
+
+      - name: Upload Apple Dist Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apple-dist-artifacts
+          path: |
+            dist/
+            data/build/packs/seed/lexicon.bin
+
+  swift-package-local:
+    name: SwiftPM Local Package Build & Test (Rust-Free)
+    needs: apple-artifact-build
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download Apple Dist Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: apple-dist-artifacts
+
+      - name: Build local SwiftPM package in release mode
+        run: swift build --package-path dist/swift-package-local -c release
+
+      - name: Test macOS consumer via local SwiftPM package resolution
+        run: swift run --package-path integration/apple/macos-consumer MacOSConsumer integration/apple/fixtures/apple_consumer_test.bin
+
+  apple-consumer-macos:
+    name: Apple macOS Consumer Integration (Rust-Free)
+    needs: apple-artifact-build
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download Apple Dist Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: apple-dist-artifacts
+
+      - name: Run Apple Consumer Test Suite
+        run: ./scripts/apple/test-consumers.sh
+
+  apple-consumer-ios-simulator:
+    name: Apple iOS Consumer Simulator & Device Build Gate (Rust-Free)
+    needs: apple-artifact-build
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Download Apple Dist Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: apple-dist-artifacts
+
+      - name: Discover iOS Simulator & Run xcodebuild test
+        run: |
+          SIM_UDID=$(python3 -c '
+          import json, subprocess
+          res = subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "--json"])
+          data = json.loads(res.decode("utf-8"))
+          devices = data.get("devices", {})
+          for runtime, dev_list in devices.items():
+              if "iOS" in runtime:
+                  for d in dev_list:
+                      if d.get("isAvailable", False) and "iPhone" in d.get("name", ""):
+                          print(d["udid"])
+                          exit(0)
+          ')
+          test -n "$SIM_UDID" || { echo "❌ Error: No available iPhone simulator found" >&2; exit 1; }
+          set +e
+          xcodebuild -resolvePackageDependencies \
+            -project integration/apple/ios-consumer/KurmanciConsumer.xcodeproj > /tmp/xcodebuild_ios_resolve.log 2>&1
+          RES_STATUS=$?
+          if [[ $RES_STATUS -ne 0 ]]; then
+            echo "❌ Error: xcodebuild -resolvePackageDependencies failed:" >&2
+            cat /tmp/xcodebuild_ios_resolve.log >&2
+            exit $RES_STATUS
+          fi
+
+          xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+
+          export REPO_ROOT="$GITHUB_WORKSPACE"
+          xcodebuild test \
+            -project integration/apple/ios-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -sdk iphonesimulator \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+          echo "✅ iOS Consumer Simulator xcodebuild test passed."
+
+      - name: Run Unsigned iOS Device Build Gate
+        run: |
+          xcodebuild build \
+            -project integration/apple/ios-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
 
 
