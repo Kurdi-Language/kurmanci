@@ -1,0 +1,354 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		110000012C12345600000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000002 /* AppDelegate.swift */; };
+		110000012C12345600000003 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000004 /* ViewController.swift */; };
+		110000012C12345600000005 /* KurmanciConsumerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000006 /* KurmanciConsumerTests.swift */; };
+		110000012C12345600000007 /* Kurmanci in Frameworks */ = {isa = PBXBuildFile; productRef = 110000012C12345600000008 /* Kurmanci */; };
+		110000012C12345600000009 /* Kurmanci in Frameworks */ = {isa = PBXBuildFile; productRef = 110000012C12345600000008 /* Kurmanci */; };
+		110000012C12345600000024 /* apple_consumer_test.bin in Resources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000025 /* apple_consumer_test.bin */; };
+		110000012C12345600000026 /* prediction_test.bin in Resources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000027 /* prediction_test.bin */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		110000012C1234560000000A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 110000012C1234560000000B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 110000012C1234560000000C;
+			remoteInfo = KurmanciConsumer;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		110000012C12345600000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		110000012C12345600000004 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		110000012C12345600000006 /* KurmanciConsumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KurmanciConsumerTests.swift; sourceTree = "<group>"; };
+		110000012C1234560000000D /* KurmanciConsumer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KurmanciConsumer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		110000012C1234560000000E /* KurmanciConsumerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KurmanciConsumerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		110000012C1234560000000F /* dist/swift-package-local */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-package-local"; path = "../../../dist/swift-package-local"; sourceTree = "<group>"; };
+		110000012C12345600000025 /* apple_consumer_test.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "apple_consumer_test.bin"; path = "../../fixtures/apple_consumer_test.bin"; sourceTree = "<group>"; };
+		110000012C12345600000027 /* prediction_test.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "prediction_test.bin"; path = "../../fixtures/prediction_test.bin"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		110000012C12345600000010 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000012C12345600000007 /* Kurmanci in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		110000012C12345600000011 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000012C12345600000009 /* Kurmanci in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		110000012C12345600000028 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000012C12345600000024 /* apple_consumer_test.bin in Resources */,
+				110000012C12345600000026 /* prediction_test.bin in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXGroup section */
+		110000012C12345600000012 = {
+			isa = PBXGroup;
+			children = (
+				110000012C12345600000013 /* KurmanciConsumer */,
+				110000012C12345600000014 /* KurmanciConsumerTests */,
+				110000012C12345600000015 /* Products */,
+				110000012C1234560000000F /* dist/swift-package-local */,
+			);
+			sourceTree = "<group>";
+		};
+		110000012C12345600000013 /* KurmanciConsumer */ = {
+			isa = PBXGroup;
+			children = (
+				110000012C12345600000002 /* AppDelegate.swift */,
+				110000012C12345600000004 /* ViewController.swift */,
+			);
+			path = KurmanciConsumer;
+			sourceTree = "<group>";
+		};
+		110000012C12345600000014 /* KurmanciConsumerTests */ = {
+			isa = PBXGroup;
+			children = (
+				110000012C12345600000006 /* KurmanciConsumerTests.swift */,
+				110000012C12345600000025 /* apple_consumer_test.bin */,
+				110000012C12345600000027 /* prediction_test.bin */,
+			);
+			path = KurmanciConsumerTests;
+			sourceTree = "<group>";
+		};
+		110000012C12345600000015 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				110000012C1234560000000D /* KurmanciConsumer.app */,
+				110000012C1234560000000E /* KurmanciConsumerTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		110000012C1234560000000C /* KurmanciConsumer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 110000012C12345600000016 /* Build configuration list for PBXNativeTarget "KurmanciConsumer" */;
+			buildPhases = (
+				110000012C12345600000017 /* Sources */,
+				110000012C12345600000010 /* Frameworks */,
+				110000012C12345600000028 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KurmanciConsumer;
+			packageProductDependencies = (
+				110000012C12345600000008 /* Kurmanci */,
+			);
+			productName = KurmanciConsumer;
+			productReference = 110000012C1234560000000D /* KurmanciConsumer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		110000012C12345600000018 /* KurmanciConsumerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 110000012C12345600000019 /* Build configuration list for PBXNativeTarget "KurmanciConsumerTests" */;
+			buildPhases = (
+				110000012C1234560000001A /* Sources */,
+				110000012C12345600000011 /* Frameworks */,
+				110000012C12345600000028 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				110000012C1234560000001B /* PBXTargetDependency */,
+			);
+			name = KurmanciConsumerTests;
+			packageProductDependencies = (
+				110000012C12345600000008 /* Kurmanci */,
+			);
+			productName = KurmanciConsumerTests;
+			productReference = 110000012C1234560000000E /* KurmanciConsumerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		110000012C1234560000000B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					110000012C1234560000000C = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					110000012C12345600000018 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 110000012C1234560000000C;
+					};
+				};
+			};
+			buildConfigurationList = 110000012C1234560000001C /* Build configuration list for PBXProject "KurmanciConsumer" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 110000012C12345600000012;
+			packageReferences = (
+				110000012C1234560000001D /* XCRemoteSwiftPackageReference "kurmanci-swift" */,
+			);
+			productRefGroup = 110000012C12345600000015 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				110000012C1234560000000C /* KurmanciConsumer */,
+				110000012C12345600000018 /* KurmanciConsumerTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		110000012C12345600000017 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000012C12345600000001 /* AppDelegate.swift in Sources */,
+				110000012C12345600000003 /* ViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		110000012C1234560000001A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000012C12345600000005 /* KurmanciConsumerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		110000012C12345600000028 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000012C12345600000024 /* apple_consumer_test.bin in Resources */,
+				110000012C12345600000026 /* prediction_test.bin in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		110000012C1234560000001B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 110000012C1234560000000C /* KurmanciConsumer */;
+			targetProxy = 110000012C1234560000000A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		110000012C1234560000001E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		110000012C1234560000001F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_IDENTITY = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		110000012C12345600000020 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		110000012C12345600000021 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumer;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		110000012C12345600000022 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KurmanciConsumer.app/KurmanciConsumer";
+			};
+			name = Debug;
+		};
+		110000012C12345600000023 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KurmanciConsumer.app/KurmanciConsumer";
+			};
+			name = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCConfigurationList section */
+		110000012C1234560000001C /* Build configuration list for PBXProject "KurmanciConsumer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				110000012C1234560000001E /* Debug */,
+				110000012C1234560000001F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		110000012C12345600000016 /* Build configuration list for PBXNativeTarget "KurmanciConsumer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				110000012C12345600000020 /* Debug */,
+				110000012C12345600000021 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		110000012C12345600000019 /* Build configuration list for PBXNativeTarget "KurmanciConsumerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				110000012C12345600000022 /* Debug */,
+				110000012C12345600000023 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		110000012C1234560000001D /* XCRemoteSwiftPackageReference "kurmanci-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Kurdi-Language/kurmanci-swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 0.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		110000012C12345600000008 /* Kurmanci */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 110000012C1234560000001D /* XCRemoteSwiftPackageReference "kurmanci-swift" */;
+			productName = Kurmanci;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 110000012C1234560000000B /* Project object */;
+}

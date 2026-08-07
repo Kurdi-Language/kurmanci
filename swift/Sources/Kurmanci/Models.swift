@@ -1,5 +1,4 @@
 import Foundation
-import CKurmanci
 
 public enum SuggestionKind: Sendable, Equatable, Hashable {
     case exact

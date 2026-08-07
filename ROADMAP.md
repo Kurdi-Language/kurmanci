@@ -2,7 +2,25 @@
 
 Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 
-## Platform Capabilities Roadmap
+## Top-Level Product Priorities
+
+### Product Quality Track
+- **Core Vocabulary Expansion (1,000+ words)**: Active
+- **Realistic Evaluation Benchmark (200–500 cases)**: Active
+- **Correction & Suggestion Ranking Quality**: Planned (following initial benchmark expansion)
+
+### Platform Integration Track
+- **Integration-Ready Engine API (5A)**: Completed
+- **Stable C ABI & FFI Bindings (5B)**: Completed
+- **Repository-Local Swift Wrapper (5C.1)**: Completed
+- **Distributable Apple SDK & XCFramework (5C.2)**: Active — Implemented in this change; pending merge
+- **Kotlin/Android SDK & AAR Distribution (5D)**: Next
+- **iOS & Android Reference Keyboards**: Planned
+- **Mobile Runtime Performance & Benchmarks**: Planned
+
+---
+
+## Detailed Platform Capabilities Roadmap
 
 | Feature / Milestone | Status | Description |
 |---|---|---|
@@ -24,11 +42,11 @@ Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 | **Pack Quality Assessment & Lexicon Enrichment (4C)** | Completed | Initial controlled-pack quality assessment (4C.1), 4C.2A regression review packet (completed), 4C.2B human lexical review guide (completed), 4C.2C initial human review and triage (completed), 4C.3 reviewed-pack rebuild and re-evaluation (completed), and explicit default-pack decision (4C.4). |
 | **Integration-Ready Engine API (5A)** | Completed | High-level, thread-safe, immutable public Rust API (`KurmanciEngine`), typed errors (`EngineError`), `PackInfo` metadata, options, consolidated DTOs (`SuggestionResult`, `Prediction`), CLI migration, benchmarks, and embedding example. |
 | **Stable C ABI & FFI Bindings (5B)** | Completed | Stable C ABI (`kurmanci-ffi`), panic containment (`catch_unwind`), C99/C++11 header (`kurmanci.h`), status codes (`kmr_status`), C smoke test, and Rust ABI unit test suite. |
-| **Repository-Local Swift Wrapper Foundation (5C.1)** | Completed | Safe Swift API validated on macOS and Linux against a locally built `kurmanci-ffi` library (`swift/` Package), typed Swift errors (`KurmanciError`), Swift-owned DTOs, limit validation, `defer` handle cleanup, thread safety (`@unchecked Sendable`), embedded NUL validation, non-empty prediction test fixture, `swift test` suite, and command-line example — implemented in this change; pending merge. |
-| **Distributable Apple SDK & XCFramework Packaging (5C.2)** | Planned | Precompiled XCFramework packaging, SwiftPM binary target integration, and iOS device/simulator target support. |
+| **Repository-Local Swift Wrapper Foundation (5C.1)** | Completed | Safe Swift API validated on macOS and Linux against a locally built `kurmanci-ffi` library (`swift/` Package), typed Swift errors (`KurmanciError`), Swift-owned DTOs, limit validation, `defer` handle cleanup, thread safety (`@unchecked Sendable`), embedded NUL validation, non-empty prediction test fixture, `swift test` suite, and command-line example. |
+| **Distributable Apple SDK & XCFramework Packaging (5C.2)** | Active | One-command reproducible XCFramework build (`scripts/apple/build-xcframework.sh`), multi-target Apple static archives (`aarch64-apple-darwin`, `x86_64-apple-darwin`, `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`), thin-slice deployment target verification (`verify-xcframework.sh`), public `kmr_*` C ABI symbol verification, versioned release zip archives (`create-release-archive.sh`), remote SwiftPM distribution package generation (`generate-release-package.sh`), C module import abstraction (`#if canImport`), macOS & iOS Xcode consumer application test hosts (`integration/apple/`), and isolated Rust-free CI jobs — implemented in this change; pending merge. |
+| **Kotlin/Android SDK & AAR Distribution (5D)** | Next | JNI bindings, native AAR packaging, JVM wrapper library, and Android integration test suite. |
 | **Train-Only Model Binding (3C2)** | Planned | Binding model builders to train partition only, provenance configuration hashes, and evaluation profile pack builds. |
 | **iOS Reference Keyboard** | Planned | Custom iOS keyboard extension using `ku-Latn` layout and native engine bindings. |
-| **Kotlin SDK** | Planned | Native Android/JVM SDK wrapper for Android applications. |
 | **Android Reference Keyboard** | Planned | Custom Android IME keyboard layout implementation. |
 
 ---

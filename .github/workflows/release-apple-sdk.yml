@@ -1,0 +1,324 @@
+# Kurmancî Language Platform — Apple SDK Distributable Release Pipeline (Milestone 5C.2)
+name: Release Apple SDK
+
+on:
+  push:
+    tags:
+      - 'swift-v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-verify-publish-release:
+    name: Build, Validate, Publish & Tag Distributable Apple SDK
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Step A — Extract and Verify Version Metadata
+        id: version
+        shell: bash
+        run: |
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG_NAME#swift-v}"
+          COMMIT_SHA="$(git rev-parse HEAD)"
+
+          if [[ -z "$VERSION" || ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Error: Invalid semantic version extracted from tag '$TAG_NAME' (must match X.Y.Z semver format)" >&2
+            exit 1
+          fi
+
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "COMMIT_SHA=${COMMIT_SHA}" >> $GITHUB_ENV
+          echo "Building Distributable Apple SDK v${VERSION} from commit ${COMMIT_SHA}"
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.85.0'
+          targets: 'aarch64-apple-darwin, x86_64-apple-darwin, aarch64-apple-ios, aarch64-apple-ios-sim, x86_64-apple-ios'
+
+      - name: Step B — Build and Verify XCFramework
+        run: |
+          cargo run -p kurmanci-data-builder -- build-pack seed
+          ./scripts/apple/build-xcframework.sh --version "${VERSION}" --commit "${COMMIT_SHA}"
+          ./scripts/apple/verify-xcframework.sh
+
+      - name: Step C — Create Release Archive and Compute Checksums
+        run: |
+          ./scripts/apple/create-release-archive.sh --version "${VERSION}" --commit "${COMMIT_SHA}"
+
+      - name: Step D — Publish Prerelease Binary Asset at Final URL
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb8723c30a799366dcf9063 # v2.2.1
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: true
+          draft: false
+          files: |
+            dist/KurmanciFFI-v${{ env.VERSION }}.xcframework.zip
+            dist/release-manifest.json
+            LICENSE
+            NOTICE
+
+      - name: Step E — Generate Remote Swift Package Manifest
+        run: |
+          ./scripts/apple/generate-release-package.sh --version "${VERSION}" --commit "${COMMIT_SHA}"
+
+      - name: Step F — Push Untagged Distribution Commit to Kurdi-Language/kurmanci-swift
+        shell: bash
+        env:
+          DIST_TOKEN: ${{ secrets.SWIFT_DIST_TOKEN }}
+        run: |
+          if [[ -z "${DIST_TOKEN:-}" ]]; then
+            echo "❌ Error: SWIFT_DIST_TOKEN is required for Apple SDK publication" >&2
+            exit 1
+          fi
+
+          DIST_REPO_DIR="/tmp/kurmanci-swift-repo"
+          rm -rf "$DIST_REPO_DIR"
+
+          git clone "https://x-access-token:${DIST_TOKEN}@github.com/Kurdi-Language/kurmanci-swift.git" "$DIST_REPO_DIR" || {
+            echo "❌ Error: Failed to access Swift distribution repository Kurdi-Language/kurmanci-swift" >&2
+            exit 1
+          }
+
+          cd "$DIST_REPO_DIR"
+
+          if git rev-parse "refs/tags/${VERSION}" >/dev/null 2>&1; then
+            echo "❌ Error: Immutable release tag ${VERSION} already exists in distribution repository" >&2
+            exit 1
+          fi
+
+          rsync -av --delete --exclude='.git' "$GITHUB_WORKSPACE/dist/swift-package/" "$DIST_REPO_DIR/"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "❌ Error: No distribution package changes detected for release v${VERSION}" >&2
+            exit 1
+          fi
+
+          git commit -m "release: Kurmancî Swift SDK v${VERSION}"
+          DIST_COMMIT="$(git rev-parse HEAD)"
+          echo "DIST_COMMIT=${DIST_COMMIT}" >> $GITHUB_ENV
+          git push origin HEAD:refs/heads/release-candidate/${VERSION}
+          echo "✅ Untagged candidate distribution commit ${DIST_COMMIT} pushed to Kurdi-Language/kurmanci-swift release-candidate/${VERSION}"
+
+      - name: Step G — Validate Clean Remote Consumers Against Distribution Commit (macOS & iOS)
+        shell: bash
+        run: |
+          # 1. macOS Remote Consumer against DIST_COMMIT
+          TEST_DIR="/tmp/remote-commit-consumer"
+          rm -rf "$TEST_DIR"
+          mkdir -p "$TEST_DIR"
+
+          cat <<EOF > "$TEST_DIR/Package.swift"
+          // swift-tools-version: 5.9
+          import PackageDescription
+
+          let package = Package(
+              name: "RemoteCommitConsumer",
+              platforms: [.macOS(.v11)],
+              dependencies: [
+                  .package(url: "https://github.com/Kurdi-Language/kurmanci-swift.git", revision: "${DIST_COMMIT}")
+              ],
+              targets: [
+                  .executableTarget(
+                      name: "RemoteCommitConsumer",
+                      dependencies: [.product(name: "Kurmanci", package: "kurmanci-swift")],
+                      path: "."
+                  )
+              ]
+          )
+          EOF
+
+          cp "$GITHUB_WORKSPACE/integration/apple/macos-consumer/main.swift" "$TEST_DIR/main.swift"
+          cp "$GITHUB_WORKSPACE/integration/apple/fixtures/apple_consumer_test.bin" "$TEST_DIR/apple_consumer_test.bin"
+          cp "$GITHUB_WORKSPACE/integration/apple/fixtures/prediction_test.bin" "$TEST_DIR/prediction_test.bin"
+          cd "$TEST_DIR"
+          swift package resolve
+          swift run RemoteCommitConsumer "$TEST_DIR/apple_consumer_test.bin"
+          echo "✅ macOS remote consumer validation against DIST_COMMIT passed."
+
+          # 2. iOS Remote Consumer against DIST_COMMIT
+          SIM_UDID=$(python3 -c '
+          import json, subprocess
+          res = subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "--json"])
+          data = json.loads(res.decode("utf-8"))
+          devices = data.get("devices", {})
+          for runtime, dev_list in devices.items():
+              if "iOS" in runtime:
+                  for d in dev_list:
+                      if d.get("isAvailable", False) and "iPhone" in d.get("name", ""):
+                          print(d["udid"])
+                          exit(0)
+          ')
+          test -n "$SIM_UDID" || { echo "❌ Error: No available iPhone simulator found" >&2; exit 1; }
+
+          # Patch ios-remote-consumer project to point to exact DIST_COMMIT revision
+          python3 -c "
+          import re
+          proj_path = '$GITHUB_WORKSPACE/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj'
+          with open(proj_path, 'r') as f:
+              content = f.read()
+          new_req = '''requirement = {
+      kind = revision;
+      revision = \"${DIST_COMMIT}\";
+    };'''
+          content = re.sub(r'requirement = \{[^}]+\};', new_req, content)
+          with open(proj_path, 'w') as f:
+              f.write(content)
+          "
+
+          cd "$GITHUB_WORKSPACE"
+          xcodebuild -resolvePackageDependencies \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj
+
+          xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+
+          export REPO_ROOT="$GITHUB_WORKSPACE"
+          xcodebuild test \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -sdk iphonesimulator \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+          xcodebuild build \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+          echo "✅ iOS remote consumer validation against DIST_COMMIT passed."
+
+      - name: Step H — Create Immutable Version Tag on Kurdi-Language/kurmanci-swift
+        shell: bash
+        env:
+          DIST_TOKEN: ${{ secrets.SWIFT_DIST_TOKEN }}
+        run: |
+          if [[ -z "${DIST_TOKEN:-}" ]]; then
+            echo "❌ Error: SWIFT_DIST_TOKEN is required for Apple SDK publication" >&2
+            exit 1
+          fi
+
+          DIST_REPO_DIR="/tmp/kurmanci-swift-repo"
+          cd "$DIST_REPO_DIR"
+          git tag "${VERSION}" "${DIST_COMMIT}"
+          git push origin "${VERSION}"
+          git push origin "${DIST_COMMIT}:main"
+          git push origin --delete "release-candidate/${VERSION}"
+          echo "✅ Pushed immutable tag ${VERSION} and fast-forwarded main on commit ${DIST_COMMIT} to Kurdi-Language/kurmanci-swift"
+
+      - name: Step I — Validate Clean Remote Consumers Against Immutable Version Tag (macOS & iOS)
+        shell: bash
+        run: |
+          # 1. macOS Remote Consumer against semantic VERSION tag
+          TEST_DIR="/tmp/remote-tag-consumer-macos"
+          rm -rf "$TEST_DIR"
+          mkdir -p "$TEST_DIR"
+
+          cat <<EOF > "$TEST_DIR/Package.swift"
+          // swift-tools-version: 5.9
+          import PackageDescription
+
+          let package = Package(
+              name: "RemoteTagConsumer",
+              platforms: [.macOS(.v11)],
+              dependencies: [
+                  .package(url: "https://github.com/Kurdi-Language/kurmanci-swift.git", exact: "${VERSION}")
+              ],
+              targets: [
+                  .executableTarget(
+                      name: "RemoteTagConsumer",
+                      dependencies: [.product(name: "Kurmanci", package: "kurmanci-swift")],
+                      path: "."
+                  )
+              ]
+          )
+          EOF
+
+          cp "$GITHUB_WORKSPACE/integration/apple/macos-consumer/main.swift" "$TEST_DIR/main.swift"
+          cp "$GITHUB_WORKSPACE/integration/apple/fixtures/apple_consumer_test.bin" "$TEST_DIR/apple_consumer_test.bin"
+          cp "$GITHUB_WORKSPACE/integration/apple/fixtures/prediction_test.bin" "$TEST_DIR/prediction_test.bin"
+          cd "$TEST_DIR"
+          swift package resolve
+          swift run RemoteTagConsumer "$TEST_DIR/apple_consumer_test.bin"
+          echo "✅ macOS remote immutable tag consumer validation passed."
+
+          # 2. iOS Remote Consumer against semantic VERSION tag
+          SIM_UDID=$(python3 -c '
+          import json, subprocess
+          res = subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "--json"])
+          data = json.loads(res.decode("utf-8"))
+          devices = data.get("devices", {})
+          for runtime, dev_list in devices.items():
+              if "iOS" in runtime:
+                  for d in dev_list:
+                      if d.get("isAvailable", False) and "iPhone" in d.get("name", ""):
+                          print(d["udid"])
+                          exit(0)
+          ')
+          test -n "$SIM_UDID" || { echo "❌ Error: No available iPhone simulator found" >&2; exit 1; }
+
+          # Patch ios-remote-consumer project to point to exact semantic VERSION tag
+          python3 -c "
+          import re
+          proj_path = '$GITHUB_WORKSPACE/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj'
+          with open(proj_path, 'r') as f:
+              content = f.read()
+          new_req = '''requirement = {
+      kind = exactVersion;
+      version = \"${VERSION}\";
+    };'''
+          content = re.sub(r'requirement = \{[^}]+\};', new_req, content)
+          with open(proj_path, 'w') as f:
+              f.write(content)
+          "
+
+          cd "$GITHUB_WORKSPACE"
+          xcodebuild -resolvePackageDependencies \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj
+
+          xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+
+          export REPO_ROOT="$GITHUB_WORKSPACE"
+          xcodebuild test \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -sdk iphonesimulator \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+          xcodebuild build \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+          echo "✅ iOS Simulator & Device remote immutable tag consumer validation passed."
+
+      - name: Step J — Promote GitHub Prerelease to Stable Production Release
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb8723c30a799366dcf9063 # v2.2.1
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: false
+          draft: false
