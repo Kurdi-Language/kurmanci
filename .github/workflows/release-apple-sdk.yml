@@ -164,19 +164,17 @@ jobs:
           test -n "$SIM_UDID" || { echo "❌ Error: No available iPhone simulator found" >&2; exit 1; }
 
           # Patch ios-remote-consumer project to point to exact DIST_COMMIT revision
-          python3 -c "
-          import re
-          proj_path = '$GITHUB_WORKSPACE/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj'
-          with open(proj_path, 'r') as f:
+          python3 -c '
+          import os, re
+          proj_path = os.environ["GITHUB_WORKSPACE"] + "/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj"
+          dist_commit = os.environ["DIST_COMMIT"]
+          with open(proj_path, "r") as f:
               content = f.read()
-          new_req = '''requirement = {
-      kind = revision;
-      revision = \"${DIST_COMMIT}\";
-    };'''
-          content = re.sub(r'requirement = \{[^}]+\};', new_req, content)
-          with open(proj_path, 'w') as f:
+          new_req = f"requirement = {{\n      kind = revision;\n      revision = \"{dist_commit}\";\n    }};"
+          content = re.sub(r"requirement = \{[^}]+\};", new_req, content)
+          with open(proj_path, "w") as f:
               f.write(content)
-          "
+          '
 
           cd "$GITHUB_WORKSPACE"
           xcodebuild -resolvePackageDependencies \
@@ -275,19 +273,17 @@ jobs:
           test -n "$SIM_UDID" || { echo "❌ Error: No available iPhone simulator found" >&2; exit 1; }
 
           # Patch ios-remote-consumer project to point to exact semantic VERSION tag
-          python3 -c "
-          import re
-          proj_path = '$GITHUB_WORKSPACE/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj'
-          with open(proj_path, 'r') as f:
+          python3 -c '
+          import os, re
+          proj_path = os.environ["GITHUB_WORKSPACE"] + "/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj"
+          version = os.environ["VERSION"]
+          with open(proj_path, "r") as f:
               content = f.read()
-          new_req = '''requirement = {
-      kind = exactVersion;
-      version = \"${VERSION}\";
-    };'''
-          content = re.sub(r'requirement = \{[^}]+\};', new_req, content)
-          with open(proj_path, 'w') as f:
+          new_req = f"requirement = {{\n      kind = exactVersion;\n      version = \"{version}\";\n    }};"
+          content = re.sub(r"requirement = \{[^}]+\};", new_req, content)
+          with open(proj_path, "w") as f:
               f.write(content)
-          "
+          '
 
           cd "$GITHUB_WORKSPACE"
           xcodebuild -resolvePackageDependencies \
