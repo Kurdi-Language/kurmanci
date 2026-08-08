@@ -13,7 +13,7 @@ jobs:
   build-verify-publish-release:
     name: Build, Validate, Publish & Tag Distributable Apple SDK
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     permissions:
       contents: write
 
@@ -166,11 +166,47 @@ jobs:
           git push origin HEAD:refs/heads/release-candidate/${VERSION}
           echo "✅ Untagged candidate distribution commit ${DIST_COMMIT} pushed to Kurdi-Language/kurmanci-swift release-candidate/${VERSION}"
 
+      - name: Step F.1 — Diagnose IPv4 vs IPv6 Path to Release Asset
+        shell: bash
+        run: |
+          ASSET_URL="https://github.com/Kurdi-Language/kurmanci/releases/download/swift-v${VERSION}/KurmanciFFI-v${VERSION}.xcframework.zip"
+
+          echo "--- IPv4 test ---"
+          curl -4 -v --max-time 20 -o /dev/null "$ASSET_URL" 2>&1 | tail -30 || echo "IPv4 FAILED/TIMED OUT"
+
+          echo "--- IPv6 test ---"
+          curl -6 -v --max-time 20 -o /dev/null "$ASSET_URL" 2>&1 | tail -30 || echo "IPv6 FAILED/TIMED OUT"
+
       - name: Step G — Validate Clean Remote Consumers Against Distribution Commit (macOS & iOS)
         shell: bash
         env:
           GIT_TERMINAL_PROMPT: 0
         run: |
+          run_with_timeout() {
+            local seconds="$1"
+            shift
+
+            python3 - "$seconds" "$@" <<'PY'
+          import subprocess
+          import sys
+
+          timeout = int(sys.argv[1])
+          command = sys.argv[2:]
+          print("+ " + " ".join(command), flush=True)
+
+          try:
+              result = subprocess.run(command, timeout=timeout)
+          except subprocess.TimeoutExpired:
+              print(
+                  f"ERROR: command timed out after {timeout}s: {' '.join(command)}",
+                  file=sys.stderr,
+                  flush=True,
+              )
+              sys.exit(124)
+
+          sys.exit(result.returncode)
+          PY
+          }
           # 1. macOS Remote Consumer against DIST_COMMIT
           TEST_DIR="/tmp/remote-commit-consumer"
           rm -rf "$TEST_DIR"
@@ -200,8 +236,21 @@ jobs:
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/apple_consumer_test.bin" "$TEST_DIR/apple_consumer_test.bin"
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/prediction_test.bin" "$TEST_DIR/prediction_test.bin"
           cd "$TEST_DIR"
-          swift package resolve
-          swift run RemoteCommitConsumer "$TEST_DIR/apple_consumer_test.bin"
+
+          for attempt in 1 2 3; do
+            echo "swift package resolve attempt ${attempt}/3"
+            if run_with_timeout 120 swift package resolve -v; then
+              break
+            fi
+            echo "Attempt ${attempt} failed or timed out"
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "❌ swift package resolve failed after 3 attempts" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
+          run_with_timeout 300 swift run RemoteCommitConsumer "$TEST_DIR/apple_consumer_test.bin"
           echo "✅ macOS remote consumer validation against DIST_COMMIT passed."
 
           # 2. iOS Remote Consumer against DIST_COMMIT
@@ -233,14 +282,16 @@ jobs:
           '
 
           cd "$GITHUB_WORKSPACE"
-          xcodebuild -resolvePackageDependencies \
+          run_with_timeout 600 \
+            xcodebuild -resolvePackageDependencies \
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj
 
           xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+          run_with_timeout 300 xcrun simctl bootstatus "$SIM_UDID" -b
 
           export REPO_ROOT="$GITHUB_WORKSPACE"
-          xcodebuild test \
+          run_with_timeout 300 \
+            xcodebuild test \
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
             -scheme KurmanciConsumer \
             -sdk iphonesimulator \
@@ -249,7 +300,8 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
 
-          xcodebuild build \
+          run_with_timeout 300 \
+            xcodebuild build \
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
             -scheme KurmanciConsumer \
             -configuration Release \
@@ -282,6 +334,32 @@ jobs:
         env:
           GIT_TERMINAL_PROMPT: 0
         run: |
+          run_with_timeout() {
+            local seconds="$1"
+            shift
+
+            python3 - "$seconds" "$@" <<'PY'
+          import subprocess
+          import sys
+
+          timeout = int(sys.argv[1])
+          command = sys.argv[2:]
+          print("+ " + " ".join(command), flush=True)
+
+          try:
+              result = subprocess.run(command, timeout=timeout)
+          except subprocess.TimeoutExpired:
+              print(
+                  f"ERROR: command timed out after {timeout}s: {' '.join(command)}",
+                  file=sys.stderr,
+                  flush=True,
+              )
+              sys.exit(124)
+
+          sys.exit(result.returncode)
+          PY
+          }
+
           # 1. macOS Remote Consumer against semantic VERSION tag
           TEST_DIR="/tmp/remote-tag-consumer-macos"
           rm -rf "$TEST_DIR"
@@ -311,8 +389,21 @@ jobs:
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/apple_consumer_test.bin" "$TEST_DIR/apple_consumer_test.bin"
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/prediction_test.bin" "$TEST_DIR/prediction_test.bin"
           cd "$TEST_DIR"
-          swift package resolve
-          swift run RemoteTagConsumer "$TEST_DIR/apple_consumer_test.bin"
+
+          for attempt in 1 2 3; do
+            echo "swift package resolve attempt ${attempt}/3"
+            if run_with_timeout 120 swift package resolve -v; then
+              break
+            fi
+            echo "Attempt ${attempt} failed or timed out"
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "❌ swift package resolve failed after 3 attempts" >&2
+              exit 1
+            fi
+            sleep 5
+          done
+
+          run_with_timeout 300 swift run RemoteTagConsumer "$TEST_DIR/apple_consumer_test.bin"
           echo "✅ macOS remote immutable tag consumer validation passed."
 
           # 2. iOS Remote Consumer against semantic VERSION tag
@@ -344,14 +435,16 @@ jobs:
           '
 
           cd "$GITHUB_WORKSPACE"
-          xcodebuild -resolvePackageDependencies \
+          run_with_timeout 600 \
+            xcodebuild -resolvePackageDependencies \
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj
 
           xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+          run_with_timeout 300 xcrun simctl bootstatus "$SIM_UDID" -b
 
           export REPO_ROOT="$GITHUB_WORKSPACE"
-          xcodebuild test \
+          run_with_timeout 300 \
+            xcodebuild test \
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
             -scheme KurmanciConsumer \
             -sdk iphonesimulator \
@@ -360,7 +453,8 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
 
-          xcodebuild build \
+          run_with_timeout 300 \
+            xcodebuild build \
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
             -scheme KurmanciConsumer \
             -configuration Release \
