@@ -1,0 +1,15 @@
+[package]
+name = "kurmanci-jni"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kurmancî Language Platform Authors"]
+license = "MIT OR Apache-2.0"
+description = "JNI C-ABI bridge for Kurmancî engine Android SDK"
+
+[lib]
+name = "kurmanci_jni"
+crate-type = ["cdylib"]
+
+[dependencies]
+kurmanci-ffi = { path = ".." }
+jni = "0.21"

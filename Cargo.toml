@@ -5,6 +5,7 @@ members = [
     "data-builder",
     "cli",
     "ffi",
+    "ffi/kurmanci-jni",
 ]
 
 [workspace.package]

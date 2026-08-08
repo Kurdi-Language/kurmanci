@@ -29,6 +29,12 @@ Thumbs.db
 *.swp
 *~
 
+# Gradle & Android
+.gradle/
+**/build/
+android/.gradle/
+integration/android/**/.gradle/
+
 # SwiftPM
 /swift/.build/
 **/swift/.build/
