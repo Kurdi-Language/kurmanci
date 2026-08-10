@@ -7,6 +7,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 VERSION="0.1.0"
 CHECKSUM=""
 COMMIT=""
+URL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -20,6 +21,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --commit)
       COMMIT="$2"
+      shift 2
+      ;;
+    --url)
+      URL="$2"
       shift 2
       ;;
     *)
@@ -47,17 +52,26 @@ if [[ ! "$CHECKSUM" =~ ^[a-f0-9]{64}$ ]]; then
   exit 1
 fi
 
+if [[ -z "$URL" ]]; then
+  URL="https://raw.githubusercontent.com/Kurdi-Language/kurmanci-swift/${VERSION}/Frameworks/KurmanciFFI-v${VERSION}.xcframework.zip"
+fi
+
 DIST_SWIFT="$REPO_ROOT/dist/swift-package"
 DIST_SWIFT_LOCAL="$REPO_ROOT/dist/swift-package-local"
 
 echo "=== Generating Release Package in dist/swift-package (v${VERSION}) ==="
 
 rm -rf "$DIST_SWIFT" "$DIST_SWIFT_LOCAL"
-mkdir -p "$DIST_SWIFT/Sources" "$DIST_SWIFT_LOCAL/Sources"
+mkdir -p "$DIST_SWIFT/Sources" "$DIST_SWIFT/Frameworks" "$DIST_SWIFT_LOCAL/Sources"
 
 # Copy Swift wrapper sources
 cp -R "$REPO_ROOT/swift/Sources/Kurmanci" "$DIST_SWIFT/Sources/"
 cp -R "$REPO_ROOT/swift/Sources/Kurmanci" "$DIST_SWIFT_LOCAL/Sources/"
+
+# Copy framework zip if present
+if [[ -f "$REPO_ROOT/dist/KurmanciFFI-v${VERSION}.xcframework.zip" ]]; then
+  cp "$REPO_ROOT/dist/KurmanciFFI-v${VERSION}.xcframework.zip" "$DIST_SWIFT/Frameworks/KurmanciFFI-v${VERSION}.xcframework.zip"
+fi
 
 # Copy documentation & licenses
 cp "$REPO_ROOT/swift/README.md" "$DIST_SWIFT/README.md"
@@ -85,7 +99,7 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "KurmanciFFI",
-            url: "https://github.com/Kurdi-Language/kurmanci/releases/download/swift-v${VERSION}/KurmanciFFI-v${VERSION}.xcframework.zip",
+            url: "${URL}",
             checksum: "${CHECKSUM}"
         ),
         .target(

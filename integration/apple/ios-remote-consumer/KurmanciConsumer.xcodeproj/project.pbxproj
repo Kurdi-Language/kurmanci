@@ -32,7 +32,6 @@
 		110000012C12345600000006 /* KurmanciConsumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KurmanciConsumerTests.swift; sourceTree = "<group>"; };
 		110000012C1234560000000D /* KurmanciConsumer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KurmanciConsumer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		110000012C1234560000000E /* KurmanciConsumerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KurmanciConsumerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		110000012C1234560000000F /* dist/swift-package-local */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "swift-package-local"; path = "../../../dist/swift-package-local"; sourceTree = "<group>"; };
 		110000012C12345600000025 /* apple_consumer_test.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "apple_consumer_test.bin"; path = "../../fixtures/apple_consumer_test.bin"; sourceTree = "<group>"; };
 		110000012C12345600000027 /* prediction_test.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "prediction_test.bin"; path = "../../fixtures/prediction_test.bin"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -75,7 +74,6 @@
 				110000012C12345600000013 /* KurmanciConsumer */,
 				110000012C12345600000014 /* KurmanciConsumerTests */,
 				110000012C12345600000015 /* Products */,
-				110000012C1234560000000F /* dist/swift-package-local */,
 			);
 			sourceTree = "<group>";
 		};
@@ -241,6 +239,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_IDENTITY = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 			};
@@ -254,6 +253,7 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_IDENTITY = "";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 			};

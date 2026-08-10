@@ -13,7 +13,7 @@ jobs:
   build-verify-publish-release:
     name: Build, Validate, Publish & Tag Distributable Apple SDK
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     permissions:
       contents: write
 
@@ -121,11 +121,11 @@ jobs:
 
           echo "✅ Release binary asset is publicly downloadable and checksum matched ($DOWNLOAD_SHA)."
 
-      - name: Step E — Generate Remote Swift Package Manifest
+      - name: Step E — Generate Initial Swift Package Workspace
         run: |
           ./scripts/apple/generate-release-package.sh --version "${VERSION}" --commit "${COMMIT_SHA}"
 
-      - name: Step F — Push Untagged Distribution Commit to Kurdi-Language/kurmanci-swift
+      - name: Step F — Push Untagged Distribution Candidate Commit to Kurdi-Language/kurmanci-swift
         shell: bash
         env:
           DIST_TOKEN: ${{ secrets.SWIFT_DIST_TOKEN }}
@@ -150,9 +150,27 @@ jobs:
             exit 1
           fi
 
-          rsync -av --delete --exclude='.git' "$GITHUB_WORKSPACE/dist/swift-package/" "$DIST_REPO_DIR/"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # 1. Commit binary framework ZIP first to obtain immutable BINARY_COMMIT
+          mkdir -p "$DIST_REPO_DIR/Frameworks"
+          cp "$GITHUB_WORKSPACE/dist/KurmanciFFI-v${VERSION}.xcframework.zip" "$DIST_REPO_DIR/Frameworks/KurmanciFFI-v${VERSION}.xcframework.zip"
+          git add "Frameworks/KurmanciFFI-v${VERSION}.xcframework.zip"
+          git commit -m "release: add KurmanciFFI v${VERSION} framework binary"
+          BINARY_COMMIT="$(git rev-parse HEAD)"
+
+          # 2. Push BINARY_COMMIT to candidate branch so raw.githubusercontent.com serves it immediately
+          git push origin HEAD:refs/heads/release-candidate/${VERSION}
+
+          # 3. Generate final Package.swift & source-manifest.json using immutable BINARY_COMMIT URL
+          RAW_URL="https://raw.githubusercontent.com/Kurdi-Language/kurmanci-swift/${BINARY_COMMIT}/Frameworks/KurmanciFFI-v${VERSION}.xcframework.zip"
+          cd "$GITHUB_WORKSPACE"
+          ./scripts/apple/generate-release-package.sh --version "${VERSION}" --commit "${COMMIT_SHA}" --url "${RAW_URL}"
+
+          # 4. Copy final package into distribution repo and commit DIST_COMMIT
+          cd "$DIST_REPO_DIR"
+          rsync -av --delete --exclude='.git' "$GITHUB_WORKSPACE/dist/swift-package/" "$DIST_REPO_DIR/"
           git add .
 
           if git diff --cached --quiet; then
@@ -163,8 +181,42 @@ jobs:
           git commit -m "release: Kurmancî Swift SDK v${VERSION}"
           DIST_COMMIT="$(git rev-parse HEAD)"
           echo "DIST_COMMIT=${DIST_COMMIT}" >> $GITHUB_ENV
+          echo "BINARY_COMMIT=${BINARY_COMMIT}" >> $GITHUB_ENV
+
           git push origin HEAD:refs/heads/release-candidate/${VERSION}
           echo "✅ Untagged candidate distribution commit ${DIST_COMMIT} pushed to Kurdi-Language/kurmanci-swift release-candidate/${VERSION}"
+
+      - name: Step F.1 — Preflight Verification of Immutable Raw Binary URL
+        shell: bash
+        run: |
+          RAW_BINARY_URL="https://raw.githubusercontent.com/Kurdi-Language/kurmanci-swift/${BINARY_COMMIT}/Frameworks/KurmanciFFI-v${VERSION}.xcframework.zip"
+          LOCAL_ZIP="dist/KurmanciFFI-v${VERSION}.xcframework.zip"
+          EXPECTED_SHA=$(shasum -a 256 "$LOCAL_ZIP" | awk '{print $1}')
+          DOWNLOAD_ZIP="/tmp/kurmanci-swift-binary.zip"
+          rm -f "$DOWNLOAD_ZIP"
+
+          echo "Verifying public downloadability of immutable raw binary asset..."
+          curl -sS -L \
+            --connect-timeout 15 \
+            --max-time 120 \
+            -o "$DOWNLOAD_ZIP" \
+            "$RAW_BINARY_URL"
+
+          if [[ ! -s "$DOWNLOAD_ZIP" ]]; then
+            echo "❌ Error: Immutable raw binary asset could not be downloaded." >&2
+            exit 1
+          fi
+
+          RAW_SHA="$(shasum -a 256 "$DOWNLOAD_ZIP" | awk '{print $1}')"
+
+          if [[ "$RAW_SHA" != "$EXPECTED_SHA" ]]; then
+            echo "❌ Error: Immutable raw binary SHA-256 mismatch." >&2
+            echo "  Expected: $EXPECTED_SHA" >&2
+            echo "  Got:      $RAW_SHA" >&2
+            exit 1
+          fi
+
+          echo "✅ Immutable raw binary asset verified successfully ($RAW_SHA)."
 
       - name: Step G — Validate Clean Remote Consumers Against Distribution Commit (macOS & iOS)
         shell: bash
@@ -200,7 +252,7 @@ jobs:
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/apple_consumer_test.bin" "$TEST_DIR/apple_consumer_test.bin"
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/prediction_test.bin" "$TEST_DIR/prediction_test.bin"
           cd "$TEST_DIR"
-          swift package resolve
+
           swift run RemoteCommitConsumer "$TEST_DIR/apple_consumer_test.bin"
           echo "✅ macOS remote consumer validation against DIST_COMMIT passed."
 
@@ -237,7 +289,7 @@ jobs:
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj
 
           xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b
 
           export REPO_ROOT="$GITHUB_WORKSPACE"
           xcodebuild test \
@@ -245,6 +297,7 @@ jobs:
             -scheme KurmanciConsumer \
             -sdk iphonesimulator \
             -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
@@ -254,6 +307,7 @@ jobs:
             -scheme KurmanciConsumer \
             -configuration Release \
             -destination 'generic/platform=iOS' \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
@@ -271,6 +325,7 @@ jobs:
 
           DIST_REPO_DIR="/tmp/kurmanci-swift-repo"
           cd "$DIST_REPO_DIR"
+
           git tag "${VERSION}" "${DIST_COMMIT}"
           git push origin "${VERSION}"
           git push origin "${DIST_COMMIT}:main"
@@ -311,7 +366,7 @@ jobs:
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/apple_consumer_test.bin" "$TEST_DIR/apple_consumer_test.bin"
           cp "$GITHUB_WORKSPACE/integration/apple/fixtures/prediction_test.bin" "$TEST_DIR/prediction_test.bin"
           cd "$TEST_DIR"
-          swift package resolve
+
           swift run RemoteTagConsumer "$TEST_DIR/apple_consumer_test.bin"
           echo "✅ macOS remote immutable tag consumer validation passed."
 
@@ -348,7 +403,7 @@ jobs:
             -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj
 
           xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
-          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b
 
           export REPO_ROOT="$GITHUB_WORKSPACE"
           xcodebuild test \
@@ -356,6 +411,7 @@ jobs:
             -scheme KurmanciConsumer \
             -sdk iphonesimulator \
             -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
@@ -365,6 +421,7 @@ jobs:
             -scheme KurmanciConsumer \
             -configuration Release \
             -destination 'generic/platform=iOS' \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
