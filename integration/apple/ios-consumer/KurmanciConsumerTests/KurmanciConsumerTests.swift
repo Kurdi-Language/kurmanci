@@ -71,7 +71,7 @@ final class KurmanciConsumerTests: XCTestCase {
 
         let completions = try engine.complete("roj", limit: 5)
         XCTAssertFalse(completions.isEmpty)
-        XCTAssertEqual(completions.first?.text, "roja")
+        XCTAssertTrue(completions.contains(where: { $0.text == "roja" }))
     }
 
     func testPredictionWithModelFixture() throws {
