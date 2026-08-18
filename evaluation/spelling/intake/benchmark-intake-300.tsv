@@ -1,0 +1,271 @@
+slot_id	target_split	task	category	difficulty	origin	input	context_prev2	context_prev1	expected_candidate_1	expected_candidate_2	expected_candidate_3	required_top_k	accepted_boolean	preserve_exact	allow_no_candidate	target_word	error_operation	natural_evidence	source_id	source_document_id	linguistic_status	reviewer_id	review_date	review_notes	export_ready
+B-001	dev	accept-word	exact-preservation	easy	ai-assisted-draft	ez						5	true	true		ez			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-002	dev	accept-word	exact-preservation	medium	ai-assisted-draft	tu						5	true	true		tu			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-003	dev	accept-word	exact-preservation	hard	ai-assisted-draft	ew						5	true	true		ew			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-004	dev	accept-word	exact-preservation	easy	ai-assisted-draft	em						5	true	true		em			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-005	dev	accept-word	exact-preservation	medium	ai-assisted-draft	hûn						5	true	true		hûn			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-006	dev	accept-word	exact-preservation	hard	ai-assisted-draft	wan						5	true	true		wan			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-007	dev	accept-word	exact-preservation	easy	ai-assisted-draft	ev						5	true	true		ev			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-008	dev	accept-word	exact-preservation	medium	ai-assisted-draft	wî						5	true	true		wî			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-009	dev	accept-word	exact-preservation	hard	ai-assisted-draft	wê						5	true	true		wê			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-010	dev	accept-word	exact-preservation	easy	ai-assisted-draft	min						5	true	true		min			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-011	dev	accept-word	exact-preservation	medium	ai-assisted-draft	te						5	true	true		te			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-012	dev	accept-word	exact-preservation	hard	ai-assisted-draft	û						5	true	true		û			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-013	dev	accept-word	exact-preservation	easy	ai-assisted-draft	ji						5	true	true		ji			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-014	dev	accept-word	exact-preservation	medium	ai-assisted-draft	di						5	true	true		di			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-015	dev	accept-word	exact-preservation	hard	ai-assisted-draft	bi						5	true	true		bi			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-016	dev	accept-word	exact-preservation	easy	ai-assisted-draft	li						5	true	true		li			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-017	dev	accept-word	exact-preservation	medium	ai-assisted-draft	bo						5	true	true		bo			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-018	dev	accept-word	exact-preservation	hard	ai-assisted-draft	ku						5	true	true		ku			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-019	dev	accept-word	exact-preservation	easy	ai-assisted-draft	ne						5	true	true		ne			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-020	dev	accept-word	exact-preservation	medium	ai-assisted-draft	na						5	true	true		na			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-021	dev	accept-word	exact-preservation	hard	ai-assisted-draft	erê						5	true	true		erê			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-022	dev	accept-word	exact-preservation	easy	ai-assisted-draft	belê						5	true	true		belê			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-023	dev	accept-word	exact-preservation	medium	ai-assisted-draft	jî						5	true	true		jî			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-024	dev	accept-word	exact-preservation	hard	ai-assisted-draft	tenê						5	true	true		tenê			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-025	dev	accept-word	exact-preservation	easy	ai-assisted-draft	pir						5	true	true		pir			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-026	dev	accept-word	exact-preservation	medium	ai-assisted-draft	hinek						5	true	true		hinek			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-027	dev	accept-word	exact-preservation	hard	ai-assisted-draft	roj						5	true	true		roj			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-028	dev	accept-word	exact-preservation	easy	ai-assisted-draft	şev						5	true	true		şev			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-029	dev	accept-word	exact-preservation	medium	ai-assisted-draft	sibê						5	true	true		sibê			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-030	dev	accept-word	exact-preservation	hard	ai-assisted-draft	îro						5	true	true		îro			kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-031	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	du			duh			5				duh	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-032	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	nih			niha			5				niha	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-033	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	de			dem			5				dem	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-034	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	sa			sal			5				sal	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-035	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	me			meh			5				meh	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-036	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	he			hefte			5				hefte	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-037	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	ma			mal			5				mal	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-038	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	der			derî			5				derî	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-039	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	a			av			5				av	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-040	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	na			nan			5				nan	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-041	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	xwar			xwarin			5				xwarin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-042	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ça			çay			5				çay	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-043	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	qeh			qehwe			5				qehwe	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-044	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	dayi			dayik			5				dayik	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-045	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ba			bav			5				bav	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-046	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	bir			bira			5				bira	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-047	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	xwiş			xwişk			5				xwişk	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-048	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	za			zarok			5				zarok	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-049	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	mal			malbat			5				malbat	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-050	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	heva			heval			5				heval	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-051	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	mi			mirov			5				mirov	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-052	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	ji			jin			5				jin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-053	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	mê			mêr			5				mêr	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-054	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	na			nav			5				nav	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-055	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	wel			welat			5				welat	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-056	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	baja			bajar			5				bajar	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-057	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	gu			gund			5				gund	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-058	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	r			rê			5				rê	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-059	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	dibi			dibistan			5				dibistan	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-060	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ma			mamoste			5				mamoste	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-061	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	xwe			xwendekar			5				xwendekar	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-062	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	pirt			pirtûk			5				pirtûk	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-063	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ni			nivîs			5				nivîs	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-064	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	zim			ziman			5				ziman	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-065	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	pey			peyv			5				peyv	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-066	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ka			kar			5				kar	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-067	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	per			pere			5				pere	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-068	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	tele			telefon			5				telefon	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-069	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ko			komputer			5				komputer	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-070	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	înt			înternet			5				înternet	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-071	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	ba			baş			5				baş	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-072	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	xw			xweş			5				xweş	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-073	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	mez			mezin			5				mezin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-074	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	biçû			biçûk			5				biçûk	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-075	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	n			nû			5				nû	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-076	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	kev			kevn			5				kevn	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-077	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	ger			germ			5				germ	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-078	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	sa			sar			5				sar	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-079	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	dir			dirêj			5				dirêj	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-080	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	kur			kurt			5				kurt	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-081	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ha			hatin			5				hatin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-082	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	çû			çûn			5				çûn	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-083	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	kiri			kirin			5				kirin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-084	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	go			gotin			5				gotin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-085	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	dît			dîtin			5				dîtin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-086	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	xwen			xwendin			5				xwendin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-087	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	ni			nivîsandin			5				nivîsandin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-088	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	zan			zanîn			5				zanîn	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-089	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	xwes			xwestin			5				xwestin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-090	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	da			dan			5				dan	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-091	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	sta			standin			5				standin	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-092	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	hebû			hebûn			5				hebûn	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-093	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	si			silav			5				silav	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-094	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	spa			spas			5				spas	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-095	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	rojb			rojbaş			5				rojbaş	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-096	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	şe			şevbaş			5				şevbaş	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-097	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	bij			bijî			5				bijî	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-098	dev	complete-prefix	prefix-completion	medium	ai-assisted-draft	xê			xêr			5				xêr	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-099	dev	complete-prefix	prefix-completion	hard	ai-assisted-draft	e			ez			5				ez	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-100	dev	complete-prefix	prefix-completion	easy	ai-assisted-draft	t			tu			5				tu	prefix-truncation		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-101	locked-eval	correct-word	missing-diacritics-i-î	easy	ai-assisted-draft	biji			bijî			5				bijî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-102	locked-eval	correct-word	missing-diacritics-i-î	medium	ai-assisted-draft	xer			xêr			5				xêr	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-103	locked-eval	correct-word	missing-diacritics-i-î	hard	ai-assisted-draft	hun			hûn			5				hûn	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-104	locked-eval	correct-word	missing-diacritics-i-î	easy	ai-assisted-draft	wi			wî			5				wî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-105	locked-eval	correct-word	missing-diacritics-i-î	medium	ai-assisted-draft	we			wê			5				wê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-106	locked-eval	correct-word	missing-diacritics-i-î	hard	ai-assisted-draft	u			û			5				û	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-107	locked-eval	correct-word	missing-diacritics-i-î	easy	ai-assisted-draft	ere			erê			5				erê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-108	locked-eval	correct-word	missing-diacritics-i-î	medium	ai-assisted-draft	bele			belê			5				belê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-109	locked-eval	correct-word	missing-diacritics-i-î	hard	ai-assisted-draft	ji			jî			5				jî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-110	locked-eval	correct-word	missing-diacritics-i-î	easy	ai-assisted-draft	tene			tenê			5				tenê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-111	locked-eval	correct-word	missing-diacritics-i-î	medium	ai-assisted-draft	sev			şev			5				şev	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-112	locked-eval	correct-word	missing-diacritics-i-î	hard	ai-assisted-draft	sibe			sibê			5				sibê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-113	locked-eval	correct-word	missing-diacritics-i-î	easy	ai-assisted-draft	iro			îro			5				îro	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-114	locked-eval	correct-word	missing-diacritics-i-î	medium	ai-assisted-draft	deri			derî			5				derî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-115	locked-eval	correct-word	missing-diacritics-i-î	hard	ai-assisted-draft	cay			çay			5				çay	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-116	locked-eval	correct-word	missing-diacritics-i-î	easy	ai-assisted-draft	xwisk			xwişk			5				xwişk	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-117	locked-eval	correct-word	missing-diacritics-i-î	medium	ai-assisted-draft	mer			mêr			5				mêr	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-118	locked-eval	correct-word	missing-diacritics-i-î	hard	ai-assisted-draft	re			rê			5				rê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-119	locked-eval	correct-word	missing-diacritics-u-û	easy	ai-assisted-draft	pirtuk			pirtûk			5				pirtûk	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-120	locked-eval	correct-word	missing-diacritics-u-û	medium	ai-assisted-draft	nivis			nivîs			5				nivîs	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-121	locked-eval	correct-word	missing-diacritics-u-û	hard	ai-assisted-draft	internet			înternet			5				înternet	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-122	locked-eval	correct-word	missing-diacritics-u-û	easy	ai-assisted-draft	bas			baş			5				baş	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-123	locked-eval	correct-word	missing-diacritics-u-û	medium	ai-assisted-draft	xwes			xweş			5				xweş	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-124	locked-eval	correct-word	missing-diacritics-u-û	hard	ai-assisted-draft	bicuk			biçûk			5				biçûk	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-125	locked-eval	correct-word	missing-diacritics-u-û	easy	ai-assisted-draft	nu			nû			5				nû	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-126	locked-eval	correct-word	missing-diacritics-u-û	medium	ai-assisted-draft	kevin			kevîn			5				kevîn	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-127	locked-eval	correct-word	missing-diacritics-u-û	hard	ai-assisted-draft	direj			dirêj			5				dirêj	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-128	locked-eval	correct-word	missing-diacritics-u-û	easy	ai-assisted-draft	cun			çûn			5				çûn	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-129	locked-eval	correct-word	missing-diacritics-e-ê	easy	ai-assisted-draft	ditin			dîtin			5				dîtin	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-130	locked-eval	correct-word	missing-diacritics-e-ê	medium	ai-assisted-draft	nivisandin			nivîsandin			5				nivîsandin	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-131	locked-eval	correct-word	missing-diacritics-e-ê	hard	ai-assisted-draft	zanin			zanîn			5				zanîn	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-132	locked-eval	correct-word	missing-diacritics-e-ê	easy	ai-assisted-draft	hebun			hebûn			5				hebûn	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-133	locked-eval	correct-word	missing-diacritics-e-ê	medium	ai-assisted-draft	rojbas			rojbaş			5				rojbaş	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-134	locked-eval	correct-word	missing-diacritics-e-ê	hard	ai-assisted-draft	sevbas			şevbaş			5				şevbaş	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-135	locked-eval	correct-word	missing-diacritics-e-ê	easy	ai-assisted-draft	biji			bijî			5				bijî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-136	locked-eval	correct-word	missing-diacritics-e-ê	medium	ai-assisted-draft	xer			xêr			5				xêr	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-137	locked-eval	correct-word	missing-diacritics-e-ê	hard	ai-assisted-draft	hun			hûn			5				hûn	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-138	locked-eval	correct-word	missing-diacritics-s-ş	easy	ai-assisted-draft	wi			wî			5				wî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-139	locked-eval	correct-word	missing-diacritics-s-ş	medium	ai-assisted-draft	we			wê			5				wê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-140	locked-eval	correct-word	missing-diacritics-s-ş	hard	ai-assisted-draft	u			û			5				û	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-141	locked-eval	correct-word	missing-diacritics-s-ş	easy	ai-assisted-draft	ere			erê			5				erê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-142	locked-eval	correct-word	missing-diacritics-s-ş	medium	ai-assisted-draft	bele			belê			5				belê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-143	locked-eval	correct-word	missing-diacritics-s-ş	hard	ai-assisted-draft	ji			jî			5				jî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-144	locked-eval	correct-word	missing-diacritics-s-ş	easy	ai-assisted-draft	tene			tenê			5				tenê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-145	locked-eval	correct-word	missing-diacritics-s-ş	medium	ai-assisted-draft	sev			şev			5				şev	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-146	locked-eval	correct-word	missing-diacritics-c-ç	easy	ai-assisted-draft	sibe			sibê			5				sibê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-147	locked-eval	correct-word	missing-diacritics-c-ç	medium	ai-assisted-draft	iro			îro			5				îro	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-148	locked-eval	correct-word	missing-diacritics-c-ç	hard	ai-assisted-draft	deri			derî			5				derî	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-149	locked-eval	correct-word	missing-diacritics-c-ç	easy	ai-assisted-draft	cay			çay			5				çay	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-150	locked-eval	correct-word	missing-diacritics-c-ç	medium	ai-assisted-draft	xwisk			xwişk			5				xwişk	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-151	locked-eval	correct-word	multiple-missing-diacritics	easy	ai-assisted-draft	mer			mêr			5				mêr	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-152	locked-eval	correct-word	multiple-missing-diacritics	medium	ai-assisted-draft	re			rê			5				rê	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-153	locked-eval	correct-word	multiple-missing-diacritics	hard	ai-assisted-draft	pirtuk			pirtûk			5				pirtûk	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-154	locked-eval	correct-word	multiple-missing-diacritics	easy	ai-assisted-draft	nivis			nivîs			5				nivîs	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-155	locked-eval	correct-word	multiple-missing-diacritics	medium	ai-assisted-draft	internet			înternet			5				înternet	remove-diacritics		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-156	locked-eval	correct-word	substitution	easy	ai-assisted-draft	lê			rê			5				rê	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-157	locked-eval	correct-word	substitution	medium	ai-assisted-draft	dipistan			dibistan			5				dibistan	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-158	locked-eval	correct-word	substitution	hard	ai-assisted-draft	namoste			mamoste			5				mamoste	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-159	locked-eval	correct-word	substitution	easy	ai-assisted-draft	xwemdekar			xwendekar			5				xwendekar	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-160	locked-eval	correct-word	substitution	medium	ai-assisted-draft	birtûk			pirtûk			5				pirtûk	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-161	locked-eval	correct-word	substitution	hard	ai-assisted-draft	mivîs			nivîs			5				nivîs	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-162	locked-eval	correct-word	substitution	easy	ai-assisted-draft	zinan			ziman			5				ziman	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-163	locked-eval	correct-word	substitution	medium	ai-assisted-draft	beyv			peyv			5				peyv	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-164	locked-eval	correct-word	substitution	hard	ai-assisted-draft	gar			kar			5				kar	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-165	locked-eval	correct-word	substitution	easy	ai-assisted-draft	bere			pere			5				pere	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-166	locked-eval	correct-word	substitution	medium	ai-assisted-draft	delefon			telefon			5				telefon	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-167	locked-eval	correct-word	substitution	hard	ai-assisted-draft	gomputer			komputer			5				komputer	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-168	locked-eval	correct-word	substitution	easy	ai-assisted-draft	îmternet			înternet			5				înternet	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-169	locked-eval	correct-word	substitution	medium	ai-assisted-draft	paş			baş			5				baş	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-170	locked-eval	correct-word	substitution	hard	ai-assisted-draft	xweşx			xweş			5				xweş	single-substitution		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-171	locked-eval	correct-word	deletion	easy	ai-assisted-draft	mezi			mezin			5				mezin	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-172	locked-eval	correct-word	deletion	medium	ai-assisted-draft	biçû			biçûk			5				biçûk	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-173	locked-eval	correct-word	deletion	hard	ai-assisted-draft	n			nû			5				nû	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-174	locked-eval	correct-word	deletion	easy	ai-assisted-draft	kevî			kevîn			5				kevîn	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-175	locked-eval	correct-word	deletion	medium	ai-assisted-draft	ger			germ			5				germ	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-176	locked-eval	correct-word	deletion	hard	ai-assisted-draft	sa			sar			5				sar	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-177	locked-eval	correct-word	deletion	easy	ai-assisted-draft	dirê			dirêj			5				dirêj	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-178	locked-eval	correct-word	deletion	medium	ai-assisted-draft	kur			kurt			5				kurt	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-179	locked-eval	correct-word	deletion	hard	ai-assisted-draft	hati			hatin			5				hatin	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-180	locked-eval	correct-word	deletion	easy	ai-assisted-draft	çû			çûn			5				çûn	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-181	locked-eval	correct-word	deletion	medium	ai-assisted-draft	kiri			kirin			5				kirin	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-182	locked-eval	correct-word	deletion	hard	ai-assisted-draft	goti			gotin			5				gotin	single-deletion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-183	locked-eval	correct-word	insertion	easy	ai-assisted-draft	dîtinn			dîtin			5				dîtin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-184	locked-eval	correct-word	insertion	medium	ai-assisted-draft	xwendinn			xwendin			5				xwendin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-185	locked-eval	correct-word	insertion	hard	ai-assisted-draft	nivîsandinn			nivîsandin			5				nivîsandin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-186	locked-eval	correct-word	insertion	easy	ai-assisted-draft	zanînn			zanîn			5				zanîn	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-187	locked-eval	correct-word	insertion	medium	ai-assisted-draft	xwestinn			xwestin			5				xwestin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-188	locked-eval	correct-word	insertion	hard	ai-assisted-draft	dann			dan			5				dan	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-189	locked-eval	correct-word	insertion	easy	ai-assisted-draft	standinn			standin			5				standin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-190	locked-eval	correct-word	insertion	medium	ai-assisted-draft	hebûnn			hebûn			5				hebûn	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-191	locked-eval	correct-word	transposition	easy	ai-assisted-draft	sliav			silav			5				silav	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-192	locked-eval	correct-word	transposition	medium	ai-assisted-draft	saps			spas			5				spas	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-193	locked-eval	correct-word	transposition	hard	ai-assisted-draft	robjaş			rojbaş			5				rojbaş	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-194	locked-eval	correct-word	transposition	easy	ai-assisted-draft	şebvaş			şevbaş			5				şevbaş	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-195	locked-eval	correct-word	transposition	medium	ai-assisted-draft	bjiî			bijî			5				bijî	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-196	locked-eval	correct-word	transposition	hard	ai-assisted-draft	êxr			xêr			5				xêr	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-197	locked-eval	correct-word	transposition	easy	ai-assisted-draft	ezx			ez			5				ez	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-198	locked-eval	correct-word	transposition	medium	ai-assisted-draft	tux			tu			5				tu	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-199	locked-eval	correct-word	transposition	hard	ai-assisted-draft	ewx			ew			5				ew	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-200	locked-eval	correct-word	transposition	easy	ai-assisted-draft	emx			em			5				em	adjacent-transposition		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-201	locked-eval	correct-word	wrong-diacritic	easy	ai-assisted-draft	hum			hûn			5				hûn	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-202	locked-eval	correct-word	wrong-diacritic	medium	ai-assisted-draft	wam			wan			5				wan	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-203	locked-eval	correct-word	wrong-diacritic	hard	ai-assisted-draft	ef			ev			5				ev	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-204	locked-eval	correct-word	wrong-diacritic	easy	ai-assisted-draft	wix			wî			5				wî	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-205	locked-eval	correct-word	wrong-diacritic	medium	ai-assisted-draft	wex			wê			5				wê	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-206	locked-eval	correct-word	wrong-diacritic	hard	ai-assisted-draft	nin			min			5				min	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-207	locked-eval	correct-word	wrong-diacritic	easy	ai-assisted-draft	de			te			5				te	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-208	locked-eval	correct-word	wrong-diacritic	medium	ai-assisted-draft	ux			û			5				û	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-209	locked-eval	correct-word	combined-errors	easy	ai-assisted-draft	jix			ji			5				ji	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-210	locked-eval	correct-word	combined-errors	medium	ai-assisted-draft	dix			di			5				di	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-211	locked-eval	correct-word	combined-errors	hard	ai-assisted-draft	pi			bi			5				bi	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-212	locked-eval	correct-word	combined-errors	easy	ai-assisted-draft	ri			li			5				li	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-213	locked-eval	correct-word	combined-errors	medium	ai-assisted-draft	po			bo			5				bo	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-214	locked-eval	correct-word	combined-errors	hard	ai-assisted-draft	gu			ku			5				ku	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-215	locked-eval	correct-word	combined-errors	easy	ai-assisted-draft	me			ne			5				ne	combined-generated-error		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-216	locked-eval	correct-word	repeated-letter	easy	ai-assisted-draft	naa			na			5				na	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-217	locked-eval	correct-word	repeated-letter	medium	ai-assisted-draft	erêê			erê			5				erê	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-218	locked-eval	correct-word	repeated-letter	hard	ai-assisted-draft	belêê			belê			5				belê	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-219	locked-eval	correct-word	repeated-letter	easy	ai-assisted-draft	jîî			jî			5				jî	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-220	locked-eval	correct-word	repeated-letter	medium	ai-assisted-draft	tenêê			tenê			5				tenê	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-236	locked-eval	accept-word	false-acceptance	easy	ai-assisted-draft	nann						5	false			nan	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-237	locked-eval	accept-word	false-acceptance	medium	ai-assisted-draft	xwarinn						5	false			xwarin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-238	locked-eval	accept-word	false-acceptance	hard	ai-assisted-draft	çayy						5	false			çay	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-239	locked-eval	accept-word	false-acceptance	easy	ai-assisted-draft	qehwee						5	false			qehwe	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-240	locked-eval	accept-word	false-acceptance	medium	ai-assisted-draft	dayikk						5	false			dayik	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-241	locked-eval	accept-word	false-acceptance	hard	ai-assisted-draft	bavv						5	false			bav	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-242	locked-eval	accept-word	false-acceptance	easy	ai-assisted-draft	birayy						5	false			biray	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-243	locked-eval	accept-word	false-acceptance	medium	ai-assisted-draft	xwişkk						5	false			xwişk	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-244	locked-eval	accept-word	false-acceptance	hard	ai-assisted-draft	zarokk						5	false			zarok	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-245	locked-eval	accept-word	false-acceptance	easy	ai-assisted-draft	malbatt						5	false			malbat	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-246	locked-eval	accept-word	false-acceptance	medium	ai-assisted-draft	hevall						5	false			heval	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-247	locked-eval	accept-word	false-acceptance	hard	ai-assisted-draft	mirovv						5	false			mirov	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-248	locked-eval	accept-word	false-acceptance	easy	ai-assisted-draft	jinn						5	false			jin	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-249	locked-eval	accept-word	false-acceptance	medium	ai-assisted-draft	mêrr						5	false			mêr	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-250	locked-eval	accept-word	false-acceptance	hard	ai-assisted-draft	navv						5	false			nav	single-insertion		kurmanci-data-enrichment-starter-v1		needs-human-review				no
+B-251	locked-eval	predict-next	next-word	easy	ai-assisted-draft	malê	li	malê				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-252	locked-eval	predict-next	next-word	medium	ai-assisted-draft	ez		ez				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-253	locked-eval	predict-next	next-word	hard	ai-assisted-draft	tu		tu				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-254	locked-eval	predict-next	next-word	easy	ai-assisted-draft	em		em				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-255	locked-eval	predict-next	next-word	medium	ai-assisted-draft	ji	spas	ji				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-256	locked-eval	predict-next	next-word	hard	ai-assisted-draft	baş	roj	baş				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-257	locked-eval	predict-next	next-word	easy	ai-assisted-draft	xêr	bi	xêr				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-258	locked-eval	predict-next	next-word	medium	ai-assisted-draft	malê	li	malê				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-259	locked-eval	predict-next	next-word	hard	ai-assisted-draft	ez		ez				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-260	locked-eval	predict-next	next-word	easy	ai-assisted-draft	tu		tu				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-261	locked-eval	predict-next	next-word	medium	ai-assisted-draft	em		em				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-262	locked-eval	predict-next	next-word	hard	ai-assisted-draft	ji	spas	ji				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-263	locked-eval	predict-next	next-word	easy	ai-assisted-draft	baş	roj	baş				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-264	locked-eval	predict-next	next-word	medium	ai-assisted-draft	xêr	bi	xêr				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-265	locked-eval	predict-next	next-word	hard	ai-assisted-draft	malê	li	malê				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-266	locked-eval	predict-next	next-word	easy	ai-assisted-draft	ez		ez				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-267	locked-eval	predict-next	next-word	medium	ai-assisted-draft	tu		tu				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-268	locked-eval	predict-next	next-word	hard	ai-assisted-draft	em		em				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-269	locked-eval	predict-next	next-word	easy	ai-assisted-draft	ji	spas	ji				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-270	locked-eval	predict-next	next-word	medium	ai-assisted-draft	baş	roj	baş				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-271	locked-eval	predict-next	next-word	hard	ai-assisted-draft	xêr	bi	xêr				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-272	locked-eval	predict-next	next-word	easy	ai-assisted-draft	malê	li	malê				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-273	locked-eval	predict-next	next-word	medium	ai-assisted-draft	ez		ez				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-274	locked-eval	predict-next	next-word	hard	ai-assisted-draft	tu		tu				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-275	locked-eval	predict-next	next-word	easy	ai-assisted-draft	em		em				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-276	locked-eval	predict-next	next-word	medium	ai-assisted-draft	ji	spas	ji				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-277	locked-eval	predict-next	next-word	hard	ai-assisted-draft	baş	roj	baş				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-278	locked-eval	predict-next	next-word	easy	ai-assisted-draft	xêr	bi	xêr				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-279	locked-eval	predict-next	next-word	medium	ai-assisted-draft	malê	li	malê				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-280	locked-eval	predict-next	next-word	hard	ai-assisted-draft	ez		ez				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-281	locked-eval	predict-next	next-word	easy	ai-assisted-draft	tu		tu				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-282	locked-eval	predict-next	next-word	medium	ai-assisted-draft	em		em				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-283	locked-eval	predict-next	next-word	hard	ai-assisted-draft	ji	spas	ji				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-284	locked-eval	predict-next	next-word	easy	ai-assisted-draft	baş	roj	baş				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no
+B-285	locked-eval	predict-next	next-word	medium	ai-assisted-draft	xêr	bi	xêr				5							kurmanci-data-enrichment-starter-v1		needs-human-review			Add 1–3 natural continuations after human review; do not infer from this starter.	no

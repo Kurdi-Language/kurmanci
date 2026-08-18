@@ -1,0 +1,501 @@
+candidate_id	surface_form	normalized_form	lemma	pos	gloss_note	region	register	domain	form_type	token_count	document_count	source_count	source_ids	example_1	example_2	diacritic_collision	proper_name_risk	foreign_language_risk	priority	decision	reviewer_id	review_date	review_notes
+V-0001	ez	ez		pronoun	I	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0002	tu	tu		pronoun	you singular	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0003	ew	ew		pronoun	he/she/it	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0004	em	em		pronoun	we	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0005	hûn	hûn		pronoun	you plural/formal	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0006	wan	wan		pronoun	them/their	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0007	ev	ev		determiner	this	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0008	wî	wî		pronoun	him/his	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0009	wê	wê		pronoun	her/that	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0010	min	min		pronoun	me/my	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0011	te	te		pronoun	you/your	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0012	û	û		conjunction	and	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0013	ji	ji		preposition	from/of	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0014	di	di		preposition	in	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0015	bi	bi		preposition	with/by	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0016	li	li		preposition	at/on	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0017	bo	bo		preposition	for	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0018	ku	ku		conjunction	that/where	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0019	ne	ne		particle	not	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0020	na	na		particle	no/not	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0021	erê	erê		particle	yes	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0022	belê	belê		particle	yes	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0023	jî	jî		particle	also	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0024	tenê	tenê		adverb	only	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0025	pir	pir		adjective	many/much	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0026	hinek	hinek		determiner	some	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0027	roj	roj		noun	day/sun	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0028	şev	şev		noun	night	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0029	sibê	sibê		noun	morning/tomorrow	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0030	îro	îro		adverb	today	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0031	duh	duh		adverb	yesterday	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0032	niha	niha		adverb	now	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0033	dem	dem		noun	time	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0034	sal	sal		noun	year	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0035	meh	meh		noun	month	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0036	hefte	hefte		noun	week	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0037	mal	mal		noun	home/house	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0038	derî	derî		noun	door	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0039	av	av		noun	water	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0040	nan	nan		noun	bread	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0041	xwarin	xwarin		noun/verb	food/to eat	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0042	çay	çay		noun	tea	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0043	qehwe	qehwe		noun	coffee	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0044	dayik	dayik		noun	mother	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0045	bav	bav		noun	father	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0046	biray	biray		noun	brother	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0047	xwişk	xwişk		noun	sister	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0048	zarok	zarok		noun	child	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0049	malbat	malbat		noun	family	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0050	heval	heval		noun	friend	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0051	mirov	mirov		noun	person/human	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0052	jin	jin		noun	woman	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0053	mêr	mêr		noun	man	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0054	nav	nav		noun	name	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0055	welat	welat		noun	country	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0056	bajar	bajar		noun	city	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0057	gund	gund		noun	village	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0058	rê	rê		noun	road/way	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0059	dibistan	dibistan		noun	school	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0060	mamoste	mamoste		noun	teacher	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0061	xwendekar	xwendekar		noun	student	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0062	pirtûk	pirtûk		noun	book	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0063	nivîs	nivîs		noun	writing	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0064	ziman	ziman		noun	language	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0065	peyv	peyv		noun	word	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0066	kar	kar		noun	work	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0067	pere	pere		noun	money	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0068	bazaar	bazaar		noun	market (verify spelling)	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				review	low		pending			
+V-0069	telefon	telefon		noun	telephone	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0070	komputer	komputer		noun	computer	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0071	înternet	înternet		noun	internet	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0072	baş	baş		adjective	good	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0073	xweş	xweş		adjective	pleasant/well	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0074	mezin	mezin		adjective	big	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0075	biçûk	biçûk		adjective	small	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0076	nû	nû		adjective	new	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0077	kevîn	kevîn		adjective	old/ancient	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0078	germ	germ		adjective	warm	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0079	sar	sar		adjective	cold	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0080	dirêj	dirêj		adjective	long	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0081	kurt	kurt		adjective	short	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0082	hatin	hatin		verb	to come	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0083	çûn	çûn		verb	to go	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0084	kirin	kirin		verb	to do/make	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0085	gotin	gotin		verb	to say	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0086	dîtin	dîtin		verb	to see	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0087	xwendin	xwendin		verb	to read/study	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0088	nivîsandin	nivîsandin		verb	to write	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0089	zanîn	zanîn		verb	to know	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0090	xwestin	xwestin		verb	to want	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0091	dan	dan		verb	to give	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0092	standin	standin		verb	to take/receive	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0093	hebûn	hebûn		verb	to exist/have	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0094	silav	silav		interjection	hello	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0095	spas	spas		interjection	thanks	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0096	rojbaş	rojbaş		interjection	good day/hello	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0097	şevbaş	şevbaş		interjection	good night	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0098	xatirê te	xatirê te		phrase	goodbye (verify tokenization)	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				review	low		pending			
+V-0099	bijî	bijî		interjection/verb	long live	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0100	xêr	xêr		noun/adjective	goodness/good	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
+V-0101						general	neutral													pending			
+V-0102						general	neutral													pending			
+V-0103						general	neutral													pending			
+V-0104						general	neutral													pending			
+V-0105						general	neutral													pending			
+V-0106						general	neutral													pending			
+V-0107						general	neutral													pending			
+V-0108						general	neutral													pending			
+V-0109						general	neutral													pending			
+V-0110						general	neutral													pending			
+V-0111						general	neutral													pending			
+V-0112						general	neutral													pending			
+V-0113						general	neutral													pending			
+V-0114						general	neutral													pending			
+V-0115						general	neutral													pending			
+V-0116						general	neutral													pending			
+V-0117						general	neutral													pending			
+V-0118						general	neutral													pending			
+V-0119						general	neutral													pending			
+V-0120						general	neutral													pending			
+V-0121						general	neutral													pending			
+V-0122						general	neutral													pending			
+V-0123						general	neutral													pending			
+V-0124						general	neutral													pending			
+V-0125						general	neutral													pending			
+V-0126						general	neutral													pending			
+V-0127						general	neutral													pending			
+V-0128						general	neutral													pending			
+V-0129						general	neutral													pending			
+V-0130						general	neutral													pending			
+V-0131						general	neutral													pending			
+V-0132						general	neutral													pending			
+V-0133						general	neutral													pending			
+V-0134						general	neutral													pending			
+V-0135						general	neutral													pending			
+V-0136						general	neutral													pending			
+V-0137						general	neutral													pending			
+V-0138						general	neutral													pending			
+V-0139						general	neutral													pending			
+V-0140						general	neutral													pending			
+V-0141						general	neutral													pending			
+V-0142						general	neutral													pending			
+V-0143						general	neutral													pending			
+V-0144						general	neutral													pending			
+V-0145						general	neutral													pending			
+V-0146						general	neutral													pending			
+V-0147						general	neutral													pending			
+V-0148						general	neutral													pending			
+V-0149						general	neutral													pending			
+V-0150						general	neutral													pending			
+V-0151						general	neutral													pending			
+V-0152						general	neutral													pending			
+V-0153						general	neutral													pending			
+V-0154						general	neutral													pending			
+V-0155						general	neutral													pending			
+V-0156						general	neutral													pending			
+V-0157						general	neutral													pending			
+V-0158						general	neutral													pending			
+V-0159						general	neutral													pending			
+V-0160						general	neutral													pending			
+V-0161						general	neutral													pending			
+V-0162						general	neutral													pending			
+V-0163						general	neutral													pending			
+V-0164						general	neutral													pending			
+V-0165						general	neutral													pending			
+V-0166						general	neutral													pending			
+V-0167						general	neutral													pending			
+V-0168						general	neutral													pending			
+V-0169						general	neutral													pending			
+V-0170						general	neutral													pending			
+V-0171						general	neutral													pending			
+V-0172						general	neutral													pending			
+V-0173						general	neutral													pending			
+V-0174						general	neutral													pending			
+V-0175						general	neutral													pending			
+V-0176						general	neutral													pending			
+V-0177						general	neutral													pending			
+V-0178						general	neutral													pending			
+V-0179						general	neutral													pending			
+V-0180						general	neutral													pending			
+V-0181						general	neutral													pending			
+V-0182						general	neutral													pending			
+V-0183						general	neutral													pending			
+V-0184						general	neutral													pending			
+V-0185						general	neutral													pending			
+V-0186						general	neutral													pending			
+V-0187						general	neutral													pending			
+V-0188						general	neutral													pending			
+V-0189						general	neutral													pending			
+V-0190						general	neutral													pending			
+V-0191						general	neutral													pending			
+V-0192						general	neutral													pending			
+V-0193						general	neutral													pending			
+V-0194						general	neutral													pending			
+V-0195						general	neutral													pending			
+V-0196						general	neutral													pending			
+V-0197						general	neutral													pending			
+V-0198						general	neutral													pending			
+V-0199						general	neutral													pending			
+V-0200						general	neutral													pending			
+V-0201						general	neutral													pending			
+V-0202						general	neutral													pending			
+V-0203						general	neutral													pending			
+V-0204						general	neutral													pending			
+V-0205						general	neutral													pending			
+V-0206						general	neutral													pending			
+V-0207						general	neutral													pending			
+V-0208						general	neutral													pending			
+V-0209						general	neutral													pending			
+V-0210						general	neutral													pending			
+V-0211						general	neutral													pending			
+V-0212						general	neutral													pending			
+V-0213						general	neutral													pending			
+V-0214						general	neutral													pending			
+V-0215						general	neutral													pending			
+V-0216						general	neutral													pending			
+V-0217						general	neutral													pending			
+V-0218						general	neutral													pending			
+V-0219						general	neutral													pending			
+V-0220						general	neutral													pending			
+V-0221						general	neutral													pending			
+V-0222						general	neutral													pending			
+V-0223						general	neutral													pending			
+V-0224						general	neutral													pending			
+V-0225						general	neutral													pending			
+V-0226						general	neutral													pending			
+V-0227						general	neutral													pending			
+V-0228						general	neutral													pending			
+V-0229						general	neutral													pending			
+V-0230						general	neutral													pending			
+V-0231						general	neutral													pending			
+V-0232						general	neutral													pending			
+V-0233						general	neutral													pending			
+V-0234						general	neutral													pending			
+V-0235						general	neutral													pending			
+V-0236						general	neutral													pending			
+V-0237						general	neutral													pending			
+V-0238						general	neutral													pending			
+V-0239						general	neutral													pending			
+V-0240						general	neutral													pending			
+V-0241						general	neutral													pending			
+V-0242						general	neutral													pending			
+V-0243						general	neutral													pending			
+V-0244						general	neutral													pending			
+V-0245						general	neutral													pending			
+V-0246						general	neutral													pending			
+V-0247						general	neutral													pending			
+V-0248						general	neutral													pending			
+V-0249						general	neutral													pending			
+V-0250						general	neutral													pending			
+V-0251						general	neutral													pending			
+V-0252						general	neutral													pending			
+V-0253						general	neutral													pending			
+V-0254						general	neutral													pending			
+V-0255						general	neutral													pending			
+V-0256						general	neutral													pending			
+V-0257						general	neutral													pending			
+V-0258						general	neutral													pending			
+V-0259						general	neutral													pending			
+V-0260						general	neutral													pending			
+V-0261						general	neutral													pending			
+V-0262						general	neutral													pending			
+V-0263						general	neutral													pending			
+V-0264						general	neutral													pending			
+V-0265						general	neutral													pending			
+V-0266						general	neutral													pending			
+V-0267						general	neutral													pending			
+V-0268						general	neutral													pending			
+V-0269						general	neutral													pending			
+V-0270						general	neutral													pending			
+V-0271						general	neutral													pending			
+V-0272						general	neutral													pending			
+V-0273						general	neutral													pending			
+V-0274						general	neutral													pending			
+V-0275						general	neutral													pending			
+V-0276						general	neutral													pending			
+V-0277						general	neutral													pending			
+V-0278						general	neutral													pending			
+V-0279						general	neutral													pending			
+V-0280						general	neutral													pending			
+V-0281						general	neutral													pending			
+V-0282						general	neutral													pending			
+V-0283						general	neutral													pending			
+V-0284						general	neutral													pending			
+V-0285						general	neutral													pending			
+V-0286						general	neutral													pending			
+V-0287						general	neutral													pending			
+V-0288						general	neutral													pending			
+V-0289						general	neutral													pending			
+V-0290						general	neutral													pending			
+V-0291						general	neutral													pending			
+V-0292						general	neutral													pending			
+V-0293						general	neutral													pending			
+V-0294						general	neutral													pending			
+V-0295						general	neutral													pending			
+V-0296						general	neutral													pending			
+V-0297						general	neutral													pending			
+V-0298						general	neutral													pending			
+V-0299						general	neutral													pending			
+V-0300						general	neutral													pending			
+V-0301						general	neutral													pending			
+V-0302						general	neutral													pending			
+V-0303						general	neutral													pending			
+V-0304						general	neutral													pending			
+V-0305						general	neutral													pending			
+V-0306						general	neutral													pending			
+V-0307						general	neutral													pending			
+V-0308						general	neutral													pending			
+V-0309						general	neutral													pending			
+V-0310						general	neutral													pending			
+V-0311						general	neutral													pending			
+V-0312						general	neutral													pending			
+V-0313						general	neutral													pending			
+V-0314						general	neutral													pending			
+V-0315						general	neutral													pending			
+V-0316						general	neutral													pending			
+V-0317						general	neutral													pending			
+V-0318						general	neutral													pending			
+V-0319						general	neutral													pending			
+V-0320						general	neutral													pending			
+V-0321						general	neutral													pending			
+V-0322						general	neutral													pending			
+V-0323						general	neutral													pending			
+V-0324						general	neutral													pending			
+V-0325						general	neutral													pending			
+V-0326						general	neutral													pending			
+V-0327						general	neutral													pending			
+V-0328						general	neutral													pending			
+V-0329						general	neutral													pending			
+V-0330						general	neutral													pending			
+V-0331						general	neutral													pending			
+V-0332						general	neutral													pending			
+V-0333						general	neutral													pending			
+V-0334						general	neutral													pending			
+V-0335						general	neutral													pending			
+V-0336						general	neutral													pending			
+V-0337						general	neutral													pending			
+V-0338						general	neutral													pending			
+V-0339						general	neutral													pending			
+V-0340						general	neutral													pending			
+V-0341						general	neutral													pending			
+V-0342						general	neutral													pending			
+V-0343						general	neutral													pending			
+V-0344						general	neutral													pending			
+V-0345						general	neutral													pending			
+V-0346						general	neutral													pending			
+V-0347						general	neutral													pending			
+V-0348						general	neutral													pending			
+V-0349						general	neutral													pending			
+V-0350						general	neutral													pending			
+V-0351						general	neutral													pending			
+V-0352						general	neutral													pending			
+V-0353						general	neutral													pending			
+V-0354						general	neutral													pending			
+V-0355						general	neutral													pending			
+V-0356						general	neutral													pending			
+V-0357						general	neutral													pending			
+V-0358						general	neutral													pending			
+V-0359						general	neutral													pending			
+V-0360						general	neutral													pending			
+V-0361						general	neutral													pending			
+V-0362						general	neutral													pending			
+V-0363						general	neutral													pending			
+V-0364						general	neutral													pending			
+V-0365						general	neutral													pending			
+V-0366						general	neutral													pending			
+V-0367						general	neutral													pending			
+V-0368						general	neutral													pending			
+V-0369						general	neutral													pending			
+V-0370						general	neutral													pending			
+V-0371						general	neutral													pending			
+V-0372						general	neutral													pending			
+V-0373						general	neutral													pending			
+V-0374						general	neutral													pending			
+V-0375						general	neutral													pending			
+V-0376						general	neutral													pending			
+V-0377						general	neutral													pending			
+V-0378						general	neutral													pending			
+V-0379						general	neutral													pending			
+V-0380						general	neutral													pending			
+V-0381						general	neutral													pending			
+V-0382						general	neutral													pending			
+V-0383						general	neutral													pending			
+V-0384						general	neutral													pending			
+V-0385						general	neutral													pending			
+V-0386						general	neutral													pending			
+V-0387						general	neutral													pending			
+V-0388						general	neutral													pending			
+V-0389						general	neutral													pending			
+V-0390						general	neutral													pending			
+V-0391						general	neutral													pending			
+V-0392						general	neutral													pending			
+V-0393						general	neutral													pending			
+V-0394						general	neutral													pending			
+V-0395						general	neutral													pending			
+V-0396						general	neutral													pending			
+V-0397						general	neutral													pending			
+V-0398						general	neutral													pending			
+V-0399						general	neutral													pending			
+V-0400						general	neutral													pending			
+V-0401						general	neutral													pending			
+V-0402						general	neutral													pending			
+V-0403						general	neutral													pending			
+V-0404						general	neutral													pending			
+V-0405						general	neutral													pending			
+V-0406						general	neutral													pending			
+V-0407						general	neutral													pending			
+V-0408						general	neutral													pending			
+V-0409						general	neutral													pending			
+V-0410						general	neutral													pending			
+V-0411						general	neutral													pending			
+V-0412						general	neutral													pending			
+V-0413						general	neutral													pending			
+V-0414						general	neutral													pending			
+V-0415						general	neutral													pending			
+V-0416						general	neutral													pending			
+V-0417						general	neutral													pending			
+V-0418						general	neutral													pending			
+V-0419						general	neutral													pending			
+V-0420						general	neutral													pending			
+V-0421						general	neutral													pending			
+V-0422						general	neutral													pending			
+V-0423						general	neutral													pending			
+V-0424						general	neutral													pending			
+V-0425						general	neutral													pending			
+V-0426						general	neutral													pending			
+V-0427						general	neutral													pending			
+V-0428						general	neutral													pending			
+V-0429						general	neutral													pending			
+V-0430						general	neutral													pending			
+V-0431						general	neutral													pending			
+V-0432						general	neutral													pending			
+V-0433						general	neutral													pending			
+V-0434						general	neutral													pending			
+V-0435						general	neutral													pending			
+V-0436						general	neutral													pending			
+V-0437						general	neutral													pending			
+V-0438						general	neutral													pending			
+V-0439						general	neutral													pending			
+V-0440						general	neutral													pending			
+V-0441						general	neutral													pending			
+V-0442						general	neutral													pending			
+V-0443						general	neutral													pending			
+V-0444						general	neutral													pending			
+V-0445						general	neutral													pending			
+V-0446						general	neutral													pending			
+V-0447						general	neutral													pending			
+V-0448						general	neutral													pending			
+V-0449						general	neutral													pending			
+V-0450						general	neutral													pending			
+V-0451						general	neutral													pending			
+V-0452						general	neutral													pending			
+V-0453						general	neutral													pending			
+V-0454						general	neutral													pending			
+V-0455						general	neutral													pending			
+V-0456						general	neutral													pending			
+V-0457						general	neutral													pending			
+V-0458						general	neutral													pending			
+V-0459						general	neutral													pending			
+V-0460						general	neutral													pending			
+V-0461						general	neutral													pending			
+V-0462						general	neutral													pending			
+V-0463						general	neutral													pending			
+V-0464						general	neutral													pending			
+V-0465						general	neutral													pending			
+V-0466						general	neutral													pending			
+V-0467						general	neutral													pending			
+V-0468						general	neutral													pending			
+V-0469						general	neutral													pending			
+V-0470						general	neutral													pending			
+V-0471						general	neutral													pending			
+V-0472						general	neutral													pending			
+V-0473						general	neutral													pending			
+V-0474						general	neutral													pending			
+V-0475						general	neutral													pending			
+V-0476						general	neutral													pending			
+V-0477						general	neutral													pending			
+V-0478						general	neutral													pending			
+V-0479						general	neutral													pending			
+V-0480						general	neutral													pending			
+V-0481						general	neutral													pending			
+V-0482						general	neutral													pending			
+V-0483						general	neutral													pending			
+V-0484						general	neutral													pending			
+V-0485						general	neutral													pending			
+V-0486						general	neutral													pending			
+V-0487						general	neutral													pending			
+V-0488						general	neutral													pending			
+V-0489						general	neutral													pending			
+V-0490						general	neutral													pending			
+V-0491						general	neutral													pending			
+V-0492						general	neutral													pending			
+V-0493						general	neutral													pending			
+V-0494						general	neutral													pending			
+V-0495						general	neutral													pending			
+V-0496						general	neutral													pending			
+V-0497						general	neutral													pending			
+V-0498						general	neutral													pending			
+V-0499						general	neutral													pending			
+V-0500						general	neutral													pending			
