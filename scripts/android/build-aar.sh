@@ -4,12 +4,17 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-VERSION="0.1.0"
+DEFAULT_GROUP="$(grep '^kurmanciMavenGroup=' "$REPO_ROOT/android/gradle.properties" 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n' || echo 'io.github.ferhatguneri')"
+DEFAULT_VERSION="$(grep '^kurmanciVersion=' "$REPO_ROOT/android/gradle.properties" 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n' || echo '0.1.0')"
+
+VERSION="${VERSION:-$DEFAULT_VERSION}"
+GROUP_ID="${GROUP_ID:-$DEFAULT_GROUP}"
+GROUP_PATH="${GROUP_ID//./\/}"
 MIN_SDK="23"
 REQUIRED_ABIS=("arm64-v8a" "armeabi-v7a" "x86_64")
 TARGET_TRIPLES=("aarch64-linux-android" "armv7-linux-androideabi" "x86_64-linux-android")
 
-echo "=== Building Kurmancî Android SDK v${VERSION} (minSdk=${MIN_SDK}) ==="
+echo "=== Building Kurmancî Android SDK v${VERSION} for group ${GROUP_ID} (minSdk=${MIN_SDK}) ==="
 
 cd "$REPO_ROOT"
 
@@ -53,11 +58,14 @@ for i in "${!REQUIRED_ABIS[@]}"; do
   echo "✅ Staged $JNI_STAGE_DIR/libkurmanci_jni.so"
 done
 
-# 2. Build Release AAR and publish directly to dist/android/maven
-echo "Building Release AAR and publishing to local Maven repository..."
+# 2. Build Release AAR and publish explicitly to distMaven repository
+echo "Building Release AAR and publishing to local Maven repository (distMaven)..."
 cd "$REPO_ROOT/android"
 chmod +x ./gradlew
-./gradlew :kurmanci:assembleRelease :kurmanci:publish
+./gradlew :kurmanci:assembleRelease :kurmanci:publishReleasePublicationToDistMavenRepository \
+  -PcentralRelease=false \
+  -PkurmanciMavenGroup="${GROUP_ID}" \
+  -PkurmanciVersion="${VERSION}"
 
 # 3. Copy AAR artifact to dist/
 mkdir -p "$REPO_ROOT/dist"
@@ -90,13 +98,16 @@ if ! echo "$AAR_CONTENTS" | grep -q "classes.jar"; then
 fi
 
 # 5. Verify local Maven repository publication
-MAVEN_POM="$REPO_ROOT/dist/android/maven/org/kurmanci/kurmanci-android/${VERSION}/kurmanci-android-${VERSION}.pom"
-MAVEN_AAR="$REPO_ROOT/dist/android/maven/org/kurmanci/kurmanci-android/${VERSION}/kurmanci-android-${VERSION}.aar"
+MAVEN_BASE="$REPO_ROOT/dist/android/maven/$GROUP_PATH/kurmanci-android/${VERSION}"
+MAVEN_POM="$MAVEN_BASE/kurmanci-android-${VERSION}.pom"
+MAVEN_AAR="$MAVEN_BASE/kurmanci-android-${VERSION}.aar"
+MAVEN_SRC="$MAVEN_BASE/kurmanci-android-${VERSION}-sources.jar"
+MAVEN_DOC="$MAVEN_BASE/kurmanci-android-${VERSION}-javadoc.jar"
 
-if [[ -f "$MAVEN_POM" && -f "$MAVEN_AAR" ]]; then
-  echo "✅ Deterministic local Maven publication verified at dist/android/maven/org/kurmanci/kurmanci-android/${VERSION}/"
+if [[ -f "$MAVEN_POM" && -f "$MAVEN_AAR" && -f "$MAVEN_SRC" && -f "$MAVEN_DOC" ]]; then
+  echo "✅ Deterministic local Maven publication verified at $MAVEN_BASE"
 else
-  echo "❌ Error: Local Maven repository publication incomplete at $MAVEN_POM" >&2
+  echo "❌ Error: Local Maven repository publication incomplete at $MAVEN_BASE" >&2
   exit 1
 fi
 

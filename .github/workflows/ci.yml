@@ -520,6 +520,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Validate Android Shell Scripts Syntax
+        run: |
+          for script in scripts/android/*.sh; do
+            echo "Checking syntax of $script..."
+            bash -n "$script"
+          done
+          echo "✅ All Android shell scripts passed bash -n syntax validation."
+
       - name: Set up Java JDK 17
         uses: actions/setup-java@v4
         with:

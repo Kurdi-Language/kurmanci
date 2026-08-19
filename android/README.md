@@ -1,4 +1,4 @@
-# Kurmancî Android SDK (`kurmanci-android`) — Milestone 5D
+# Kurmancî Android SDK (`kurmanci-android`) — Milestone 5E
 
 `kurmanci-android` is an idiomatic, zero-Rust-dependency Android SDK built on top of the stable Kurmancî C ABI (`kurmanci-ffi`) via a JNI bridge (`libkurmanci_jni.so`).
 
@@ -8,26 +8,21 @@
 
 ---
 
-## 1. Gradle Installation (Local Maven Repository)
+## 1. Gradle Installation (Maven Central)
 
-During local development and CI testing, `scripts/android/build-aar.sh` publishes `org.kurmanci:kurmanci-android:0.1.0` directly to `dist/android/maven/`.
-
-Add the local Maven repository and dependency to your consumer app's `settings.gradle.kts` / `build.gradle.kts`:
+Add `mavenCentral()` and the dependency to your application's `settings.gradle.kts` / `build.gradle.kts`:
 
 ```kotlin
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven {
-            name = "localDist"
-            url = uri(rootDir.resolve("../../../dist/android/maven"))
-        }
     }
 }
 
 dependencies {
-    implementation("org.kurmanci:kurmanci-android:0.1.0")
+    // Pending 0.1.0 release on Maven Central
+    implementation("io.github.ferhatguneri:kurmanci-android:0.1.0")
 }
 ```
 
@@ -72,17 +67,17 @@ KurmanciEngine.open(packBytes).use { engine ->
 
 ---
 
-## 3. Building from Source
+## 3. Building & Testing for Contributors
 
-To build the native shared libraries, assemble the `.aar`, and publish to `dist/android/maven`:
+Contributors can build native shared libraries, assemble the AAR, and publish to local `dist/android/maven`:
 
 ```bash
 # 1. Build seed data pack
 cargo run -p kurmanci-data-builder -- build-pack seed
 
-# 2. Build AAR and local Maven publication
+# 2. Build AAR and publish locally
 ./scripts/android/build-aar.sh
 
-# 3. Test clean consumer application
+# 3. Test clean consumer application against local Maven
 ./scripts/android/test-consumers.sh
 ```

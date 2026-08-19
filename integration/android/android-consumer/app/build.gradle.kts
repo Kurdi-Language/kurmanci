@@ -3,6 +3,9 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val kurmanciGroup = project.findProperty("kurmanciMavenGroup")?.toString() ?: "io.github.ferhatguneri"
+val kurmanciVersion = project.findProperty("kurmanciVersion")?.toString() ?: "0.1.0"
+
 android {
     namespace = "org.kurmanci.consumer"
     compileSdk = 34
@@ -27,7 +30,7 @@ android {
 }
 
 dependencies {
-    implementation("org.kurmanci:kurmanci-android:0.1.0")
+    implementation("$kurmanciGroup:kurmanci-android:$kurmanciVersion")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.11.1")

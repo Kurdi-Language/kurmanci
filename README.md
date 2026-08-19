@@ -1,6 +1,6 @@
 # Kurmancî Language Platform
 
-Early-stage offline Kurmancî (`ku-Latn`) language engine and deterministic lexicon compiler written in Rust. Current capabilities include prefix completion, ranked correction candidates, bigram and trigram context prediction models, compiled binary language-pack loading, and a CLI demonstration. Mobile SDKs and custom keyboards are planned.
+Early-stage offline Kurmancî (`ku-Latn`) language engine and deterministic lexicon compiler written in Rust. Current capabilities include prefix completion, ranked correction candidates, bigram and trigram context prediction models, compiled binary language-pack loading, Swift SDK, Android SDK, and a CLI demonstration.
 
 Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://github.com/Kurdi-Language/kurmanci)
 
@@ -29,9 +29,10 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 > Frequency tables, bigrams, and trigrams are experimental. They are disabled in current production packs (`model_profile = "none"`).
 
 - [x] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python.
-- [x] **Repository-Local Swift Wrapper Foundation** (`swift/`): Safe Swift API (`KurmanciEngine`) validated on macOS and Linux against a locally built `kurmanci-ffi` library — implemented in Milestone 5C.1; pending merge.
-- [ ] **Distributable Apple SDK & XCFramework Packaging** (*Milestone 5C.2 - Planned*): Precompiled XCFramework packaging and SwiftPM binary target integration.
-- [ ] **Mobile SDKs & Keyboards** (*Planned*): Kotlin SDK (Android) and custom reference keyboard extensions.
+- [x] **Distributable Apple SDK & XCFramework Packaging** (*Milestone 5C - Released*): Precompiled XCFramework packaging (`KurmanciFFI.xcframework`) and SwiftPM package distribution (`Kurdi-Language/kurmanci-swift` v0.1.0).
+- [x] **Android SDK & JNI Packaging** (*Milestone 5D - Completed*): Idiomatic Kotlin SDK (`org.kurmanci.KurmanciEngine`), JNI bridge (`libkurmanci_jni.so`), cross-compiled native ABIs (`arm64-v8a`, `armeabi-v7a`, `x86_64`), and AAR packaging.
+- [x] **Public Android Maven Central Distribution** (*Milestone 5E - Release-Ready*): Android SDK implemented; Maven Central distribution release-ready (`io.github.ferhatguneri:kurmanci-android:0.1.0`).
+- [ ] **Mobile Keyboards & Text Services** (*Planned*): Custom reference keyboard extensions for iOS and Android.
 - [ ] **WebAssembly Bindings** (*Planned*): Browser and WebAssembly client library target.
 
 ---
