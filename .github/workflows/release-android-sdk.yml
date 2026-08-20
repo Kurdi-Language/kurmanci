@@ -19,7 +19,9 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Validate Tag Version Format
         shell: bash
@@ -73,7 +75,7 @@ jobs:
           echo "✅ All 4 Maven Central publication secrets verified."
 
       - name: Set up Java JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'

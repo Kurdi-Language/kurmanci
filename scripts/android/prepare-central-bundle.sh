@@ -36,13 +36,21 @@ if [[ ! -d "$ARTIFACT_DIR" ]]; then
   exit 1
 fi
 
+echo "Normalizing Central staging bundle (removing Gradle signature-checksum sidecars)..."
+find "$ARTIFACT_DIR" -maxdepth 1 -type f \
+  \( -name '*.asc.md5' \
+     -o -name '*.asc.sha1' \
+     -o -name '*.asc.sha256' \
+     -o -name '*.asc.sha512' \) \
+  -print -delete
+
 echo "Generating MD5 and SHA-1 checksums for primary deployed artifacts..."
 
 cd "$ARTIFACT_DIR"
 
 for file in *; do
   # Skip existing checksum files and signature files
-  if [[ "$file" == *.md5 || "$file" == *.sha1 || "$file" == *.asc ]]; then
+  if [[ "$file" == *.md5 || "$file" == *.sha1 || "$file" == *.sha256 || "$file" == *.sha512 || "$file" == *.asc ]]; then
     continue
   fi
 
@@ -59,14 +67,6 @@ for file in *; do
     fi
   fi
 done
-
-echo "Normalizing Central staging bundle (removing Gradle signature-checksum sidecars)..."
-find "$ARTIFACT_DIR" -maxdepth 1 -type f \
-  \( -name '*.asc.md5' \
-     -o -name '*.asc.sha1' \
-     -o -name '*.asc.sha256' \
-     -o -name '*.asc.sha512' \) \
-  -print -delete
 
 # Package Central ZIP bundle
 ZIP_OUTPUT="$REPO_ROOT/dist/central-bundle-${VERSION}.zip"
