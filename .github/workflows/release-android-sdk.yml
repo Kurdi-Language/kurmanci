@@ -169,15 +169,7 @@ jobs:
             --form "bundle=@${ZIP_PATH};type=application/octet-stream" \
             "https://central.sonatype.com/api/v1/publisher/upload?publishingType=USER_MANAGED")
 
-          DEPLOYMENT_ID=$(echo "$RESPONSE" | python3 -c '
-          import sys, json
-          data = sys.stdin.read().strip()
-          try:
-              obj = json.loads(data)
-              print(obj.get("deploymentId", obj.get("id", data)))
-          except Exception:
-              print(data)
-          ')
+          DEPLOYMENT_ID="$(printf '%s' "$RESPONSE" | tr -d '\r\n')"
 
           if [[ ! "$DEPLOYMENT_ID" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
             echo "❌ Error: Invalid Central deployment ID format: $DEPLOYMENT_ID" >&2
@@ -202,15 +194,7 @@ jobs:
               -H "Authorization: Bearer ${AUTH_TOKEN}" \
               "https://central.sonatype.com/api/v1/publisher/status?id=${DEPLOYMENT_ID}")
 
-            STATE=$(echo "$STATUS_JSON" | python3 -c '
-            import sys, json
-            data = sys.stdin.read().strip()
-            try:
-                obj = json.loads(data)
-                print(obj.get("deploymentState", obj.get("state", "UNKNOWN")))
-            except Exception:
-                print("UNKNOWN")
-            ')
+            STATE="$(printf '%s' "$STATUS_JSON" | python3 -c 'import json,sys; o=json.load(sys.stdin); print(o.get("deploymentState") or o.get("state") or "UNKNOWN")')"
 
             echo "  Attempt $attempt: State = $STATE"
             if [[ "$STATE" == "VALIDATED" ]]; then
@@ -218,14 +202,11 @@ jobs:
               exit 0
             elif [[ "$STATE" == "FAILED" ]]; then
               echo "❌ Fatal Error: Central Deployment FAILED validation:" >&2
-              echo "$STATUS_JSON" | python3 -c '
-              import sys, json
-              try:
-                  obj = json.loads(sys.stdin.read())
-                  print("Validation Errors:", json.dumps(obj.get("errors", obj.get("validationErrors", obj)), indent=2))
-              except Exception:
-                  pass
-              ' >&2
+              echo "$STATUS_JSON" | python3 -m json.tool >&2 || echo "$STATUS_JSON" >&2
+              exit 1
+            elif [[ "$STATE" == "UNKNOWN" ]]; then
+              echo "❌ Error: Unknown deployment state in response:" >&2
+              echo "$STATUS_JSON" >&2
               exit 1
             fi
             sleep 15
@@ -275,15 +256,7 @@ jobs:
               -H "Authorization: Bearer ${AUTH_TOKEN}" \
               "https://central.sonatype.com/api/v1/publisher/status?id=${DEPLOYMENT_ID}")
 
-            STATE=$(echo "$STATUS_JSON" | python3 -c '
-            import sys, json
-            data = sys.stdin.read().strip()
-            try:
-                obj = json.loads(data)
-                print(obj.get("deploymentState", obj.get("state", "UNKNOWN")))
-            except Exception:
-                print("UNKNOWN")
-            ')
+            STATE="$(printf '%s' "$STATUS_JSON" | python3 -c 'import json,sys; o=json.load(sys.stdin); print(o.get("deploymentState") or o.get("state") or "UNKNOWN")')"
 
             echo "  Attempt $attempt: State = $STATE"
             if [[ "$STATE" == "PUBLISHED" ]]; then
@@ -292,6 +265,10 @@ jobs:
               break
             elif [[ "$STATE" == "FAILED" ]]; then
               echo "❌ Error: Central Deployment FAILED promotion/publish state:" >&2
+              echo "$STATUS_JSON" | python3 -m json.tool >&2 || echo "$STATUS_JSON" >&2
+              exit 1
+            elif [[ "$STATE" == "UNKNOWN" ]]; then
+              echo "❌ Error: Unknown deployment state in response:" >&2
               echo "$STATUS_JSON" >&2
               exit 1
             fi
