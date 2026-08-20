@@ -229,10 +229,9 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
+          # Note: android-emulator-runner executes each physical script line in a separate sh -c, so stateful setup must not be split across lines.
           script: |
-            AUTH_TOKEN=$(echo -n "${MAVEN_CENTRAL_USERNAME}:${MAVEN_CENTRAL_PASSWORD}" | base64 | tr -d '\n')
-            STAGED_REPO_URL="https://central.sonatype.com/api/v1/publisher/deployment/${DEPLOYMENT_ID}/download/"
-            VERSION="${VERSION}" GROUP_ID="${GROUP_ID}" CONSUMER_MODE="staged" STAGED_REPO_URL="${STAGED_REPO_URL}" STAGED_AUTH_TOKEN="Bearer ${AUTH_TOKEN}" ./scripts/android/test-consumers.sh
+            VERSION="${VERSION}" GROUP_ID="${GROUP_ID}" CONSUMER_MODE="staged" STAGED_REPO_URL="https://central.sonatype.com/api/v1/publisher/deployment/${DEPLOYMENT_ID}/download/" STAGED_AUTH_TOKEN="Bearer $(printf '%s:%s' "${MAVEN_CENTRAL_USERNAME}" "${MAVEN_CENTRAL_PASSWORD}" | base64 | tr -d '\n')" ./scripts/android/test-consumers.sh
 
       # Step 8: Promote Central Deployment to RELEASED
       - name: Promote Central Deployment to RELEASED
