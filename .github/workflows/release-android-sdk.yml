@@ -187,10 +187,10 @@ jobs:
           MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
         run: |
           AUTH_TOKEN=$(echo -n "${MAVEN_CENTRAL_USERNAME}:${MAVEN_CENTRAL_PASSWORD}" | base64 | tr -d '\n')
-          echo "Polling Central status for deployment ID ${DEPLOYMENT_ID} until VALIDATED..."
+          echo "Polling Central status for deployment ID ${DEPLOYMENT_ID} until VALIDATED (up to 30 mins)..."
 
-          for attempt in {1..30}; do
-            STATUS_JSON=$(curl --fail-with-body --silent --show-error -X POST \
+          for attempt in {1..120}; do
+            STATUS_JSON=$(curl --retry 5 --retry-delay 2 --retry-max-time 60 --fail-with-body --silent --show-error -X POST \
               -H "Authorization: Bearer ${AUTH_TOKEN}" \
               "https://central.sonatype.com/api/v1/publisher/status?id=${DEPLOYMENT_ID}")
 
@@ -248,10 +248,10 @@ jobs:
 
           echo "Promotion response: $PROMOTE_RES"
 
-          echo "Polling Central status until PUBLISHED..."
+          echo "Polling Central status until PUBLISHED (up to 30 mins)..."
           PUBLISHED_SUCCESS=0
-          for attempt in {1..30}; do
-            STATUS_JSON=$(curl --fail-with-body --silent --show-error -X POST \
+          for attempt in {1..90}; do
+            STATUS_JSON=$(curl --retry 5 --retry-delay 2 --retry-max-time 60 --fail-with-body --silent --show-error -X POST \
               -H "Authorization: Bearer ${AUTH_TOKEN}" \
               "https://central.sonatype.com/api/v1/publisher/status?id=${DEPLOYMENT_ID}")
 
@@ -284,10 +284,10 @@ jobs:
         run: |
           GROUP_PATH="$(echo "$GROUP_ID" | tr '.' '/')"
           PUBLIC_POM_URL="https://repo1.maven.org/maven2/${GROUP_PATH}/kurmanci-android/${VERSION}/kurmanci-android-${VERSION}.pom"
-          echo "Polling public Maven Central CDN for ${PUBLIC_POM_URL}..."
+          echo "Polling public Maven Central CDN for ${PUBLIC_POM_URL} (up to 30 mins)..."
 
           PROPAGATION_SUCCESS=0
-          for attempt in {1..30}; do
+          for attempt in {1..90}; do
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PUBLIC_POM_URL" || true)
             echo "  Attempt $attempt: HTTP status = $HTTP_CODE"
             if [[ "$HTTP_CODE" == "200" ]]; then
