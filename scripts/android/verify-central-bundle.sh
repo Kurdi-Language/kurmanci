@@ -108,21 +108,22 @@ if [[ -f "$mod_file" ]]; then
   fi
 fi
 
-# Rule: .asc files must not have .md5 or .sha1 files
+# Project Canonical Bundle Normalization Policy:
+# Ensure our final normalized bundle contains no signature-checksum sidecars (*.asc.md5, *.asc.sha1, etc.).
 for asc in *.asc; do
   if [[ -f "$asc" ]]; then
-    if [[ -f "${asc}.md5" || -f "${asc}.sha1" ]]; then
-      echo "❌ Error: Signature file $asc must NOT have .md5 or .sha1 checksum files" >&2
+    if [[ -f "${asc}.md5" || -f "${asc}.sha1" || -f "${asc}.sha256" || -f "${asc}.sha512" ]]; then
+      echo "❌ Error: Unexpected signature checksum sidecar after bundle normalization for $asc" >&2
       exit 1
     fi
   fi
 done
 
-# Rule: checksum files must not have .asc files
-for chk in *.md5 *.sha1; do
+# Ensure checksum files do not have PGP signatures attached
+for chk in *.md5 *.sha1 *.sha256 *.sha512; do
   if [[ -f "$chk" ]]; then
     if [[ -f "${chk}.asc" ]]; then
-      echo "❌ Error: Checksum file $chk must NOT have .asc signature file" >&2
+      echo "❌ Error: Unexpected signature file ${chk}.asc for checksum file $chk" >&2
       exit 1
     fi
   fi

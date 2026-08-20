@@ -60,6 +60,14 @@ for file in *; do
   fi
 done
 
+echo "Normalizing Central staging bundle (removing Gradle signature-checksum sidecars)..."
+find "$ARTIFACT_DIR" -maxdepth 1 -type f \
+  \( -name '*.asc.md5' \
+     -o -name '*.asc.sha1' \
+     -o -name '*.asc.sha256' \
+     -o -name '*.asc.sha512' \) \
+  -print -delete
+
 # Package Central ZIP bundle
 ZIP_OUTPUT="$REPO_ROOT/dist/central-bundle-${VERSION}.zip"
 rm -f "$ZIP_OUTPUT"

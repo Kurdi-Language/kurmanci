@@ -574,6 +574,40 @@ jobs:
             ./scripts/android/build-aar.sh
             ./scripts/android/test-consumers.sh
 
+      # Milestone 5E: Signed Central Bundle Layout & Verification CI Preflight
+      - name: Run Signed Central-Bundle CI Preflight
+        shell: bash
+        run: |
+          echo "Generating disposable GPG key for CI bundle preflight..."
+          KEY_PARAM_FILE="$(mktemp)"
+          cat <<EOF > "$KEY_PARAM_FILE"
+          %no-protection
+          Key-Type: RSA
+          Key-Length: 2048
+          Subkey-Type: RSA
+          Subkey-Length: 2048
+          Name-Real: CI Disposable Key
+          Name-Email: ci@example.com
+          Expire-Date: 1d
+          EOF
+
+          gpg --batch --generate-key "$KEY_PARAM_FILE" 2>/dev/null
+          rm -f "$KEY_PARAM_FILE"
+
+          KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | tail -n 1 | cut -d: -f5)
+          GPG_KEY_ARMORED=$(gpg --export-secret-keys --armor "$KEY_ID")
+
+          echo "Running prepare-central-bundle.sh with disposable key..."
+          VERSION="0.1.0" GROUP_ID="io.github.ferhatguneri" \
+          MAVEN_SIGNING_KEY="$GPG_KEY_ARMORED" \
+          MAVEN_SIGNING_PASSWORD="" \
+          ./scripts/android/prepare-central-bundle.sh
+
+          echo "Running verify-central-bundle.sh..."
+          VERSION="0.1.0" GROUP_ID="io.github.ferhatguneri" CHECK_SIGNATURES=true \
+          ./scripts/android/verify-central-bundle.sh
+
+
 
 
 
