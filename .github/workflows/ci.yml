@@ -574,6 +574,46 @@ jobs:
             ./scripts/android/build-aar.sh
             ./scripts/android/test-consumers.sh
 
+      # Milestone 5E: Signed Central Bundle Layout & Verification CI Preflight
+      - name: Run Signed Central-Bundle CI Preflight
+        shell: bash
+        run: |
+          echo "Generating disposable password-protected GPG key in isolated GNUPGHOME..."
+          TMP_GPG_HOME="$(mktemp -d)"
+          chmod 700 "$TMP_GPG_HOME"
+          export GNUPGHOME="$TMP_GPG_HOME"
+          PASSPHRASE="ci-disposable-passphrase-12345"
+
+          KEY_PARAM_FILE="$(mktemp)"
+          cat <<EOF > "$KEY_PARAM_FILE"
+          Key-Type: RSA
+          Key-Length: 2048
+          Subkey-Type: RSA
+          Subkey-Length: 2048
+          Name-Real: CI Disposable Key
+          Name-Email: ci@example.com
+          Expire-Date: 1d
+          Passphrase: ${PASSPHRASE}
+          EOF
+
+          gpg --batch --generate-key "$KEY_PARAM_FILE"
+          rm -f "$KEY_PARAM_FILE"
+
+          KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^sec' | tail -n 1 | cut -d: -f5)
+          GPG_KEY_ARMORED=$(gpg --batch --pinentry-mode loopback --passphrase "$PASSPHRASE" --export-secret-keys --armor "$KEY_ID")
+
+          echo "Running prepare-central-bundle.sh with disposable key and passphrase..."
+          MAVEN_SIGNING_KEY="$GPG_KEY_ARMORED" \
+          MAVEN_SIGNING_PASSWORD="$PASSPHRASE" \
+          ./scripts/android/prepare-central-bundle.sh
+
+          echo "Running verify-central-bundle.sh..."
+          CHECK_SIGNATURES=true \
+          ./scripts/android/verify-central-bundle.sh
+
+          rm -rf "$TMP_GPG_HOME"
+
+
 
 
 
