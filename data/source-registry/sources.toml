@@ -11,7 +11,7 @@ notes = "Handcrafted canonical seed entries for initial validation and baseline 
 
 [[sources.files]]
 path = "data/reviewed/lexicon.jsonl"
-sha256 = "15973de7500d6d2ad0c9332e8bae6510b03408d94528f1b9918ccfb6226dc9c5"
+sha256 = "afe8d18a39a0bb1bec214504cc89c7b8dba79defbe61da0b22b412afce090250"
 
 [[sources]]
 source_id = "kurdish-hunspell-kmr"
