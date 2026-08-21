@@ -16,7 +16,7 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
 use crate::review::queues::EntryQueueRecord;
-use crate::review::schema::ReviewDecisionRecord;
+use crate::review::schema::{ReviewDecisionRecord, ReviewDecisionStatus};
 
 pub const VOCABULARY_REVIEW_SUMMARY_SCHEMA: &str = "vocabulary-review-batch-summary-v1";
 
@@ -35,6 +35,8 @@ pub struct VocabularyReviewRecord {
     pub rank: usize,
     pub target_id: String,
     pub source_id: String,
+    pub source_revision: String,
+    pub source_lines: Vec<usize>,
     pub form: String,
     pub normalized: String,
     pub imported_metadata: VocabularyImportedMetadata,
@@ -75,14 +77,9 @@ struct CorpusFrequencyItem {
 
 /// Minimal queue record structure for joining target_id/normalized to audit flags.
 #[derive(Debug, Clone, Deserialize)]
-#[allow(dead_code)]
 struct GenericQueueTarget {
     #[serde(default)]
     pub target_id: Option<String>,
-    #[serde(default)]
-    pub normalized: Option<String>,
-    #[serde(default)]
-    pub display: Option<String>,
     #[serde(default)]
     pub member_entry_ids: Option<Vec<String>>,
 }
@@ -96,7 +93,11 @@ struct CandidateEvalItem {
     pub audit_flags: Vec<String>,
 }
 
-/// Loads existing decisions from `decisions.jsonl` to exclude already-decided target IDs.
+/// Loads existing decisions from `decisions.jsonl` to exclude active/human-reviewed decision target IDs.
+///
+/// Statuses other than `Unreviewed` (e.g. `Approved`, `ApprovedWithMetadataChange`, `RejectedFromDefaultPack`,
+/// `ExperimentalOnly`, `NeedsLinguist`, `NeedsSourceInvestigation`) cause the target ID to be excluded.
+/// Unreviewed decisions do NOT exclude a candidate.
 pub fn load_existing_decision_target_ids<P: AsRef<Path>>(decisions_path: P) -> Result<HashSet<String>, String> {
     let path = decisions_path.as_ref();
     if !path.exists() {
@@ -116,17 +117,25 @@ pub fn load_existing_decision_target_ids<P: AsRef<Path>>(decisions_path: P) -> R
         }
         let rec: ReviewDecisionRecord = serde_json::from_str(trimmed)
             .map_err(|e| format!("Failed parsing decision JSON at line {}: {}", line_idx + 1, e))?;
-        ids.insert(rec.target_id);
+
+        if rec.review_status != ReviewDecisionStatus::Unreviewed {
+            ids.insert(rec.target_id);
+        }
     }
 
     Ok(ids)
 }
 
 /// Loads corpus frequencies from `data/build/frequencies.jsonl`.
+///
+/// `data/build/frequencies.jsonl` is a REQUIRED prerequisite. Fails if missing.
 pub fn load_corpus_frequencies<P: AsRef<Path>>(freq_path: P) -> Result<BTreeMap<String, (u64, u64, f64)>, String> {
     let path = freq_path.as_ref();
     if !path.exists() {
-        return Ok(BTreeMap::new());
+        return Err(format!(
+            "Corpus frequencies file missing at '{}'. Run 'cargo run -p kurmanci-data-builder -- build-frequencies' first.",
+            path.display()
+        ));
     }
 
     let file = File::open(path)
@@ -148,7 +157,9 @@ pub fn load_corpus_frequencies<P: AsRef<Path>>(freq_path: P) -> Result<BTreeMap<
     Ok(map)
 }
 
-/// Loads audit flags across all audit queues in `data/review-queues/kurdish-hunspell-kmr/`.
+/// Loads audit flags across all expected audit queues in `data/review-queues/kurdish-hunspell-kmr/`.
+///
+/// Fails loudly on malformed JSON with filename, line number, and parse error.
 pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String, BTreeSet<String>>, String> {
     let dir = queues_dir.as_ref();
     let mut flags_map: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
@@ -185,20 +196,27 @@ pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String
         let reader = BufReader::new(file);
 
         for (line_idx, line_res) in reader.lines().enumerate() {
-            let line = line_res.map_err(|e| format!("Error reading queue line {}: {}", line_idx + 1, e))?;
+            let line = line_res.map_err(|e| format!("Error reading queue line {} in {}: {}", line_idx + 1, path.display(), e))?;
             let trimmed = line.trim();
             if trimmed.is_empty() {
                 continue;
             }
 
-            if let Ok(gt) = serde_json::from_str::<GenericQueueTarget>(trimmed) {
-                if let Some(tid) = gt.target_id {
-                    flags_map.entry(tid).or_default().insert(flag_name.to_string());
-                }
-                if let Some(members) = gt.member_entry_ids {
-                    for member_id in members {
-                        flags_map.entry(member_id).or_default().insert(flag_name.to_string());
-                    }
+            let gt: GenericQueueTarget = serde_json::from_str(trimmed).map_err(|e| {
+                format!(
+                    "Failed parsing audit queue file '{}' at line {}: {}",
+                    filename,
+                    line_idx + 1,
+                    e
+                )
+            })?;
+
+            if let Some(tid) = gt.target_id {
+                flags_map.entry(tid).or_default().insert(flag_name.to_string());
+            }
+            if let Some(members) = gt.member_entry_ids {
+                for member_id in members {
+                    flags_map.entry(member_id).or_default().insert(flag_name.to_string());
                 }
             }
         }
@@ -210,7 +228,6 @@ pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String
 /// Generates the deterministic, ranked 1,000-entry human review batch from repository data.
 pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<VocabularyReviewBatchSummary, String> {
     let root = root_dir.as_ref();
-    let source_id = "kurdish-hunspell-kmr";
 
     let pool_path = root.join("data/review-queues/kurdish-hunspell-kmr/hunspell-only.jsonl");
     let decisions_path = root.join("data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl");
@@ -310,7 +327,9 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
         review_records.push(VocabularyReviewRecord {
             rank: idx + 1,
             target_id: item.record.target_id.clone(),
-            source_id: source_id.to_string(),
+            source_id: item.record.source_id.clone(),
+            source_revision: item.record.source_revision.clone(),
+            source_lines: item.record.source_lines.clone(),
             form: item.record.display.clone(),
             normalized: item.record.normalized.clone(),
             imported_metadata: VocabularyImportedMetadata {
@@ -338,12 +357,13 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
         .map_err(|e| format!("Failed creating TSV output at {}: {}", tsv_path.display(), e))?;
     writeln!(
         tsv_file,
-        "rank\ttarget_id\tsource_id\tform\tnormalized\tpart_of_speech\tflags\tmorphology\ttoken_count\tdocument_count\tzipf\taudit_flags\tdecision_status"
+        "rank\ttarget_id\tsource_id\tsource_revision\tsource_lines\tform\tnormalized\tpart_of_speech\tflags\tmorphology\ttoken_count\tdocument_count\tzipf\taudit_flags\tdecision_status"
     ).map_err(|e| format!("Failed writing TSV header: {}", e))?;
 
     for r in &review_records {
         let pos_str = r.imported_metadata.part_of_speech.as_deref().unwrap_or("");
         let morph_str = r.imported_metadata.morphology.join(";");
+        let lines_str = r.source_lines.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(";");
         let flags_joined = r.audit_flags.join(";");
 
         let tc_str = if r.token_count > 0 { r.token_count.to_string() } else { "".to_string() };
@@ -352,10 +372,12 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
 
         writeln!(
             tsv_file,
-            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             r.rank,
             r.target_id,
             r.source_id,
+            r.source_revision,
+            lines_str,
             r.form,
             r.normalized,
             pos_str,
