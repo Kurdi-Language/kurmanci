@@ -1,501 +1,1051 @@
 candidate_id	surface_form	normalized_form	lemma	pos	gloss_note	region	register	domain	form_type	token_count	document_count	source_count	source_ids	example_1	example_2	diacritic_collision	proper_name_risk	foreign_language_risk	priority	decision	reviewer_id	review_date	review_notes
-V-0001	ez	ez		pronoun	I	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0002	tu	tu		pronoun	you singular	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0003	ew	ew		pronoun	he/she/it	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0004	em	em		pronoun	we	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0005	hûn	hûn		pronoun	you plural/formal	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0006	wan	wan		pronoun	them/their	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0007	ev	ev		determiner	this	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0008	wî	wî		pronoun	him/his	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0009	wê	wê		pronoun	her/that	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0010	min	min		pronoun	me/my	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0011	te	te		pronoun	you/your	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0012	û	û		conjunction	and	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0013	ji	ji		preposition	from/of	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0014	di	di		preposition	in	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0015	bi	bi		preposition	with/by	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0016	li	li		preposition	at/on	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0017	bo	bo		preposition	for	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0018	ku	ku		conjunction	that/where	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0019	ne	ne		particle	not	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0020	na	na		particle	no/not	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0021	erê	erê		particle	yes	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0022	belê	belê		particle	yes	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0023	jî	jî		particle	also	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0024	tenê	tenê		adverb	only	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0025	pir	pir		adjective	many/much	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0026	hinek	hinek		determiner	some	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0027	roj	roj		noun	day/sun	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0028	şev	şev		noun	night	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0029	sibê	sibê		noun	morning/tomorrow	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0030	îro	îro		adverb	today	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0031	duh	duh		adverb	yesterday	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0032	niha	niha		adverb	now	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0033	dem	dem		noun	time	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0034	sal	sal		noun	year	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0035	meh	meh		noun	month	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0036	hefte	hefte		noun	week	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0037	mal	mal		noun	home/house	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0038	derî	derî		noun	door	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0039	av	av		noun	water	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0040	nan	nan		noun	bread	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0041	xwarin	xwarin		noun/verb	food/to eat	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0042	çay	çay		noun	tea	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0043	qehwe	qehwe		noun	coffee	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0044	dayik	dayik		noun	mother	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0045	bav	bav		noun	father	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0046	biray	biray		noun	brother	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0047	xwişk	xwişk		noun	sister	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0048	zarok	zarok		noun	child	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0049	malbat	malbat		noun	family	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0050	heval	heval		noun	friend	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0051	mirov	mirov		noun	person/human	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0052	jin	jin		noun	woman	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0053	mêr	mêr		noun	man	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0054	nav	nav		noun	name	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0055	welat	welat		noun	country	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0056	bajar	bajar		noun	city	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0057	gund	gund		noun	village	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0058	rê	rê		noun	road/way	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0059	dibistan	dibistan		noun	school	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0060	mamoste	mamoste		noun	teacher	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0061	xwendekar	xwendekar		noun	student	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0062	pirtûk	pirtûk		noun	book	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0063	nivîs	nivîs		noun	writing	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0064	ziman	ziman		noun	language	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0065	peyv	peyv		noun	word	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0066	kar	kar		noun	work	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0067	pere	pere		noun	money	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0068	bazaar	bazaar		noun	market (verify spelling)	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				review	low		pending			
-V-0069	telefon	telefon		noun	telephone	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0070	komputer	komputer		noun	computer	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0071	înternet	înternet		noun	internet	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0072	baş	baş		adjective	good	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0073	xweş	xweş		adjective	pleasant/well	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0074	mezin	mezin		adjective	big	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0075	biçûk	biçûk		adjective	small	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0076	nû	nû		adjective	new	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0077	kevîn	kevîn		adjective	old/ancient	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0078	germ	germ		adjective	warm	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0079	sar	sar		adjective	cold	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0080	dirêj	dirêj		adjective	long	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0081	kurt	kurt		adjective	short	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0082	hatin	hatin		verb	to come	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0083	çûn	çûn		verb	to go	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0084	kirin	kirin		verb	to do/make	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0085	gotin	gotin		verb	to say	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0086	dîtin	dîtin		verb	to see	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0087	xwendin	xwendin		verb	to read/study	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0088	nivîsandin	nivîsandin		verb	to write	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0089	zanîn	zanîn		verb	to know	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0090	xwestin	xwestin		verb	to want	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0091	dan	dan		verb	to give	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0092	standin	standin		verb	to take/receive	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0093	hebûn	hebûn		verb	to exist/have	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0094	silav	silav		interjection	hello	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0095	spas	spas		interjection	thanks	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0096	rojbaş	rojbaş		interjection	good day/hello	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0097	şevbaş	şevbaş		interjection	good night	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0098	xatirê te	xatirê te		phrase	goodbye (verify tokenization)	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				review	low		pending			
-V-0099	bijî	bijî		interjection/verb	long live	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0100	xêr	xêr		noun/adjective	goodness/good	general	neutral	everyday	lemma-or-common-form			1	ai-assisted-starter				low	low		pending			
-V-0101						general	neutral													pending			
-V-0102						general	neutral													pending			
-V-0103						general	neutral													pending			
-V-0104						general	neutral													pending			
-V-0105						general	neutral													pending			
-V-0106						general	neutral													pending			
-V-0107						general	neutral													pending			
-V-0108						general	neutral													pending			
-V-0109						general	neutral													pending			
-V-0110						general	neutral													pending			
-V-0111						general	neutral													pending			
-V-0112						general	neutral													pending			
-V-0113						general	neutral													pending			
-V-0114						general	neutral													pending			
-V-0115						general	neutral													pending			
-V-0116						general	neutral													pending			
-V-0117						general	neutral													pending			
-V-0118						general	neutral													pending			
-V-0119						general	neutral													pending			
-V-0120						general	neutral													pending			
-V-0121						general	neutral													pending			
-V-0122						general	neutral													pending			
-V-0123						general	neutral													pending			
-V-0124						general	neutral													pending			
-V-0125						general	neutral													pending			
-V-0126						general	neutral													pending			
-V-0127						general	neutral													pending			
-V-0128						general	neutral													pending			
-V-0129						general	neutral													pending			
-V-0130						general	neutral													pending			
-V-0131						general	neutral													pending			
-V-0132						general	neutral													pending			
-V-0133						general	neutral													pending			
-V-0134						general	neutral													pending			
-V-0135						general	neutral													pending			
-V-0136						general	neutral													pending			
-V-0137						general	neutral													pending			
-V-0138						general	neutral													pending			
-V-0139						general	neutral													pending			
-V-0140						general	neutral													pending			
-V-0141						general	neutral													pending			
-V-0142						general	neutral													pending			
-V-0143						general	neutral													pending			
-V-0144						general	neutral													pending			
-V-0145						general	neutral													pending			
-V-0146						general	neutral													pending			
-V-0147						general	neutral													pending			
-V-0148						general	neutral													pending			
-V-0149						general	neutral													pending			
-V-0150						general	neutral													pending			
-V-0151						general	neutral													pending			
-V-0152						general	neutral													pending			
-V-0153						general	neutral													pending			
-V-0154						general	neutral													pending			
-V-0155						general	neutral													pending			
-V-0156						general	neutral													pending			
-V-0157						general	neutral													pending			
-V-0158						general	neutral													pending			
-V-0159						general	neutral													pending			
-V-0160						general	neutral													pending			
-V-0161						general	neutral													pending			
-V-0162						general	neutral													pending			
-V-0163						general	neutral													pending			
-V-0164						general	neutral													pending			
-V-0165						general	neutral													pending			
-V-0166						general	neutral													pending			
-V-0167						general	neutral													pending			
-V-0168						general	neutral													pending			
-V-0169						general	neutral													pending			
-V-0170						general	neutral													pending			
-V-0171						general	neutral													pending			
-V-0172						general	neutral													pending			
-V-0173						general	neutral													pending			
-V-0174						general	neutral													pending			
-V-0175						general	neutral													pending			
-V-0176						general	neutral													pending			
-V-0177						general	neutral													pending			
-V-0178						general	neutral													pending			
-V-0179						general	neutral													pending			
-V-0180						general	neutral													pending			
-V-0181						general	neutral													pending			
-V-0182						general	neutral													pending			
-V-0183						general	neutral													pending			
-V-0184						general	neutral													pending			
-V-0185						general	neutral													pending			
-V-0186						general	neutral													pending			
-V-0187						general	neutral													pending			
-V-0188						general	neutral													pending			
-V-0189						general	neutral													pending			
-V-0190						general	neutral													pending			
-V-0191						general	neutral													pending			
-V-0192						general	neutral													pending			
-V-0193						general	neutral													pending			
-V-0194						general	neutral													pending			
-V-0195						general	neutral													pending			
-V-0196						general	neutral													pending			
-V-0197						general	neutral													pending			
-V-0198						general	neutral													pending			
-V-0199						general	neutral													pending			
-V-0200						general	neutral													pending			
-V-0201						general	neutral													pending			
-V-0202						general	neutral													pending			
-V-0203						general	neutral													pending			
-V-0204						general	neutral													pending			
-V-0205						general	neutral													pending			
-V-0206						general	neutral													pending			
-V-0207						general	neutral													pending			
-V-0208						general	neutral													pending			
-V-0209						general	neutral													pending			
-V-0210						general	neutral													pending			
-V-0211						general	neutral													pending			
-V-0212						general	neutral													pending			
-V-0213						general	neutral													pending			
-V-0214						general	neutral													pending			
-V-0215						general	neutral													pending			
-V-0216						general	neutral													pending			
-V-0217						general	neutral													pending			
-V-0218						general	neutral													pending			
-V-0219						general	neutral													pending			
-V-0220						general	neutral													pending			
-V-0221						general	neutral													pending			
-V-0222						general	neutral													pending			
-V-0223						general	neutral													pending			
-V-0224						general	neutral													pending			
-V-0225						general	neutral													pending			
-V-0226						general	neutral													pending			
-V-0227						general	neutral													pending			
-V-0228						general	neutral													pending			
-V-0229						general	neutral													pending			
-V-0230						general	neutral													pending			
-V-0231						general	neutral													pending			
-V-0232						general	neutral													pending			
-V-0233						general	neutral													pending			
-V-0234						general	neutral													pending			
-V-0235						general	neutral													pending			
-V-0236						general	neutral													pending			
-V-0237						general	neutral													pending			
-V-0238						general	neutral													pending			
-V-0239						general	neutral													pending			
-V-0240						general	neutral													pending			
-V-0241						general	neutral													pending			
-V-0242						general	neutral													pending			
-V-0243						general	neutral													pending			
-V-0244						general	neutral													pending			
-V-0245						general	neutral													pending			
-V-0246						general	neutral													pending			
-V-0247						general	neutral													pending			
-V-0248						general	neutral													pending			
-V-0249						general	neutral													pending			
-V-0250						general	neutral													pending			
-V-0251						general	neutral													pending			
-V-0252						general	neutral													pending			
-V-0253						general	neutral													pending			
-V-0254						general	neutral													pending			
-V-0255						general	neutral													pending			
-V-0256						general	neutral													pending			
-V-0257						general	neutral													pending			
-V-0258						general	neutral													pending			
-V-0259						general	neutral													pending			
-V-0260						general	neutral													pending			
-V-0261						general	neutral													pending			
-V-0262						general	neutral													pending			
-V-0263						general	neutral													pending			
-V-0264						general	neutral													pending			
-V-0265						general	neutral													pending			
-V-0266						general	neutral													pending			
-V-0267						general	neutral													pending			
-V-0268						general	neutral													pending			
-V-0269						general	neutral													pending			
-V-0270						general	neutral													pending			
-V-0271						general	neutral													pending			
-V-0272						general	neutral													pending			
-V-0273						general	neutral													pending			
-V-0274						general	neutral													pending			
-V-0275						general	neutral													pending			
-V-0276						general	neutral													pending			
-V-0277						general	neutral													pending			
-V-0278						general	neutral													pending			
-V-0279						general	neutral													pending			
-V-0280						general	neutral													pending			
-V-0281						general	neutral													pending			
-V-0282						general	neutral													pending			
-V-0283						general	neutral													pending			
-V-0284						general	neutral													pending			
-V-0285						general	neutral													pending			
-V-0286						general	neutral													pending			
-V-0287						general	neutral													pending			
-V-0288						general	neutral													pending			
-V-0289						general	neutral													pending			
-V-0290						general	neutral													pending			
-V-0291						general	neutral													pending			
-V-0292						general	neutral													pending			
-V-0293						general	neutral													pending			
-V-0294						general	neutral													pending			
-V-0295						general	neutral													pending			
-V-0296						general	neutral													pending			
-V-0297						general	neutral													pending			
-V-0298						general	neutral													pending			
-V-0299						general	neutral													pending			
-V-0300						general	neutral													pending			
-V-0301						general	neutral													pending			
-V-0302						general	neutral													pending			
-V-0303						general	neutral													pending			
-V-0304						general	neutral													pending			
-V-0305						general	neutral													pending			
-V-0306						general	neutral													pending			
-V-0307						general	neutral													pending			
-V-0308						general	neutral													pending			
-V-0309						general	neutral													pending			
-V-0310						general	neutral													pending			
-V-0311						general	neutral													pending			
-V-0312						general	neutral													pending			
-V-0313						general	neutral													pending			
-V-0314						general	neutral													pending			
-V-0315						general	neutral													pending			
-V-0316						general	neutral													pending			
-V-0317						general	neutral													pending			
-V-0318						general	neutral													pending			
-V-0319						general	neutral													pending			
-V-0320						general	neutral													pending			
-V-0321						general	neutral													pending			
-V-0322						general	neutral													pending			
-V-0323						general	neutral													pending			
-V-0324						general	neutral													pending			
-V-0325						general	neutral													pending			
-V-0326						general	neutral													pending			
-V-0327						general	neutral													pending			
-V-0328						general	neutral													pending			
-V-0329						general	neutral													pending			
-V-0330						general	neutral													pending			
-V-0331						general	neutral													pending			
-V-0332						general	neutral													pending			
-V-0333						general	neutral													pending			
-V-0334						general	neutral													pending			
-V-0335						general	neutral													pending			
-V-0336						general	neutral													pending			
-V-0337						general	neutral													pending			
-V-0338						general	neutral													pending			
-V-0339						general	neutral													pending			
-V-0340						general	neutral													pending			
-V-0341						general	neutral													pending			
-V-0342						general	neutral													pending			
-V-0343						general	neutral													pending			
-V-0344						general	neutral													pending			
-V-0345						general	neutral													pending			
-V-0346						general	neutral													pending			
-V-0347						general	neutral													pending			
-V-0348						general	neutral													pending			
-V-0349						general	neutral													pending			
-V-0350						general	neutral													pending			
-V-0351						general	neutral													pending			
-V-0352						general	neutral													pending			
-V-0353						general	neutral													pending			
-V-0354						general	neutral													pending			
-V-0355						general	neutral													pending			
-V-0356						general	neutral													pending			
-V-0357						general	neutral													pending			
-V-0358						general	neutral													pending			
-V-0359						general	neutral													pending			
-V-0360						general	neutral													pending			
-V-0361						general	neutral													pending			
-V-0362						general	neutral													pending			
-V-0363						general	neutral													pending			
-V-0364						general	neutral													pending			
-V-0365						general	neutral													pending			
-V-0366						general	neutral													pending			
-V-0367						general	neutral													pending			
-V-0368						general	neutral													pending			
-V-0369						general	neutral													pending			
-V-0370						general	neutral													pending			
-V-0371						general	neutral													pending			
-V-0372						general	neutral													pending			
-V-0373						general	neutral													pending			
-V-0374						general	neutral													pending			
-V-0375						general	neutral													pending			
-V-0376						general	neutral													pending			
-V-0377						general	neutral													pending			
-V-0378						general	neutral													pending			
-V-0379						general	neutral													pending			
-V-0380						general	neutral													pending			
-V-0381						general	neutral													pending			
-V-0382						general	neutral													pending			
-V-0383						general	neutral													pending			
-V-0384						general	neutral													pending			
-V-0385						general	neutral													pending			
-V-0386						general	neutral													pending			
-V-0387						general	neutral													pending			
-V-0388						general	neutral													pending			
-V-0389						general	neutral													pending			
-V-0390						general	neutral													pending			
-V-0391						general	neutral													pending			
-V-0392						general	neutral													pending			
-V-0393						general	neutral													pending			
-V-0394						general	neutral													pending			
-V-0395						general	neutral													pending			
-V-0396						general	neutral													pending			
-V-0397						general	neutral													pending			
-V-0398						general	neutral													pending			
-V-0399						general	neutral													pending			
-V-0400						general	neutral													pending			
-V-0401						general	neutral													pending			
-V-0402						general	neutral													pending			
-V-0403						general	neutral													pending			
-V-0404						general	neutral													pending			
-V-0405						general	neutral													pending			
-V-0406						general	neutral													pending			
-V-0407						general	neutral													pending			
-V-0408						general	neutral													pending			
-V-0409						general	neutral													pending			
-V-0410						general	neutral													pending			
-V-0411						general	neutral													pending			
-V-0412						general	neutral													pending			
-V-0413						general	neutral													pending			
-V-0414						general	neutral													pending			
-V-0415						general	neutral													pending			
-V-0416						general	neutral													pending			
-V-0417						general	neutral													pending			
-V-0418						general	neutral													pending			
-V-0419						general	neutral													pending			
-V-0420						general	neutral													pending			
-V-0421						general	neutral													pending			
-V-0422						general	neutral													pending			
-V-0423						general	neutral													pending			
-V-0424						general	neutral													pending			
-V-0425						general	neutral													pending			
-V-0426						general	neutral													pending			
-V-0427						general	neutral													pending			
-V-0428						general	neutral													pending			
-V-0429						general	neutral													pending			
-V-0430						general	neutral													pending			
-V-0431						general	neutral													pending			
-V-0432						general	neutral													pending			
-V-0433						general	neutral													pending			
-V-0434						general	neutral													pending			
-V-0435						general	neutral													pending			
-V-0436						general	neutral													pending			
-V-0437						general	neutral													pending			
-V-0438						general	neutral													pending			
-V-0439						general	neutral													pending			
-V-0440						general	neutral													pending			
-V-0441						general	neutral													pending			
-V-0442						general	neutral													pending			
-V-0443						general	neutral													pending			
-V-0444						general	neutral													pending			
-V-0445						general	neutral													pending			
-V-0446						general	neutral													pending			
-V-0447						general	neutral													pending			
-V-0448						general	neutral													pending			
-V-0449						general	neutral													pending			
-V-0450						general	neutral													pending			
-V-0451						general	neutral													pending			
-V-0452						general	neutral													pending			
-V-0453						general	neutral													pending			
-V-0454						general	neutral													pending			
-V-0455						general	neutral													pending			
-V-0456						general	neutral													pending			
-V-0457						general	neutral													pending			
-V-0458						general	neutral													pending			
-V-0459						general	neutral													pending			
-V-0460						general	neutral													pending			
-V-0461						general	neutral													pending			
-V-0462						general	neutral													pending			
-V-0463						general	neutral													pending			
-V-0464						general	neutral													pending			
-V-0465						general	neutral													pending			
-V-0466						general	neutral													pending			
-V-0467						general	neutral													pending			
-V-0468						general	neutral													pending			
-V-0469						general	neutral													pending			
-V-0470						general	neutral													pending			
-V-0471						general	neutral													pending			
-V-0472						general	neutral													pending			
-V-0473						general	neutral													pending			
-V-0474						general	neutral													pending			
-V-0475						general	neutral													pending			
-V-0476						general	neutral													pending			
-V-0477						general	neutral													pending			
-V-0478						general	neutral													pending			
-V-0479						general	neutral													pending			
-V-0480						general	neutral													pending			
-V-0481						general	neutral													pending			
-V-0482						general	neutral													pending			
-V-0483						general	neutral													pending			
-V-0484						general	neutral													pending			
-V-0485						general	neutral													pending			
-V-0486						general	neutral													pending			
-V-0487						general	neutral													pending			
-V-0488						general	neutral													pending			
-V-0489						general	neutral													pending			
-V-0490						general	neutral													pending			
-V-0491						general	neutral													pending			
-V-0492						general	neutral													pending			
-V-0493						general	neutral													pending			
-V-0494						general	neutral													pending			
-V-0495						general	neutral													pending			
-V-0496						general	neutral													pending			
-V-0497						general	neutral													pending			
-V-0498						general	neutral													pending			
-V-0499						general	neutral													pending			
-V-0500						general	neutral													pending			
+V-0001	ji	ji	ji	preposition		general	neutral	everyday	lemma-or-common-form	8	7	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0002	bo	bo	bo	preposition		general	neutral	everyday	lemma-or-common-form	6	6	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0003	û	û	û	conjunction		general	neutral	everyday	lemma-or-common-form	5	5	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0004	ez	ez	ez	pronoun		general	neutral	everyday	lemma-or-common-form	4	4	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0005	kurmancî	kurmancî	kurmancî	adjective		general	neutral	everyday	lemma-or-common-form	4	4	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0006	me	me	me	pronoun		general	neutral	everyday	lemma-or-common-form	3	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0007	e	e	e	verb		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0008	ev	ev	ev	pronoun		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0009	hat	hat	hat	verb		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0010	platform	platform	platform	noun		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0011	rojbaş	rojbaş	rojbaş	unknown		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0012	yî	yî	yî	verb		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0013	çêkirin	çêkirin	çêkirin	noun		general	neutral	everyday	lemma-or-common-form	2	2	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0014	baş	baş	baş	adjective		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0015	bi	bi	bi	preposition		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0016	ciwan	ciwan	ciwan	adjective		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0017	de	de	de	preposition		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0018	dewlemend	dewlemend	dewlemend	adjective		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0019	di	di	di	preposition		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0020	em	em	em	pronoun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0021	gelekî	gelekî	gelekî	adverb		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0022	heval	heval	heval	noun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0023	hunermend	hunermend	hunermend	noun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0024	im	im	im	verb		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0025	ku	ku	ku	conjunction		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0026	kurd	kurd	kurd	noun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0027	kurdî	kurdî	kurdî	adjective		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0028	pêş	pêş	pêş	adverb		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0029	rast	rast	rast	adjective		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0030	re	re	re	preposition		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0031	serkeftin	serkeftin	serkeftin	noun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0032	spas	spas	spas	unknown		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0033	tu	tu	tu	pronoun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0034	vê	vê	vê	verb		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0035	werin	werin	werin	verb		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0036	xwe	xwe	xwe	pronoun		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0037	ye	ye	ye	verb		general	neutral	everyday	lemma-or-common-form	1	1	1	kurdish-hunspell-kmr			low	low		high	pending			
+V-0038	'abd	'abd	'abd	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0039	'aciz	'aciz	'aciz	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0040	'adetî	'adetî	'adetî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0041	'adil	'adil	'adil	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0042	'adiz	'adiz	'adiz	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0043	'agîd	'agîd	'agîd	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0044	'agît	'agît	'agît	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0045	'alemî	'alemî	'alemî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0046	'aleqedar	'aleqedar	'aleqedar	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0047	'amî	'amî	'amî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0048	'aqilane	'aqilane	'aqilane	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0049	'aqildar	'aqildar	'aqildar	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0050	'aqildêr	'aqildêr	'aqildêr	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0051	'aqlane	'aqlane	'aqlane	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0052	'asabî	'asabî	'asabî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0053	'asebî	'asebî	'asebî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0054	'asilza	'asilza	'asilza	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0055	'asilzade	'asilzade	'asilzade	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0056	'azîm	'azîm	'azîm	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0057	'azîz	'azîz	'azîz	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0058	'ebes	'ebes	'ebes	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0059	'ebûr	'ebûr	'ebûr	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0060	'ecêb	'ecêb	'ecêb	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0061	'ecêbgirtî	'ecêbgirtî	'ecêbgirtî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0062	'ecîb	'ecîb	'ecîb	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0063	'ecîbî	'ecîbî	'ecîbî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0064	'edetî	'edetî	'edetî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0065	'edil	'edil	'edil	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0066	'edl	'edl	'edl	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0067	'egîd	'egîd	'egîd	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0068	'egît	'egît	'egît	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0069	'eleqedar	'eleqedar	'eleqedar	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0070	'eletewş	'eletewş	'eletewş	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0071	'engilîzî	'engilîzî	'engilîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0072	'englîzî	'englîzî	'englîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0073	'engîlîzî	'engîlîzî	'engîlîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0074	'enirrî	'enirrî	'enirrî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0075	'enirî	'enirî	'enirî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0076	'eqilane	'eqilane	'eqilane	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0077	'eqildar	'eqildar	'eqildar	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0078	'eqildêr	'eqildêr	'eqildêr	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0079	'eqilsivik	'eqilsivik	'eqilsivik	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0080	'eqlane	'eqlane	'eqlane	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0081	'eqldar	'eqldar	'eqldar	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0082	'eqldêr	'eqldêr	'eqldêr	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0083	'erebkirî	'erebkirî	'erebkirî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0084	'esabî	'esabî	'esabî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0085	'esebî	'esebî	'esebî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0086	'esilza	'esilza	'esilza	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0087	'esilzade	'esilzade	'esilzade	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0088	'etal	'etal	'etal	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0089	'evd	'evd	'evd	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0090	'eyan	'eyan	'eyan	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0091	'eybdar	'eybdar	'eybdar	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0092	'ezîm	'ezîm	'ezîm	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0093	'ezîz	'ezîz	'ezîz	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0094	'ilmî	'ilmî	'ilmî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0095	'ingilîzî	'ingilîzî	'ingilîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0096	'inglîzî	'inglîzî	'inglîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0097	'ingîlîzî	'ingîlîzî	'ingîlîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0098	'inirrî	'inirrî	'inirrî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0099	'inirî	'inirî	'inirî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0100	'olî	'olî	'olî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0101	'wîc	'wîc	'wîc	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0102	'îc	'îc	'îc	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0103	'îngilîzî	'îngilîzî	'îngilîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0104	'înglîzî	'înglîzî	'înglîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0105	'îngîlîzî	'îngîlîzî	'îngîlîzî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0106	'ûc	'ûc	'ûc	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0107	Abbotsford	abbotsford	abbotsford	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0108	Aberdeen	aberdeen	aberdeen	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0109	Afran	afran	afran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0110	Afyonkarahisar	afyonkarahisar	afyonkarahisar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0111	Agadir	agadir	agadir	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0112	Agirvan	agirvan	agirvan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0113	Agrîn	agrîn	agrîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0114	Aichach	aichach	aichach	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0115	Ajda	ajda	ajda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0116	Ajeng	ajeng	ajeng	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0117	Ajna	ajna	ajna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0118	Ajwan	ajwan	ajwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0119	Ajîn	ajîn	ajîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0120	Akçay	akçay	akçay	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0121	Alal	alal	alal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0122	Alanya	alanya	alanya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0123	Alaz	alaz	alaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0124	Albanya	albanya	albanya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0125	Albstadt	albstadt	albstadt	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0126	Alcerya	alcerya	alcerya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0127	Alessandria	alessandria	alessandria	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0128	Almanya	almanya	almanya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0129	Almere	almere	almere	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0130	Altena	altena	altena	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0131	Alwan	alwan	alwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0132	Amanc	amanc	amanc	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0133	Amara	amara	amara	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0134	Amasya	amasya	amasya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0135	Amed	amed	amed	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0136	Amersfoort	amersfoort	amersfoort	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0137	Amerîka	amerîka	amerîka	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0138	Amerîqa	amerîqa	amerîqa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0139	Amritsar	amritsar	amritsar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0140	Amsterdam	amsterdam	amsterdam	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0141	Amêdî	amêdî	amêdî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0142	Amîna	amîna	amîna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0143	Amûd	amûd	amûd	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0144	Amûda	amûda	amûda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0145	Amûdê	amûdê	amûdê	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0146	Ancona	ancona	ancona	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0147	Andorra	andorra	andorra	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0148	Andria	andria	andria	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0149	Angola	angola	angola	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0150	Anhieb	anhieb	anhieb	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0151	Antalya	antalya	antalya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0152	Anteqye	anteqye	anteqye	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0153	Ara	ara	ara	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0154	Aram	aram	aram	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0155	Aras	aras	aras	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0156	Araz	araz	araz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0157	Arda	arda	arda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0158	Ardan	ardan	ardan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0159	Ardî	ardî	ardî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0160	Arhat	arhat	arhat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0161	Ariyan	ariyan	ariyan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0162	Arjentîn	arjentîn	arjentîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0163	Armagedon	armagedon	armagedon	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0164	Armagh	armagh	armagh	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0165	Arnawidkî	arnawidkî	arnawidkî	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0166	Artûş	artûş	artûş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0167	Arêz	arêz	arêz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0168	Arîman	arîman	arîman	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0169	Arûba	arûba	arûba	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0170	Arûn	arûn	arûn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0171	Arûng	arûng	arûng	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0172	Asena	asena	asena	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0173	Aska	aska	aska	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0174	Askê	askê	askê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0175	Asmara	asmara	asmara	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0176	Assen	assen	assen	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0177	Asti	asti	asti	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0178	Astû	astû	astû	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0179	Astûrya	astûrya	astûrya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0180	Asya	asya	asya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0181	Atîna	atîna	atîna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0182	Avan	avan	avan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0183	Avbîn	avbîn	avbîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0184	Avdel	avdel	avdel	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0185	Avdî	avdî	avdî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0186	Avignon	avignon	avignon	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0187	Avzen	avzen	avzen	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0188	Avîn	avîn	avîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0189	Avşîn	avşîn	avşîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0190	Awdel	awdel	awdel	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0191	Awdil	awdil	awdil	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0192	Awedan	awedan	awedan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0193	Awira	awira	awira	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0194	Awistralya	awistralya	awistralya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0195	Awistriya	awistriya	awistriya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0196	Awîng	awîng	awîng	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0197	Axdam	axdam	axdam	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0198	Aydın	aydın	aydın	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0199	Aydıncık	aydıncık	aydıncık	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0200	Ayşe	ayşe	ayşe	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0201	Azade	azade	azade	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0202	Azerbaycan	azerbaycan	azerbaycan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0203	Azerbeycanî	azerbeycanî	azerbeycanî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0204	Azîn	azîn	azîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0205	Azû	azû	azû	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0206	Aşgabat	aşgabat	aşgabat	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0207	Aşid	aşid	aşid	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0208	Babîl	babîl	babîl	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0209	Babîr	babîr	babîr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0210	Babûr	babûr	babûr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0211	Bada	bada	bada	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0212	Badil	badil	badil	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0213	Bado	bado	bado	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0214	Badîn	badîn	badîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0215	Bagerd	bagerd	bagerd	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0216	Bagir	bagir	bagir	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0217	Bagok	bagok	bagok	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0218	Baha	baha	baha	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0219	Bahama	bahama	bahama	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0220	Baho	baho	baho	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0221	Bajen	bajen	bajen	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0222	Baku	baku	baku	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0223	Balaban	balaban	balaban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0224	Balber	balber	balber	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0225	Balîxan	balîxan	balîxan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0226	Bamako	bamako	bamako	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0227	Bamernê	bamernê	bamernê	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0228	Banepa	banepa	banepa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0229	Baneşîn	baneşîn	baneşîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0230	Bangalor	bangalor	bangalor	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0231	Bangkok	bangkok	bangkok	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0232	Bangladeş	bangladeş	bangladeş	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0233	Banjul	banjul	banjul	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0234	Banî	banî	banî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0235	Baram	baram	baram	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0236	Baraw	baraw	baraw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0237	Barbados	barbados	barbados	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0238	Bareş	bareş	bareş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0239	Bargiran	bargiran	bargiran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0240	Bari	bari	bari	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0241	Barletta	barletta	barletta	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0242	Barnas	barnas	barnas	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0243	Barrie	barrie	barrie	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0244	Barsaz	barsaz	barsaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0245	Barselona	barselona	barselona	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0246	Barsinghausen	barsinghausen	barsinghausen	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0247	Barêz	barêz	barêz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0248	Barûve	barûve	barûve	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0249	Basam	basam	basam	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0250	Basim	basim	basim	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0251	Bathurst	bathurst	bathurst	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0252	Batman	batman	batman	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0253	Batîfa	batîfa	batîfa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0254	Bawan	bawan	bawan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0255	Bawerd	bawerd	bawerd	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0256	Baweşen	baweşen	baweşen	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0257	Baweşîn	baweşîn	baweşîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0258	Baxewan	baxewan	baxewan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0259	Bayiz	bayiz	bayiz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0260	Bayındır	bayındır	bayındır	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0261	Bazan	bazan	bazan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0262	Baziyan	baziyan	baziyan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0263	Bazo	bazo	bazo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0264	Bazyan	bazyan	bazyan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0265	Bazê	bazê	bazê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0266	Bazîdaxa	bazîdaxa	bazîdaxa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0267	Bazît	bazît	bazît	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0268	Baçîn	baçîn	baçîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0269	Başin	başin	başin	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0270	Bedewcan	bedewcan	bedewcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0271	Bedredîn	bedredîn	bedredîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0272	Bedrî	bedrî	bedrî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0273	Befraw	befraw	befraw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0274	Befrî	befrî	befrî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0275	Behat	behat	behat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0276	Behdîn	behdîn	behdîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0277	Behoş	behoş	behoş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0278	Behreyn	behreyn	behreyn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0279	Behwan	behwan	behwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0280	Behêz	behêz	behêz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0281	Behî	behî	behî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0282	Behîc	behîc	behîc	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0283	Beijing	beijing	beijing	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0284	Bejna	bejna	bejna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0285	Bejno	bejno	bejno	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0286	Bejnê	bejnê	bejnê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0287	Bejîn	bejîn	bejîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0288	Belar	belar	belar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0289	Belarûs	belarûs	belarûs	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0290	Belfast	belfast	belfast	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0291	Belgrad	belgrad	belgrad	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0292	Belleville	belleville	belleville	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0293	Belmopan	belmopan	belmopan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0294	Belqîs	belqîs	belqîs	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0295	Belçîka	belçîka	belçîka	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0296	Belên	belên	belên	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0297	Belîban	belîban	belîban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0298	Belîze	belîze	belîze	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0299	Bemo	bemo	bemo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0300	Benaw	benaw	benaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0301	Bendan	bendan	bendan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0302	Benden	benden	benden	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0303	Bendewa	bendewa	bendewa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0304	Bendewan	bendewan	bendewan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0305	Bendewar	bendewar	bendewar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0306	Bendo	bendo	bendo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0307	Benewş	benewş	benewş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0308	Bengladiş	bengladiş	bengladiş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0309	Berafîn	berafîn	berafîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0310	Beraw	beraw	beraw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0311	Berbest	berbest	berbest	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0312	Berde	berde	berde	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0313	Berdil	berdil	berdil	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0314	Berem	berem	berem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0315	Berevan	berevan	berevan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0316	Berfan	berfan	berfan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0317	Bergamo	bergamo	bergamo	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0318	Berhevdar	berhevdar	berhevdar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0319	Berkar	berkar	berkar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0320	Berken	berken	berken	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0321	Berma	berma	berma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0322	Berpa	berpa	berpa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0323	Berpal	berpal	berpal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0324	Bersîn	bersîn	bersîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0325	Berwan	berwan	berwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0326	Berxo	berxo	berxo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0327	Berzan	berzan	berzan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0328	Berzenc	berzenc	berzenc	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0329	Berzend	berzend	berzend	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0330	Berzo	berzo	berzo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0331	Berzê	berzê	berzê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0332	Berçem	berçem	berçem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0333	Berêz	berêz	berêz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0334	Berîn	berîn	berîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0335	Berîxan	berîxan	berîxan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0336	Besam	besam	besam	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0337	Besna	besna	besna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0338	Besê	besê	besê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0339	Bewran	bewran	bewran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0340	Bexda	bexda	bexda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0341	Beyanî	beyanî	beyanî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0342	Beysos	beysos	beysos	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0343	Bezma	bezma	bezma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0344	Beşat	beşat	beşat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0345	Bidlîs	bidlîs	bidlîs	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0346	Bijew	bijew	bijew	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0347	Bijwên	bijwên	bijwên	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0348	Bijya	bijya	bijya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0349	Bijûn	bijûn	bijûn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0350	Bilê	bilê	bilê	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0351	Binevş	binevş	binevş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0352	Binyamîn	binyamîn	binyamîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0353	Binyat	binyat	binyat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0354	Birca	birca	birca	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0355	Birmingham	birmingham	birmingham	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0356	Birwa	birwa	birwa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0357	Birzo	birzo	birzo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0358	Biyan	biyan	biyan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0359	Bizan	bizan	bizan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0360	Bişkuj	bişkuj	bişkuj	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0361	Bolonya	bolonya	bolonya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0362	Bolsward	bolsward	bolsward	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0363	Bolîvya	bolîvya	bolîvya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0364	Boston	boston	boston	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0365	Botswana	botswana	botswana	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0366	Bozo	bozo	bozo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0367	Bradford	bradford	bradford	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0368	Brahîm	brahîm	brahîm	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0369	Brampton	brampton	brampton	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0370	Brandon	brandon	brandon	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0371	Brantford	brantford	brantford	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0372	Bratîslava	bratîslava	bratîslava	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0373	Braunschweig	braunschweig	braunschweig	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0374	Brazzaville	brazzaville	brazzaville	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0375	Brazîl	brazîl	brazîl	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0376	Breda	breda	breda	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0377	Bremen	bremen	bremen	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0378	Brescia	brescia	brescia	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0379	Bridgetown	bridgetown	bridgetown	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0380	Bristol	bristol	bristol	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0381	Bruksel	bruksel	bruksel	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0382	Brîtanya	brîtanya	brîtanya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0383	Brûney	brûney	brûney	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0384	Buda	buda	buda	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0385	Bujumbura	bujumbura	bujumbura	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0386	Bulgaristan	bulgaristan	bulgaristan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0387	Burlington	burlington	burlington	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0388	Burnaby	burnaby	burnaby	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0389	Bursa	bursa	bursa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0390	Burundî	burundî	burundî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0391	Buxara	buxara	buxara	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0392	Béziers	béziers	béziers	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0393	Bêbak	bêbak	bêbak	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0394	Bêbaş	bêbaş	bêbaş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0395	Bêcan	bêcan	bêcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0396	Bêdar	bêdar	bêdar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0397	Bêgirî	bêgirî	bêgirî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0398	Bêhawta	bêhawta	bêhawta	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0399	Bêjewan	bêjewan	bêjewan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0400	Bêjîn	bêjîn	bêjîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0401	Bêlan	bêlan	bêlan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0402	Bêlqîs	bêlqîs	bêlqîs	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0403	Bêlîm	bêlîm	bêlîm	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0404	Bênaw	bênaw	bênaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0405	Bênaz	bênaz	bênaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0406	Bênewa	bênewa	bênewa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0407	Bênîn	bênîn	bênîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0408	Bêrecûk	bêrecûk	bêrecûk	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0409	Bêrîcan	bêrîcan	bêrîcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0410	Bêrîwan	bêrîwan	bêrîwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0411	Bêrûd	bêrûd	bêrûd	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0412	Bêsaran	bêsaran	bêsaran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0413	Bêwar	bêwar	bêwar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0414	Bêwîjan	bêwîjan	bêwîjan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0415	Bîlal	bîlal	bîlal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0416	Bîrdar	bîrdar	bîrdar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0417	Bîrhat	bîrhat	bîrhat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0418	Bûban	bûban	bûban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0419	Bûtan	bûtan	bûtan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0420	Cakarta	cakarta	cakarta	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0421	Calgary	calgary	calgary	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0422	Cali	cali	cali	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0423	Calût	calût	calût	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0424	Cambridge	cambridge	cambridge	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0425	Camrose	camrose	camrose	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0426	Canan	canan	canan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0427	Cango	cango	cango	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0428	Cangîr	cangîr	cangîr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0429	Cannes	cannes	cannes	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0430	Cano	cano	cano	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0431	Canterbury	canterbury	canterbury	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0432	Canê	canê	canê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0433	Caracas	caracas	caracas	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0434	Cardiff	cardiff	cardiff	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0435	Carlisle	carlisle	carlisle	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0436	Caserta	caserta	caserta	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0437	Casim	casim	casim	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0438	Catania	catania	catania	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0439	Cebrayîl	cebrayîl	cebrayîl	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0440	Cejnî	cejnî	cejnî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0441	Celal	celal	celal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0442	Celîl	celîl	celîl	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0443	Cembelî	cembelî	cembelî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0444	Cemîl	cemîl	cemîl	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0445	Cemîla	cemîla	cemîla	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0446	Cemşîd	cemşîd	cemşîd	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0447	Cengawer	cengawer	cengawer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0448	Cengo	cengo	cengo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0449	Cengî	cengî	cengî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0450	Cerablûs	cerablûs	cerablûs	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0451	Cewdet	cewdet	cewdet	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0452	Cewê	cewê	cewê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0453	Ceyhan	ceyhan	ceyhan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0454	Cezayir	cezayir	cezayir	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0455	Changchun	changchun	changchun	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0456	Charlottetown	charlottetown	charlottetown	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0457	Chelmsford	chelmsford	chelmsford	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0458	Chengdu	chengdu	chengdu	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0459	Chester	chester	chester	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0460	Cheyenne	cheyenne	cheyenne	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0461	Chichester	chichester	chichester	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0462	Chongqing	chongqing	chongqing	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0463	Cigerxîn	cigerxîn	cigerxîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0464	Ciwana	ciwana	ciwana	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0465	Ciwancan	ciwancan	ciwancan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0466	Ciwannaz	ciwannaz	ciwannaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0467	Coban	coban	coban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0468	Colemêrg	colemêrg	colemêrg	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0469	Como	como	como	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0470	Coquitlam	coquitlam	coquitlam	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0471	Cotkar	cotkar	cotkar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0472	Cottbus	cottbus	cottbus	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0473	Cotyar	cotyar	cotyar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0474	Coventry	coventry	coventry	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0475	Cranbrook	cranbrook	cranbrook	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0476	Cremona	cremona	cremona	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0477	Cuneo	cuneo	cuneo	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0478	Cîbûtî	cîbûtî	cîbûtî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0479	Cîgerxwîn	cîgerxwîn	cîgerxwîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0480	Cûdî	cûdî	cûdî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0481	Daban	daban	daban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0482	Dadyar	dadyar	dadyar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0483	Daka	daka	daka	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0484	Dakar	dakar	dakar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0485	Dakshinkali	dakshinkali	dakshinkali	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0486	Daner	daner	daner	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0487	Danyal	danyal	danyal	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0488	Danîmarka	danîmarka	danîmarka	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0489	Daran	daran	daran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0490	Daryûs	daryûs	daryûs	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0491	Darîn	darîn	darîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0492	Dauphin	dauphin	dauphin	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0493	Dawid	dawid	dawid	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0494	Daxaz	daxaz	daxaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0495	Demgul	demgul	demgul	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0496	Derby	derby	derby	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0497	Derkar	derkar	derkar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0498	Derman	derman	derman	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0499	Derry	derry	derry	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0500	Dersima	dersima	dersima	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0501	Derwêş	derwêş	derwêş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0502	Detmold	detmold	detmold	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0503	Dewken	dewken	dewken	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0504	Dexîl	dexîl	dexîl	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0505	Deza	deza	deza	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0506	Dicle	dicle	dicle	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0507	Dieppe	dieppe	dieppe	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0508	Dihok	dihok	dihok	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0509	Dijle	dijle	dijle	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0510	Dikili	dikili	dikili	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0511	Dila	dila	dila	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0512	Dilan	dilan	dilan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0513	Dilara	dilara	dilara	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0514	Dilawaz	dilawaz	dilawaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0515	Dilba	dilba	dilba	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0516	Dilbirîn	dilbirîn	dilbirîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0517	Dilcan	dilcan	dilcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0518	Dilciwan	dilciwan	dilciwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0519	Dilger	dilger	dilger	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0520	Diljen	diljen	diljen	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0521	Dilkanî	dilkanî	dilkanî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0522	Dilmest	dilmest	dilmest	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0523	Dilnaz	dilnaz	dilnaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0524	Dilnîgar	dilnîgar	dilnîgar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0525	Dilo	dilo	dilo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0526	Dilocan	dilocan	dilocan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0527	Dilodîn	dilodîn	dilodîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0528	Dilorîn	dilorîn	dilorîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0529	Dilvan	dilvan	dilvan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0530	Dilxoş	dilxoş	dilxoş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0531	Dilyar	dilyar	dilyar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0532	Dilşa	dilşa	dilşa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0533	Dilşên	dilşên	dilşên	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0534	Dimorî	dimorî	dimorî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0535	Dinslaken	dinslaken	dinslaken	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0536	Diyadîn	diyadîn	diyadîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0537	Diyako	diyako	diyako	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0538	Diyarbekir	diyarbekir	diyarbekir	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0539	Domînîka	domînîka	domînîka	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0540	Dow	dow	dow	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0541	Dresden	dresden	dresden	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0542	Dubai	dubai	dubai	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0543	Dundee	dundee	dundee	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0544	Durham	durham	durham	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0545	Duşenbe	duşenbe	duşenbe	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0546	Dêber	dêber	dêber	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0547	Dîana	dîana	dîana	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0548	Dîcle	dîcle	dîcle	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0549	Dîdem	dîdem	dîdem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0550	Dîlber	dîlber	dîlber	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0551	Dîmeşq	dîmeşq	dîmeşq	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0552	Ebas	ebas	ebas	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0553	Ebdilkerîm	ebdilkerîm	ebdilkerîm	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0554	Ebdilletîf	ebdilletîf	ebdilletîf	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0555	Ebdilqadir	ebdilqadir	ebdilqadir	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0556	Ebex	ebex	ebex	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0557	Ebûbekir	ebûbekir	ebûbekir	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0558	Edene	edene	edene	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0559	Edinburgh	edinburgh	edinburgh	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0560	Edirne	edirne	edirne	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0561	Edla	edla	edla	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0562	Edmonton	edmonton	edmonton	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0563	Efaf	efaf	efaf	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0564	Efo	efo	efo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0565	Efrasiyab	efrasiyab	efrasiyab	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0566	Efrîn	efrîn	efrîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0567	Efsan	efsan	efsan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0568	Efxanistan	efxanistan	efxanistan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0569	Efîf	efîf	efîf	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0570	Egît	egît	egît	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0571	Ehmed	ehmed	ehmed	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0572	Ejî	ejî	ejî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0573	Eka	eka	eka	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0574	Ekbatana	ekbatana	ekbatana	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0575	Ekuador	ekuador	ekuador	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0576	Elbistan	elbistan	elbistan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0577	Elezîz	elezîz	elezîz	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0578	Elkîş	elkîş	elkîş	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0579	Elwand	elwand	elwand	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0580	Elyas	elyas	elyas	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0581	Elî	elî	elî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0582	Elîko	elîko	elîko	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0583	Emman	emman	emman	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0584	Emo	emo	emo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0585	Emîr	emîr	emîr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0586	Enqere	enqere	enqere	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0587	Enwa	enwa	enwa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0588	Enwer	enwer	enwer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0589	Erdehan	erdehan	erdehan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0590	Erdem	erdem	erdem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0591	Erdexan	erdexan	erdexan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0592	Erdêxan	erdêxan	erdêxan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0593	Erebîstan	erebîstan	erebîstan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0594	Erez	erez	erez	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0595	Erfurt	erfurt	erfurt	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0596	Ermenistan	ermenistan	ermenistan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0597	Ernewaz	ernewaz	ernewaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0598	Erzen	erzen	erzen	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0599	Erzerom	erzerom	erzerom	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0600	Erzirom	erzirom	erzirom	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0601	Erzo	erzo	erzo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0602	Erzîrom	erzîrom	erzîrom	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0603	Erîtrea	erîtrea	erîtrea	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0604	Erîtriya	erîtriya	erîtriya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0605	Esed	esed	esed	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0606	Esma	esma	esma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0607	Esmercan	esmercan	esmercan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0608	Esmerxan	esmerxan	esmerxan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0609	Esmîxan	esmîxan	esmîxan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0610	Espar	espar	espar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0611	Espoo	espoo	espoo	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0612	Esrîn	esrîn	esrîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0613	Estonya	estonya	estonya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0614	Estêr	estêr	estêr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0615	Eswan	eswan	eswan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0616	Etiyopya	etiyopya	etiyopya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0617	Etûn	etûn	etûn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0618	Evdile	evdile	evdile	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0619	Evser	evser	evser	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0620	Ewaz	ewaz	ewaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0621	Ewrîn	ewrîn	ewrîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0622	Ewrûpa	ewrûpa	ewrûpa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0623	Ewîn	ewîn	ewîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0624	Exeter	exeter	exeter	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0625	Eyaz	eyaz	eyaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0626	Eyûb	eyûb	eyûb	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0627	Ezaz	ezaz	ezaz	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0628	Ezcan	ezcan	ezcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0629	Ezirgan	ezirgan	ezirgan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0630	Ezma	ezma	ezma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0631	Ezîn	ezîn	ezîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0632	Fadil	fadil	fadil	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0633	Fatimî	fatimî	fatimî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0634	Fatma	fatma	fatma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0635	Fayiq	fayiq	fayiq	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0636	Feraşîn	feraşîn	feraşîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0637	Ferhat	ferhat	ferhat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0638	Fero	fero	fero	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0639	Ferzê	ferzê	ferzê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0640	Ferzîne	ferzîne	ferzîne	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0641	Ferîde	ferîde	ferîde	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0642	Ferîdûn	ferîdûn	ferîdûn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0643	Fethiye	fethiye	fethiye	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0644	Fexrî	fexrî	fexrî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0645	Filîpîn	filîpîn	filîpîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0646	Filît	filît	filît	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0647	Firat	firat	firat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0648	Firenze	firenze	firenze	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0649	Firya	firya	firya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0650	Firyal	firyal	firyal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0651	Floransa	floransa	floransa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0652	Foggia	foggia	foggia	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0653	Foça	foça	foça	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0654	Fransa	fransa	fransa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0655	Friedrichshafen	friedrichshafen	friedrichshafen	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0656	Fêsel	fêsel	fêsel	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0657	Fîdan	fîdan	fîdan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0658	Fîlya	fîlya	fîlya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0659	Fînlenda	fînlenda	fînlenda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0660	Fîroz	fîroz	fîroz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0661	Fîrya	fîrya	fîrya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0662	Gabon	gabon	gabon	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0663	Gambiya	gambiya	gambiya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0664	Gana	gana	gana	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0665	Gare	gare	gare	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0666	Gelavêj	gelavêj	gelavêj	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0667	Gelaz	gelaz	gelaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0668	Gerdana	gerdana	gerdana	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0669	Gerdangaz	gerdangaz	gerdangaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0670	Gerdew	gerdew	gerdew	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0671	Germanya	germanya	germanya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0672	Gever	gever	gever	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0673	Gewrê	gewrê	gewrê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0674	Gezîne	gezîne	gezîne	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0675	Gezîza	gezîza	gezîza	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0676	Geşa	geşa	geşa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0677	Geşîn	geşîn	geşîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0678	Gherîb	gherîb	gherîb	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0679	Gibraltar	gibraltar	gibraltar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0680	Gilya	gilya	gilya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0681	Gilyaz	gilyaz	gilyaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0682	Gilêne	gilêne	gilêne	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0683	Giyabent	giyabent	giyabent	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0684	Glasgow	glasgow	glasgow	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0685	Gloucester	gloucester	gloucester	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0686	Goran	goran	goran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0687	Grenada	grenada	grenada	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0688	Gronland	gronland	gronland	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0689	Grînlenda	grînlenda	grînlenda	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0690	Guadalajara	guadalajara	guadalajara	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0691	Guadix	guadix	guadix	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0692	Guatemala	guatemala	guatemala	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0693	Guelph	guelph	guelph	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0694	Gulal	gulal	gulal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0695	Gulavî	gulavî	gulavî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0696	Gulaw	gulaw	gulaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0697	Gulbahar	gulbahar	gulbahar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0698	Gulbanû	gulbanû	gulbanû	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0699	Gulbaran	gulbaran	gulbaran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0700	Gulbarîn	gulbarîn	gulbarîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0701	Gulbawan	gulbawan	gulbawan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0702	Gulbax	gulbax	gulbax	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0703	Gulbeden	gulbeden	gulbeden	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0704	Gulbehar	gulbehar	gulbehar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0705	Gulbejn	gulbejn	gulbejn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0706	Gulbent	gulbent	gulbent	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0707	Gulberoj	gulberoj	gulberoj	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0708	Gulberîn	gulberîn	gulberîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0709	Gulbeser	gulbeser	gulbeser	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0710	Gulbest	gulbest	gulbest	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0711	Gulbîn	gulbîn	gulbîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0712	Gulcan	gulcan	gulcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0713	Gulda	gulda	gulda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0714	Guldar	guldar	guldar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0715	Gulferî	gulferî	gulferî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0716	Gulfiroş	gulfiroş	gulfiroş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0717	Gulnav	gulnav	gulnav	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0718	Gulnaz	gulnaz	gulnaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0719	Gulperî	gulperî	gulperî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0720	Gulreng	gulreng	gulreng	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0721	Gulroj	gulroj	gulroj	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0722	Gulsînem	gulsînem	gulsînem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0723	Gulveda	gulveda	gulveda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0724	Gulxatûn	gulxatûn	gulxatûn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0725	Gulxoş	gulxoş	gulxoş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0726	Gulê	gulê	gulê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0727	Gulîn	gulîn	gulîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0728	Gulîzar	gulîzar	gulîzar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0729	Gulîzer	gulîzer	gulîzer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0730	Gulîşa	gulîşa	gulîşa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0731	Gulşa	gulşa	gulşa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0732	Gulşirîn	gulşirîn	gulşirîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0733	Gulşîn	gulşîn	gulşîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0734	Gurcistan	gurcistan	gurcistan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0735	Gurgum	gurgum	gurgum	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0736	Guvend	guvend	guvend	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0737	Guyana	guyana	guyana	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0738	Gyumrî	gyumrî	gyumrî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0739	Gîne	gîne	gîne	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0740	HD	hd	hd	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0741	Haarlem	haarlem	haarlem	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0742	Habaqûq	habaqûq	habaqûq	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0743	Hacer	hacer	hacer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0744	Haidong	haidong	haidong	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0745	Hakim	hakim	hakim	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0746	Halifax	halifax	halifax	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0747	Ham	ham	ham	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0748	Hamid	hamid	hamid	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0749	Hamilton	hamilton	hamilton	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0750	Hana	hana	hana	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0751	Hannover	hannover	hannover	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0752	Hanoi	hanoi	hanoi	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0753	Hanîs	hanîs	hanîs	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0754	Harbin	harbin	harbin	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0755	Hawdem	hawdem	hawdem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0756	Hawdil	hawdil	hawdil	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0757	Hawjîn	hawjîn	hawjîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0758	Hawnaz	hawnaz	hawnaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0759	Hawniyaz	hawniyaz	hawniyaz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0760	Hawrama	hawrama	hawrama	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0761	Hawrê	hawrê	hawrê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0762	Hazo	hazo	hazo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0763	Hebîb	hebîb	hebîb	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0764	Hefte	hefte	hefte	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0765	Hek	hek	hek	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0766	Hekar	hekar	hekar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0767	Helat	helat	helat	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0768	Helaw	helaw	helaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0769	Heleb	heleb	heleb	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0770	Helebce	helebce	helebce	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0771	Heleman	heleman	heleman	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0772	Helsînkî	helsînkî	helsînkî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0773	Hemaîl	hemaîl	hemaîl	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0774	Hemreş	hemreş	hemreş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0775	Hemîd	hemîd	hemîd	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0776	Heps	heps	heps	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0777	Herdem	herdem	herdem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0778	Hereford	hereford	hereford	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0779	Herf	herf	herf	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0780	Hermîn	hermîn	hermîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0781	Herrnhut	herrnhut	herrnhut	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0782	Hes	hes	hes	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0783	Hesasiyet	hesasiyet	hesasiyet	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0784	Hesret	hesret	hesret	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0785	Hesîba	hesîba	hesîba	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0786	Hesîbe	hesîbe	hesîbe	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0787	Hesîçe	hesîçe	hesîçe	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0788	Hetauda	hetauda	hetauda	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0789	Hetaw	hetaw	hetaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0790	Hevgin	hevgin	hevgin	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0791	Hevjîn	hevjîn	hevjîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0792	Hewcedarî	hewcedarî	hewcedarî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0793	Hewdem	hewdem	hewdem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0794	Hewg	hewg	hewg	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0795	Hewil	hewil	hewil	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0796	Hewlêr	hewlêr	hewlêr	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0797	Hewranî	hewranî	hewranî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0798	Hewraz	hewraz	hewraz	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0799	Hewrê	hewrê	hewrê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0800	Hewsa	hewsa	hewsa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0801	Hewş	hewş	hewş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0802	Heyf	heyf	heyf	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0803	Heywan	heywan	heywan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0804	Hezo	hezo	hezo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0805	Hezuo	hezuo	hezuo	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0806	Heîv	heîv	heîv	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0807	Hikim	hikim	hikim	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0808	Hilbîn	hilbîn	hilbîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0809	Hilkar	hilkar	hilkar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0810	Hindistan	hindistan	hindistan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0811	Hinduîzm	hinduîzm	hinduîzm	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0812	Hisna	hisna	hisna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0813	Hizib	hizib	hizib	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0814	Hişkahî	hişkahî	hişkahî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0815	Hişkasayî	hişkasayî	hişkasayî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0816	Hohnstein	hohnstein	hohnstein	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0817	Hondûras	hondûras	hondûras	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0818	Hoybûn	hoybûn	hoybûn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0819	Hugir	hugir	hugir	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0820	Hukum	hukum	hukum	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0821	Huzan	huzan	huzan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0822	Huzûr	huzûr	huzûr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0823	Hêlsînkî	hêlsînkî	hêlsînkî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0824	Hêmen	hêmen	hêmen	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0825	Hêrs	hêrs	hêrs	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0826	Hîroşîma	hîroşîma	hîroşîma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0827	Hîvan	hîvan	hîvan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0828	Hîwa	hîwa	hîwa	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0829	Innsbruck	innsbruck	innsbruck	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0830	Internet	internet	internet	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0831	Inverness	inverness	inverness	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0832	Iraq	iraq	iraq	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0833	Isfehan	isfehan	isfehan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0834	Islamiyet	islamiyet	islamiyet	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0835	Isma	isma	isma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0836	Ismet	ismet	ismet	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0837	Jamaîka	jamaîka	jamaîka	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0838	Japon	japon	japon	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0839	Japonya	japonya	japonya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0840	Jiwan	jiwan	jiwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0841	Jonava	jonava	jonava	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0842	Jêla	jêla	jêla	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0843	Jêlyan	jêlyan	jêlyan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0844	Jêlî	jêlî	jêlî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0845	Jîman	jîman	jîman	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0846	Jîno	jîno	jîno	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0847	Jîwan	jîwan	jîwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0848	Kabûl	kabûl	kabûl	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0849	Kaja	kaja	kaja	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0850	Kajaw	kajaw	kajaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0851	Kamboca	kamboca	kamboca	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0852	Kambodya	kambodya	kambodya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0853	Kamerûn	kamerûn	kamerûn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0854	Kamiran	kamiran	kamiran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0855	Kammer	kammer	kammer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0856	Kampala	kampala	kampala	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0857	Kamîran	kamîran	kamîran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0858	Kanada	kanada	kanada	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0859	Kanberra	kanberra	kanberra	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0860	Kanîmasî	kanîmasî	kanîmasî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0861	Kardox	kardox	kardox	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0862	Kardux	kardux	kardux	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0863	Karza	karza	karza	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0864	Karzan	karzan	karzan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0865	Kathmandu	kathmandu	kathmandu	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0866	Katovîts	katovîts	katovîts	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0867	Kaunas	kaunas	kaunas	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0868	Kawar	kawar	kawar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0869	Kawe	kawe	kawe	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0870	Kazim	kazim	kazim	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0871	Kefirhewar	kefirhewar	kefirhewar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0872	Kejal	kejal	kejal	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0873	Kejaw	kejaw	kejaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0874	Kejo	kejo	kejo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0875	Kejê	kejê	kejê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0876	Kekan	kekan	kekan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0877	Keko	keko	keko	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0878	Kelbajar	kelbajar	kelbajar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0879	Kendul	kendul	kendul	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0880	Keneda	keneda	keneda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0881	Kenya	kenya	kenya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0882	Kepreşîne	kepreşîne	kepreşîne	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0883	Kerbela	kerbela	kerbela	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0884	Kerkûk	kerkûk	kerkûk	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0885	Kerîma	kerîma	kerîma	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0886	Kesra	kesra	kesra	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0887	Kesrewan	kesrewan	kesrewan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0888	Kevîr	kevîr	kevîr	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0889	Kewer	kewer	kewer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0890	Keya	keya	keya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0891	Keyna	keyna	keyna	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0892	Keyo	keyo	keyo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0893	Kezêban	kezêban	kezêban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0894	Kilda	kilda	kilda	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0895	Kilîs	kilîs	kilîs	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0896	Kingston	kingston	kingston	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0897	Kinikan	kinikan	kinikan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0898	Kinê	kinê	kinê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0899	Kirîbatî	kirîbatî	kirîbatî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0900	Kitchener	kitchener	kitchener	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0901	Kizilagaç	kizilagaç	kizilagaç	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0902	Koban	koban	koban	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0903	Kobanê	kobanê	kobanê	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0904	Kolombiya	kolombiya	kolombiya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0905	Komor	komor	komor	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0906	Konfederasyon	konfederasyon	konfederasyon	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0907	Konstantînopolîs	konstantînopolîs	konstantînopolîs	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0908	Konstanz	konstanz	konstanz	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0909	Kop	kop	kop	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0910	Kopenhag	kopenhag	kopenhag	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0911	Korak	korak	korak	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0912	Kosova	kosova	kosova	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0913	Kosret	kosret	kosret	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0914	Koyo	koyo	koyo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0915	Kozan	kozan	kozan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0916	Kroatya	kroatya	kroatya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0917	Kufe	kufe	kufe	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0918	Kumar	kumar	kumar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0919	Kurdistan	kurdistan	kurdistan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0920	Kuweyt	kuweyt	kuweyt	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0921	Kuçer	kuçer	kuçer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0922	Kuşadası	kuşadası	kuşadası	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0923	Kêste	kêste	kêste	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0924	Kîev	kîev	kîev	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0925	Kîka	kîka	kîka	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0926	Kînşasa	kînşasa	kînşasa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0927	Kîpros	kîpros	kîpros	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0928	Kûba	kûba	kûba	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0929	Kınık	kınık	kınık	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0930	Lagos	lagos	lagos	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0931	Lahr	lahr	lahr	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0932	Lalebend	lalebend	lalebend	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0933	Laleş	laleş	laleş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0934	Lalitpur	lalitpur	lalitpur	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0935	Lanzhou	lanzhou	lanzhou	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0936	Laos	laos	laos	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0937	Lawîn	lawîn	lawîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0938	Laçîn	laçîn	laçîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0939	Lecce	lecce	lecce	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0940	Leeds	leeds	leeds	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0941	Leeuwarden	leeuwarden	leeuwarden	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0942	Leicester	leicester	leicester	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0943	Leipzig	leipzig	leipzig	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0944	Lelystad	lelystad	lelystad	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0945	Leman	leman	leman	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0946	Lerzan	lerzan	lerzan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0947	Lesoto	lesoto	lesoto	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0948	Letonya	letonya	letonya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0949	Lewken	lewken	lewken	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0950	Leypiçig	leypiçig	leypiçig	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0951	Lhasa	lhasa	lhasa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0952	Libnan	libnan	libnan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0953	Libreville	libreville	libreville	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0954	Lichfield	lichfield	lichfield	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0955	Licê	licê	licê	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0956	Liechtenstein	liechtenstein	liechtenstein	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0957	Linnich	linnich	linnich	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0958	Lisburn	lisburn	lisburn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0959	Liverpool	liverpool	liverpool	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0960	Lolan	lolan	lolan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0961	London	london	london	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0962	Loran	loran	loran	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0963	Lorîcan	lorîcan	lorîcan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0964	Luanda	luanda	luanda	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0965	Ludwigsburg	ludwigsburg	ludwigsburg	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0966	Lugano	lugano	lugano	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0967	Lugau	lugau	lugau	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0968	Luleå	luleå	luleå	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0969	Lêzan	lêzan	lêzan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0970	Lîberya	lîberya	lîberya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0971	Lîbya	lîbya	lîbya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0972	Lîma	lîma	lîma	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0973	Lîtvanya	lîtvanya	lîtvanya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0974	Lîzbon	lîzbon	lîzbon	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0975	Lûksembûrg	lûksembûrg	lûksembûrg	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0976	Mabuk	mabuk	mabuk	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0977	Macaristan	macaristan	macaristan	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0978	Madagaskar	madagaskar	madagaskar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0979	Maden	maden	maden	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0980	Madrîd	madrîd	madrîd	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0981	Magdeburg	magdeburg	magdeburg	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0982	Mahabad	mahabad	mahabad	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0983	Makaw	makaw	makaw	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0984	Makedonya	makedonya	makedonya	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0985	Mako	mako	mako	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0986	Maldîv	maldîv	maldîv	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0987	Malezya	malezya	malezya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0988	Malta	malta	malta	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0989	Malî	malî	malî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0990	Mamekî	mamekî	mamekî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0991	Manchester	manchester	manchester	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0992	Manisa	manisa	manisa	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0993	Marakeş	marakeş	marakeş	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0994	Marbella	marbella	marbella	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0995	Maroko	maroko	maroko	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0996	Maurîtius	maurîtius	maurîtius	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0997	Mazîdax	mazîdax	mazîdax	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0998	Mazîn	mazîn	mazîn	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-0999	Medellín	medellín	medellín	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1000	Mehabad	mehabad	mehabad	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1001	Mehsûm	mehsûm	mehsûm	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1002	Mekke	mekke	mekke	adjective		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1003	Meknes	meknes	meknes	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1004	Meksîk	meksîk	meksîk	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1005	Meksîko	meksîko	meksîko	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1006	Meksîm	meksîm	meksîm	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1007	Meledî	meledî	meledî	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1008	Mem	mem	mem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1009	Memlan	memlan	memlan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1010	Memyan	memyan	memyan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1011	Mendelî	mendelî	mendelî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1012	Mendê	mendê	mendê	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1013	Meppel	meppel	meppel	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1014	Merakeş	merakeş	merakeş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1015	Mercan	mercan	mercan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1016	Merdan	merdan	merdan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1017	Merdem	merdem	merdem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1018	Merdo	merdo	merdo	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1019	Mergewer	mergewer	mergewer	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1020	Merwan	merwan	merwan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1021	Meryem	meryem	meryem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1022	Merîvan	merîvan	merîvan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1023	Mestan	mestan	mestan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1024	Mesîhîtî	mesîhîtî	mesîhîtî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1025	Meyfroş	meyfroş	meyfroş	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1026	Mezdar	mezdar	mezdar	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1027	Mezher	mezher	mezher	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1028	Mihemed	mihemed	mihemed	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1029	Mircan	mircan	mircan	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1030	Miro	miro	miro	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1031	Miryem	miryem	miryem	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1032	Misir	misir	misir	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1033	Mississauga	mississauga	mississauga	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1034	Moldova	moldova	moldova	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1035	Monako	monako	monako	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1036	Mongolya	mongolya	mongolya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1037	Montenegro	montenegro	montenegro	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1038	Monza	monza	monza	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1039	Morîtanya	morîtanya	morîtanya	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1040	Moskova	moskova	moskova	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1041	Mozambîk	mozambîk	mozambîk	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1042	Mukurî	mukurî	mukurî	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1043	Mumbai	mumbai	mumbai	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1044	Munîh	munîh	munîh	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1045	Mut	mut	mut	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1046	Myanmar	myanmar	myanmar	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1047	Mêrdîn	mêrdîn	mêrdîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1048	Mêrgesor	mêrgesor	mêrgesor	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1049	Mêrsîn	mêrsîn	mêrsîn	unknown		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
+V-1050	Mîkaîl	mîkaîl	mîkaîl	noun		general	neutral	everyday	lemma-or-common-form			1	kurdish-hunspell-kmr			low	low		medium	pending			
