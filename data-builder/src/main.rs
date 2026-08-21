@@ -115,6 +115,8 @@ enum Commands {
     },
     /// Evaluates seed, reviewed, and experimental-full packs against reviewed cases
     EvaluatePacks,
+    /// Generates a deterministic ranked 1,000-entry human review batch from existing review queue and frequencies
+    GenerateVocabularyReviewBatch,
 }
 
 fn main() {
@@ -610,6 +612,36 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error evaluating packs: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::GenerateVocabularyReviewBatch => {
+            println!("=== Kurmancî Bulk Vocabulary Review Batch Generator ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::review::generate_vocabulary_review_batch(&root) {
+                Ok(summary) => {
+                    println!("⚡ VOCABULARY REVIEW BATCH GENERATED SUCCESSFULLY!");
+                    println!("  Total Pool Candidates: {}", summary.total_pool_candidates);
+                    println!(
+                        "  Excluded Decisions:    {}",
+                        summary.excluded_existing_decisions
+                    );
+                    println!(
+                        "  Eligible Pending:      {}",
+                        summary.eligible_pending_candidates
+                    );
+                    println!("  Batch Size:            {}", summary.batch_size);
+                    println!(
+                        "  Clean Candidates:      {}",
+                        summary.clean_candidates_count
+                    );
+                    println!("  Corpus Matched:        {}", summary.corpus_matched_count);
+                    println!("  Output TSV:            {}", summary.output_tsv);
+                    println!("  Output JSONL:          {}", summary.output_jsonl);
+                }
+                Err(e) => {
+                    eprintln!("Error generating vocabulary review batch: {}", e);
                     std::process::exit(1);
                 }
             }

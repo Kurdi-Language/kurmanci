@@ -208,6 +208,32 @@ jobs:
           diff /tmp/ci-check/freq1/reports.sha256 /tmp/ci-check/freq2/reports.sha256
           echo "Frequency build determinism verification passed."
 
+      - name: Generate Vocabulary Review Batch (First Pass)
+        run: cargo run -p kurmanci-data-builder -- generate-vocabulary-review-batch
+
+      - name: Verify Committed Vocabulary Review Batch Reproducibility
+        run: |
+          git diff --exit-code -- \
+            data/reports/vocabulary-review/top-1000.tsv \
+            data/reports/vocabulary-review/top-1000.jsonl \
+            data/reports/vocabulary-review/summary.json
+          echo "Committed vocabulary review batch is byte-identical to generated batch."
+
+      - name: Record Vocabulary Review Batch Pass 1 Checksums
+        run: |
+          mkdir -p /tmp/ci-check/vocab_review1
+          sha256sum data/reports/vocabulary-review/* > /tmp/ci-check/vocab_review1/checksums.sha256
+
+      - name: Generate Vocabulary Review Batch (Second Pass - Determinism Verification)
+        run: cargo run -p kurmanci-data-builder -- generate-vocabulary-review-batch
+
+      - name: Verify Vocabulary Review Batch Determinism
+        run: |
+          mkdir -p /tmp/ci-check/vocab_review2
+          sha256sum data/reports/vocabulary-review/* > /tmp/ci-check/vocab_review2/checksums.sha256
+          diff /tmp/ci-check/vocab_review1/checksums.sha256 /tmp/ci-check/vocab_review2/checksums.sha256
+          echo "Vocabulary review batch determinism verification passed."
+
       - name: Run N-Gram Builder (First Pass)
         run: cargo run -p kurmanci-data-builder -- build-ngrams
 
