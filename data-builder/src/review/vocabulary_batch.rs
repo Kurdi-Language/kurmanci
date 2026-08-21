@@ -98,7 +98,9 @@ struct CandidateEvalItem {
 /// Statuses other than `Unreviewed` (e.g. `Approved`, `ApprovedWithMetadataChange`, `RejectedFromDefaultPack`,
 /// `ExperimentalOnly`, `NeedsLinguist`, `NeedsSourceInvestigation`) cause the target ID to be excluded.
 /// Unreviewed decisions do NOT exclude a candidate.
-pub fn load_existing_decision_target_ids<P: AsRef<Path>>(decisions_path: P) -> Result<HashSet<String>, String> {
+pub fn load_existing_decision_target_ids<P: AsRef<Path>>(
+    decisions_path: P,
+) -> Result<HashSet<String>, String> {
     let path = decisions_path.as_ref();
     if !path.exists() {
         return Ok(HashSet::new());
@@ -110,13 +112,19 @@ pub fn load_existing_decision_target_ids<P: AsRef<Path>>(decisions_path: P) -> R
     let mut ids = HashSet::new();
 
     for (line_idx, line_res) in reader.lines().enumerate() {
-        let line = line_res.map_err(|e| format!("Error reading decisions line {}: {}", line_idx + 1, e))?;
+        let line = line_res
+            .map_err(|e| format!("Error reading decisions line {}: {}", line_idx + 1, e))?;
         let trimmed = line.trim();
         if trimmed.is_empty() {
             continue;
         }
-        let rec: ReviewDecisionRecord = serde_json::from_str(trimmed)
-            .map_err(|e| format!("Failed parsing decision JSON at line {}: {}", line_idx + 1, e))?;
+        let rec: ReviewDecisionRecord = serde_json::from_str(trimmed).map_err(|e| {
+            format!(
+                "Failed parsing decision JSON at line {}: {}",
+                line_idx + 1,
+                e
+            )
+        })?;
 
         if rec.review_status != ReviewDecisionStatus::Unreviewed {
             ids.insert(rec.target_id);
@@ -129,7 +137,9 @@ pub fn load_existing_decision_target_ids<P: AsRef<Path>>(decisions_path: P) -> R
 /// Loads corpus frequencies from `data/build/frequencies.jsonl`.
 ///
 /// `data/build/frequencies.jsonl` is a REQUIRED prerequisite. Fails if missing.
-pub fn load_corpus_frequencies<P: AsRef<Path>>(freq_path: P) -> Result<BTreeMap<String, (u64, u64, f64)>, String> {
+pub fn load_corpus_frequencies<P: AsRef<Path>>(
+    freq_path: P,
+) -> Result<BTreeMap<String, (u64, u64, f64)>, String> {
     let path = freq_path.as_ref();
     if !path.exists() {
         return Err(format!(
@@ -138,20 +148,34 @@ pub fn load_corpus_frequencies<P: AsRef<Path>>(freq_path: P) -> Result<BTreeMap<
         ));
     }
 
-    let file = File::open(path)
-        .map_err(|e| format!("Failed to open frequencies file at {}: {}", path.display(), e))?;
+    let file = File::open(path).map_err(|e| {
+        format!(
+            "Failed to open frequencies file at {}: {}",
+            path.display(),
+            e
+        )
+    })?;
     let reader = BufReader::new(file);
     let mut map = BTreeMap::new();
 
     for (line_idx, line_res) in reader.lines().enumerate() {
-        let line = line_res.map_err(|e| format!("Error reading frequencies line {}: {}", line_idx + 1, e))?;
+        let line = line_res
+            .map_err(|e| format!("Error reading frequencies line {}: {}", line_idx + 1, e))?;
         let trimmed = line.trim();
         if trimmed.is_empty() {
             continue;
         }
-        let item: CorpusFrequencyItem = serde_json::from_str(trimmed)
-            .map_err(|e| format!("Failed parsing frequency JSON at line {}: {}", line_idx + 1, e))?;
-        map.insert(item.word, (item.token_count, item.document_count, item.zipf));
+        let item: CorpusFrequencyItem = serde_json::from_str(trimmed).map_err(|e| {
+            format!(
+                "Failed parsing frequency JSON at line {}: {}",
+                line_idx + 1,
+                e
+            )
+        })?;
+        map.insert(
+            item.word,
+            (item.token_count, item.document_count, item.zipf),
+        );
     }
 
     Ok(map)
@@ -160,7 +184,9 @@ pub fn load_corpus_frequencies<P: AsRef<Path>>(freq_path: P) -> Result<BTreeMap<
 /// Loads audit flags across all expected audit queues in `data/review-queues/kurdish-hunspell-kmr/`.
 ///
 /// Fails if any expected audit queue file is missing or if JSON parsing fails.
-pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String, BTreeSet<String>>, String> {
+pub fn load_audit_flags<P: AsRef<Path>>(
+    queues_dir: P,
+) -> Result<BTreeMap<String, BTreeSet<String>>, String> {
     let dir = queues_dir.as_ref();
     let mut flags_map: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
 
@@ -202,7 +228,14 @@ pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String
         let reader = BufReader::new(file);
 
         for (line_idx, line_res) in reader.lines().enumerate() {
-            let line = line_res.map_err(|e| format!("Error reading queue line {} in {}: {}", line_idx + 1, path.display(), e))?;
+            let line = line_res.map_err(|e| {
+                format!(
+                    "Error reading queue line {} in {}: {}",
+                    line_idx + 1,
+                    path.display(),
+                    e
+                )
+            })?;
             let trimmed = line.trim();
             if trimmed.is_empty() {
                 continue;
@@ -218,11 +251,17 @@ pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String
             })?;
 
             if let Some(tid) = gt.target_id {
-                flags_map.entry(tid).or_default().insert(flag_name.to_string());
+                flags_map
+                    .entry(tid)
+                    .or_default()
+                    .insert(flag_name.to_string());
             }
             if let Some(members) = gt.member_entry_ids {
                 for member_id in members {
-                    flags_map.entry(member_id).or_default().insert(flag_name.to_string());
+                    flags_map
+                        .entry(member_id)
+                        .or_default()
+                        .insert(flag_name.to_string());
                 }
             }
         }
@@ -232,7 +271,9 @@ pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String
 }
 
 /// Generates the deterministic, ranked 1,000-entry human review batch from repository data.
-pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<VocabularyReviewBatchSummary, String> {
+pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(
+    root_dir: P,
+) -> Result<VocabularyReviewBatchSummary, String> {
     let root = root_dir.as_ref();
 
     let pool_path = root.join("data/review-queues/kurdish-hunspell-kmr/hunspell-only.jsonl");
@@ -249,8 +290,13 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
     let frequencies = load_corpus_frequencies(&freq_path)?;
     let audit_flags_by_target = load_audit_flags(&queues_dir)?;
 
-    let pool_file = File::open(&pool_path)
-        .map_err(|e| format!("Failed opening candidate pool {}: {}", pool_path.display(), e))?;
+    let pool_file = File::open(&pool_path).map_err(|e| {
+        format!(
+            "Failed opening candidate pool {}: {}",
+            pool_path.display(),
+            e
+        )
+    })?;
     let pool_reader = BufReader::new(pool_file);
 
     let mut total_pool_candidates = 0;
@@ -258,15 +304,21 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
     let mut eval_items: Vec<CandidateEvalItem> = Vec::new();
 
     for (line_idx, line_res) in pool_reader.lines().enumerate() {
-        let line = line_res.map_err(|e| format!("Error reading candidate pool line {}: {}", line_idx + 1, e))?;
+        let line = line_res
+            .map_err(|e| format!("Error reading candidate pool line {}: {}", line_idx + 1, e))?;
         let trimmed = line.trim();
         if trimmed.is_empty() {
             continue;
         }
 
         total_pool_candidates += 1;
-        let record: EntryQueueRecord = serde_json::from_str(trimmed)
-            .map_err(|e| format!("Failed parsing candidate pool JSON line {}: {}", line_idx + 1, e))?;
+        let record: EntryQueueRecord = serde_json::from_str(trimmed).map_err(|e| {
+            format!(
+                "Failed parsing candidate pool JSON line {}: {}",
+                line_idx + 1,
+                e
+            )
+        })?;
 
         if existing_decisions.contains(&record.target_id) {
             excluded_existing_decisions += 1;
@@ -305,11 +357,16 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
     eval_items.sort_by(|a, b| {
         let a_clean = a.audit_flags.is_empty();
         let b_clean = b.audit_flags.is_empty();
-        b_clean.cmp(&a_clean)
+        b_clean
+            .cmp(&a_clean)
             .then_with(|| (b.token_count > 0).cmp(&(a.token_count > 0)))
             .then_with(|| b.document_count.cmp(&a.document_count))
             .then_with(|| b.token_count.cmp(&a.token_count))
-            .then_with(|| b.zipf.partial_cmp(&a.zipf).unwrap_or(std::cmp::Ordering::Equal))
+            .then_with(|| {
+                b.zipf
+                    .partial_cmp(&a.zipf)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })
             .then_with(|| a.record.target_id.cmp(&b.record.target_id))
             .then_with(|| a.record.display.cmp(&b.record.display))
     });
@@ -351,16 +408,26 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
         });
     }
 
-    fs::create_dir_all(&report_dir)
-        .map_err(|e| format!("Failed creating report directory {}: {}", report_dir.display(), e))?;
+    fs::create_dir_all(&report_dir).map_err(|e| {
+        format!(
+            "Failed creating report directory {}: {}",
+            report_dir.display(),
+            e
+        )
+    })?;
 
     let tsv_path = report_dir.join("top-1000.tsv");
     let jsonl_path = report_dir.join("top-1000.jsonl");
     let summary_path = report_dir.join("summary.json");
 
     // Write TSV
-    let mut tsv_file = File::create(&tsv_path)
-        .map_err(|e| format!("Failed creating TSV output at {}: {}", tsv_path.display(), e))?;
+    let mut tsv_file = File::create(&tsv_path).map_err(|e| {
+        format!(
+            "Failed creating TSV output at {}: {}",
+            tsv_path.display(),
+            e
+        )
+    })?;
     writeln!(
         tsv_file,
         "rank\ttarget_id\tsource_id\tsource_revision\tsource_lines\tform\tnormalized\tpart_of_speech\tflags\tmorphology\ttoken_count\tdocument_count\tzipf\taudit_flags\tdecision_status"
@@ -369,12 +436,29 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
     for r in &review_records {
         let pos_str = r.imported_metadata.part_of_speech.as_deref().unwrap_or("");
         let morph_str = r.imported_metadata.morphology.join(";");
-        let lines_str = r.source_lines.iter().map(|n| n.to_string()).collect::<Vec<_>>().join(";");
+        let lines_str = r
+            .source_lines
+            .iter()
+            .map(|n| n.to_string())
+            .collect::<Vec<_>>()
+            .join(";");
         let flags_joined = r.audit_flags.join(";");
 
-        let tc_str = if r.token_count > 0 { r.token_count.to_string() } else { "".to_string() };
-        let dc_str = if r.document_count > 0 { r.document_count.to_string() } else { "".to_string() };
-        let zipf_str = if r.zipf > 0.0 { format!("{:.2}", r.zipf) } else { "".to_string() };
+        let tc_str = if r.token_count > 0 {
+            r.token_count.to_string()
+        } else {
+            "".to_string()
+        };
+        let dc_str = if r.document_count > 0 {
+            r.document_count.to_string()
+        } else {
+            "".to_string()
+        };
+        let zipf_str = if r.zipf > 0.0 {
+            format!("{:.2}", r.zipf)
+        } else {
+            "".to_string()
+        };
 
         writeln!(
             tsv_file,
@@ -394,12 +478,18 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
             zipf_str,
             flags_joined,
             r.decision_status
-        ).map_err(|e| format!("Failed writing TSV record rank {}: {}", r.rank, e))?;
+        )
+        .map_err(|e| format!("Failed writing TSV record rank {}: {}", r.rank, e))?;
     }
 
     // Write JSONL
-    let mut jsonl_file = File::create(&jsonl_path)
-        .map_err(|e| format!("Failed creating JSONL output at {}: {}", jsonl_path.display(), e))?;
+    let mut jsonl_file = File::create(&jsonl_path).map_err(|e| {
+        format!(
+            "Failed creating JSONL output at {}: {}",
+            jsonl_path.display(),
+            e
+        )
+    })?;
 
     for r in &review_records {
         let json_line = serde_json::to_string(r)
@@ -424,8 +514,13 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(root_dir: P) -> Result<V
 
     let summary_json = serde_json::to_string_pretty(&summary)
         .map_err(|e| format!("Failed serializing summary JSON: {}", e))?;
-    fs::write(&summary_path, summary_json)
-        .map_err(|e| format!("Failed writing summary JSON at {}: {}", summary_path.display(), e))?;
+    fs::write(&summary_path, summary_json).map_err(|e| {
+        format!(
+            "Failed writing summary JSON at {}: {}",
+            summary_path.display(),
+            e
+        )
+    })?;
 
     Ok(summary)
 }

@@ -81,7 +81,9 @@ fn test_missing_frequencies_prerequisite_fails() {
 
     let gen_res = generate_vocabulary_review_batch(temp.path());
     assert!(gen_res.is_err());
-    assert!(gen_res.unwrap_err().contains("Corpus frequencies file missing"));
+    assert!(gen_res
+        .unwrap_err()
+        .contains("Corpus frequencies file missing"));
 }
 
 #[test]
@@ -189,7 +191,11 @@ fn test_audit_flag_join_and_ranking_priority() {
     assert_eq!(summary.batch_size, 2);
     assert_eq!(summary.clean_candidates_count, 1);
 
-    let jsonl_content = fs::read_to_string(temp.path().join("data/reports/vocabulary-review/top-1000.jsonl")).unwrap();
+    let jsonl_content = fs::read_to_string(
+        temp.path()
+            .join("data/reports/vocabulary-review/top-1000.jsonl"),
+    )
+    .unwrap();
     let lines: Vec<&str> = jsonl_content.lines().collect();
     assert_eq!(lines.len(), 2);
 
@@ -208,7 +214,9 @@ fn test_audit_flag_join_and_ranking_priority() {
 fn test_existing_decisions_status_aware() {
     let temp = TempDir::new().unwrap();
     let queue_dir = temp.path().join("data/review-queues/kurdish-hunspell-kmr");
-    let dec_dir = temp.path().join("data/review-decisions/kurdish-hunspell-kmr");
+    let dec_dir = temp
+        .path()
+        .join("data/review-decisions/kurdish-hunspell-kmr");
     let build_dir = temp.path().join("data/build");
     fs::create_dir_all(&queue_dir).unwrap();
     fs::create_dir_all(&dec_dir).unwrap();
@@ -246,9 +254,24 @@ fn test_existing_decisions_status_aware() {
     };
 
     let mut pf = File::create(&pool_file).unwrap();
-    writeln!(pf, "{}", serde_json::to_string(&make_cand("id_unreviewed", "peyv_unreviewed", 1)).unwrap()).unwrap();
-    writeln!(pf, "{}", serde_json::to_string(&make_cand("id_approved", "peyv_approved", 2)).unwrap()).unwrap();
-    writeln!(pf, "{}", serde_json::to_string(&make_cand("id_rejected", "peyv_rejected", 3)).unwrap()).unwrap();
+    writeln!(
+        pf,
+        "{}",
+        serde_json::to_string(&make_cand("id_unreviewed", "peyv_unreviewed", 1)).unwrap()
+    )
+    .unwrap();
+    writeln!(
+        pf,
+        "{}",
+        serde_json::to_string(&make_cand("id_approved", "peyv_approved", 2)).unwrap()
+    )
+    .unwrap();
+    writeln!(
+        pf,
+        "{}",
+        serde_json::to_string(&make_cand("id_rejected", "peyv_rejected", 3)).unwrap()
+    )
+    .unwrap();
 
     let dec_unreviewed = serde_json::json!({
         "schema_version": "review-decision-v1",
@@ -284,19 +307,36 @@ fn test_existing_decisions_status_aware() {
     writeln!(df, "{}", serde_json::to_string(&dec_rejected).unwrap()).unwrap();
 
     let excluded = load_existing_decision_target_ids(&dec_file).unwrap();
-    assert!(!excluded.contains("id_unreviewed"), "Unreviewed decision MUST NOT exclude candidate");
-    assert!(excluded.contains("id_approved"), "Approved decision MUST exclude candidate");
-    assert!(excluded.contains("id_rejected"), "Rejected decision MUST exclude candidate");
+    assert!(
+        !excluded.contains("id_unreviewed"),
+        "Unreviewed decision MUST NOT exclude candidate"
+    );
+    assert!(
+        excluded.contains("id_approved"),
+        "Approved decision MUST exclude candidate"
+    );
+    assert!(
+        excluded.contains("id_rejected"),
+        "Rejected decision MUST exclude candidate"
+    );
 
     let summary = generate_vocabulary_review_batch(temp.path()).unwrap();
     assert_eq!(summary.total_pool_candidates, 3);
     assert_eq!(summary.excluded_existing_decisions, 2);
     assert_eq!(summary.eligible_pending_candidates, 1);
 
-    let jsonl_content = fs::read_to_string(temp.path().join("data/reports/vocabulary-review/top-1000.jsonl")).unwrap();
-    let rec: serde_json::Value = serde_json::from_str(jsonl_content.lines().next().unwrap()).unwrap();
+    let jsonl_content = fs::read_to_string(
+        temp.path()
+            .join("data/reports/vocabulary-review/top-1000.jsonl"),
+    )
+    .unwrap();
+    let rec: serde_json::Value =
+        serde_json::from_str(jsonl_content.lines().next().unwrap()).unwrap();
     assert_eq!(rec["target_id"], "id_unreviewed");
-    assert_eq!(rec["source_revision"], "88131d6878ef7fa3ee114aa554adc385ff85b44c");
+    assert_eq!(
+        rec["source_revision"],
+        "88131d6878ef7fa3ee114aa554adc385ff85b44c"
+    );
     assert_eq!(rec["source_lines"], serde_json::json!([1]));
 }
 
@@ -304,7 +344,9 @@ fn test_existing_decisions_status_aware() {
 fn test_no_mutation_invariants_tempdir() {
     let temp = TempDir::new().unwrap();
     let queue_dir = temp.path().join("data/review-queues/kurdish-hunspell-kmr");
-    let dec_dir = temp.path().join("data/review-decisions/kurdish-hunspell-kmr");
+    let dec_dir = temp
+        .path()
+        .join("data/review-decisions/kurdish-hunspell-kmr");
     let rev_dir = temp.path().join("data/reviewed");
     let build_dir = temp.path().join("data/build");
     fs::create_dir_all(&queue_dir).unwrap();
@@ -379,7 +421,16 @@ fn test_no_mutation_invariants_tempdir() {
     let sha_dec_after = compute_file_sha256(&dec_path);
     let sha_lex_after = compute_file_sha256(&lex_path);
 
-    assert_eq!(sha_queue_before, sha_queue_after, "hunspell-only.jsonl must not be mutated!");
-    assert_eq!(sha_dec_before, sha_dec_after, "decisions.jsonl must not be mutated!");
-    assert_eq!(sha_lex_before, sha_lex_after, "data/reviewed/lexicon.jsonl must not be mutated!");
+    assert_eq!(
+        sha_queue_before, sha_queue_after,
+        "hunspell-only.jsonl must not be mutated!"
+    );
+    assert_eq!(
+        sha_dec_before, sha_dec_after,
+        "decisions.jsonl must not be mutated!"
+    );
+    assert_eq!(
+        sha_lex_before, sha_lex_after,
+        "data/reviewed/lexicon.jsonl must not be mutated!"
+    );
 }

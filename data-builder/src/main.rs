@@ -623,10 +623,19 @@ fn main() {
                 Ok(summary) => {
                     println!("⚡ VOCABULARY REVIEW BATCH GENERATED SUCCESSFULLY!");
                     println!("  Total Pool Candidates: {}", summary.total_pool_candidates);
-                    println!("  Excluded Decisions:    {}", summary.excluded_existing_decisions);
-                    println!("  Eligible Pending:      {}", summary.eligible_pending_candidates);
+                    println!(
+                        "  Excluded Decisions:    {}",
+                        summary.excluded_existing_decisions
+                    );
+                    println!(
+                        "  Eligible Pending:      {}",
+                        summary.eligible_pending_candidates
+                    );
                     println!("  Batch Size:            {}", summary.batch_size);
-                    println!("  Clean Candidates:      {}", summary.clean_candidates_count);
+                    println!(
+                        "  Clean Candidates:      {}",
+                        summary.clean_candidates_count
+                    );
                     println!("  Corpus Matched:        {}", summary.corpus_matched_count);
                     println!("  Output TSV:            {}", summary.output_tsv);
                     println!("  Output JSONL:          {}", summary.output_jsonl);
