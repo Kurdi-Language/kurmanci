@@ -159,13 +159,16 @@ pub fn load_corpus_frequencies<P: AsRef<Path>>(freq_path: P) -> Result<BTreeMap<
 
 /// Loads audit flags across all expected audit queues in `data/review-queues/kurdish-hunspell-kmr/`.
 ///
-/// Fails loudly on malformed JSON with filename, line number, and parse error.
+/// Fails if any expected audit queue file is missing or if JSON parsing fails.
 pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String, BTreeSet<String>>, String> {
     let dir = queues_dir.as_ref();
     let mut flags_map: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
 
     if !dir.exists() {
-        return Ok(flags_map);
+        return Err(format!(
+            "Required audit queues directory missing at '{}'. Run 'cargo run -p kurmanci-data-builder -- generate-review-queues kurdish-hunspell-kmr' to regenerate review queues.",
+            dir.display()
+        ));
     }
 
     let queue_flag_specs = [
@@ -188,7 +191,10 @@ pub fn load_audit_flags<P: AsRef<Path>>(queues_dir: P) -> Result<BTreeMap<String
     for (filename, flag_name) in queue_flag_specs {
         let path = dir.join(filename);
         if !path.exists() {
-            continue;
+            return Err(format!(
+                "Required audit queue file missing at '{}'. Run 'cargo run -p kurmanci-data-builder -- generate-review-queues kurdish-hunspell-kmr' to regenerate review queues.",
+                path.display()
+            ));
         }
 
         let file = File::open(&path)
