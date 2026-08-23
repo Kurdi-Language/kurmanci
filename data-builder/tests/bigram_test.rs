@@ -1,4 +1,4 @@
-//! Unit and Integration Tests for Milestone 3A Bigram Language Model,
+//! Unit and Integration Tests for Bigram Language Model,
 //! Sentence Segmentation, Binary Pack v3 with Lexicon Indices, Engine predict_next API,
 //! and 2-Pass Pipeline Determinism.
 

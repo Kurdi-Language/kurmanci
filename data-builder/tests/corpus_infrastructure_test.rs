@@ -1,4 +1,4 @@
-//! Integration tests for Milestone 3C1: Corpus Infrastructure & Deterministic Partitioning.
+//! Integration tests for Corpus Infrastructure & Deterministic Partitioning.
 
 use data_builder_lib::corpus::importer::{CanonicalDocumentRecord, CanonicalImportManifest};
 use data_builder_lib::corpus::partition::PartitionDocumentRecord;

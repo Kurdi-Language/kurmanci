@@ -2,55 +2,60 @@
 
 Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
 
-## Top-Level Product Priorities
+## Capabilities Overview
 
-### Product Quality Track
-- **Core Vocabulary Expansion (1,000+ words)**: Active
-- **Realistic Evaluation Benchmark (200–500 cases)**: Active
-- **Correction & Suggestion Ranking Quality**: Planned (following initial benchmark expansion)
-
-### Platform Integration Track
-- **Integration-Ready Engine API (5A)**: Completed
-- **Stable C ABI & FFI Bindings (5B)**: Completed
-- **Repository-Local Swift Wrapper (5C.1)**: Completed
-- **Distributable Apple SDK & XCFramework (5C.2)**: Active — Implemented in this change; pending merge
-- **Kotlin/Android SDK & AAR Distribution (5D)**: Next
-- **iOS & Android Reference Keyboards**: Planned
-- **Mobile Runtime Performance & Benchmarks**: Planned
+The platform currently provides:
+- **Rust Core Engine** (`kurmanci-engine`): Fast Trie autocomplete, weighted edit distance, diacritic-sensitive candidate ranking, and n-gram context prediction.
+- **Data Compiler & Pipeline** (`kurmanci-data-builder`): Reproducible binary language pack compilation (`lexicon.bin`, format v4), corpus ingestion, and deterministic partitioning.
+- **Lexicon & Evaluation Infrastructure**: Rule-driven review queue generation, human decision validation, multi-pack policy staging, and tri-pack evaluation comparison engine.
+- **Public Native Interfaces**: High-level thread-safe Rust API and panic-safe C99/C++11 ABI (`kurmanci-ffi`).
+- **Apple Integration**: SwiftPM package distribution and precompiled Apple XCFramework (`KurmanciFFI.xcframework`).
+- **Android Integration**: Idiomatic Kotlin SDK (`org.kurmanci.KurmanciEngine`), JNI native libraries, cross-compiled ABIs, AAR packaging, and Maven Central release (`io.github.ferhatguneri:kurmanci-android`).
 
 ---
 
-## Detailed Platform Capabilities Roadmap
+## Forward-Looking Product Priorities
 
-| Feature / Milestone | Status | Description |
-|---|---|---|
-| **Deterministic Language-Pack Pipeline** | Completed | Reproducible binary compiler (`data-builder`), zero-copy pack encoding, and SHA-256 manifest verification. |
-| **Deterministic Hunspell Importer** | Completed | Parsed preserved Hunspell .dic dataset into provenanced lexicon JSONL and reports (.aff expansion remains planned). |
-| **Lexical Data Quality Audit** | Completed | 15-report deterministic quality audit with importer cross-check, Unicode analysis, conflict grouping, suspicious entry detection, and manual-seed comparison. Verdict A — suitable for controlled evaluation only. |
-| **Typo & Keyboard Distance Model** | Completed | Weighted Damerau-Levenshtein edit distance with Kurmancî diacritic penalties. |
-| **Word & Document Frequencies** | Experimental | Engineering implemented; linguistic validation pending. Frequency pipeline (`import-corpus`, `build-frequencies`) and frequency table generation. Disabled in controlled packs (`model_profile = "none"`). |
-| **Frequency-Aware Suggestion Ranking** | Experimental | Engineering implemented; linguistic validation pending. Fixed-point Zipf (`zipf_milli`) in binary pack v2 and `--explain` CLI. Disabled in controlled packs (`model_profile = "none"`). |
-| **Deterministic Bigram Language Model** | Experimental | Engineering implemented; linguistic validation pending. Sentence-isolated bigram extraction and binary pack v3 indices. Disabled in controlled packs (`model_profile = "none"`). |
-| **Deterministic Trigrams & Backoff Prediction** | Experimental | Engineering implemented; linguistic validation pending. Trigram model, binary pack v4 indices, and CLI hard backoff engine API. Disabled in controlled packs (`model_profile = "none"`). |
-| **Corpus Infrastructure & Partitioning (3C1)** | Completed | Format-sensitive registry validation, canonical JSONL document ingestion, atomic sibling-staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning. |
-| **Controlled Review Infrastructure (4A.1)** | Completed | Length-prefixed u64 SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision store validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`). |
-| **Controlled Pack Policy & Builds (4A.2)** | Completed | `pack-policy.toml` loader, `seed`, `reviewed`, and `experimental-full` multi-pack builds, model-profile separation (`model_profile = "none"`), pack manifests, and licensing attribution. |
-| **Evaluation Schema & Workflow (4B.1)** | Completed | Typed benchmark schema (`benchmark-case-v1`), length-prefixed domain-separated SHA-256 `case_id` generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`. |
-| **Three-Pack Comparison Engine (4B.2)** | Completed | Deterministic comparison engine (`evaluate-packs`) simultaneously evaluates `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`). |
-| **Benchmark Review Governance (4B.3A)** | Completed | Reviewer/date validation, metadata-only promotion semantics, filesystem snapshot transition validation, evidence standards, governance, tests, and PR-scoped benchmark-data protection. Added no benchmark cases. |
-| **Initial Human-Reviewed Dataset (4B.3B)** | Completed | Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules. |
-| **Pack Quality Assessment & Lexicon Enrichment (4C)** | Completed | Initial controlled-pack quality assessment (4C.1), 4C.2A regression review packet (completed), 4C.2B human lexical review guide (completed), 4C.2C initial human review and triage (completed), 4C.3 reviewed-pack rebuild and re-evaluation (completed), and explicit default-pack decision (4C.4). |
-| **Integration-Ready Engine API (5A)** | Completed | High-level, thread-safe, immutable public Rust API (`KurmanciEngine`), typed errors (`EngineError`), `PackInfo` metadata, options, consolidated DTOs (`SuggestionResult`, `Prediction`), CLI migration, benchmarks, and embedding example. |
-| **Stable C ABI & FFI Bindings (5B)** | Completed | Stable C ABI (`kurmanci-ffi`), panic containment (`catch_unwind`), C99/C++11 header (`kurmanci.h`), status codes (`kmr_status`), C smoke test, and Rust ABI unit test suite. |
-| **Repository-Local Swift Wrapper Foundation (5C.1)** | Completed | Safe Swift API validated on macOS and Linux against a locally built `kurmanci-ffi` library (`swift/` Package), typed Swift errors (`KurmanciError`), Swift-owned DTOs, limit validation, `defer` handle cleanup, thread safety (`@unchecked Sendable`), embedded NUL validation, non-empty prediction test fixture, `swift test` suite, and command-line example. |
-| **Distributable Apple SDK & XCFramework Packaging (5C.2)** | Active | One-command reproducible XCFramework build (`scripts/apple/build-xcframework.sh`), multi-target Apple static archives (`aarch64-apple-darwin`, `x86_64-apple-darwin`, `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`), thin-slice deployment target verification (`verify-xcframework.sh`), public `kmr_*` C ABI symbol verification, versioned release zip archives (`create-release-archive.sh`), remote SwiftPM distribution package generation (`generate-release-package.sh`), C module import abstraction (`#if canImport`), macOS & iOS Xcode consumer application test hosts (`integration/apple/`), and isolated Rust-free CI jobs — implemented in this change; pending merge. |
-| **Kotlin/Android SDK & AAR Distribution (5D)** | Next | JNI bindings, native AAR packaging, JVM wrapper library, and Android integration test suite. |
-| **Train-Only Model Binding (3C2)** | Planned | Binding model builders to train partition only, provenance configuration hashes, and evaluation profile pack builds. |
-| **iOS Reference Keyboard** | Planned | Custom iOS keyboard extension using `ku-Latn` layout and native engine bindings. |
-| **Android Reference Keyboard** | Planned | Custom Android IME keyboard layout implementation. |
+### Language Data
+- Substantially expand the reviewed core vocabulary.
+- Integrate additional properly licensed lexical sources.
+- Improve corpus coverage and source/provenance evidence.
+- Improve handling of variants where supported by reviewed data.
+
+### Evaluation & Benchmarks
+- Grow the human-reviewed benchmark toward 200–500 useful cases.
+- Expand typo, diacritic, completion, preservation, ranking, morphology, and keyboard-error coverage.
+- Use benchmark failures to drive ranking and correction improvements.
+
+### Core Engine
+- Correction, autocomplete, and ranking improvements driven by evaluation.
+- Morphology and diacritic handling improvements.
+- Performance and memory footprint optimization.
+
+### Public APIs
+- Preserve stable Rust API and C ABI contracts.
+- Evolve APIs only where concrete integration requirements justify it.
+
+### Apple Integration
+- Maintain SwiftPM and XCFramework distribution.
+- Develop reference iOS keyboard integration.
+
+### Android Integration
+- Maintain Kotlin SDK, JNI bindings, and Maven Central distribution.
+- Develop reference Android keyboard/IME integration.
+
+### Platform Integrations
+- System spell-check and text-service integration.
+
+### Performance
+- Real-device latency and memory measurement across supported mobile ABIs.
+- Production hardening and load efficiency.
+
+### Future Platform Integrations
+- WebAssembly client bindings where appropriate.
 
 ---
 
-### Contributing & Feedback
+## Contributing & Feedback
 
 Suggestions and technical proposals are welcome via [GitHub Issues](https://github.com/Kurdi-Language/kurmanci/issues).

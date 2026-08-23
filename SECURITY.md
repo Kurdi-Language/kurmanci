@@ -8,7 +8,7 @@ The Kurmancî core engine (`kurmanci-engine`) and compiler (`kurmanci-data-build
 2. **Local Transient Memory**: Input strings passed to query APIs (`suggest`, `contains`) are processed transiently in memory for candidate generation and immediately discarded.
 3. **No Automatic Persistence**: The core engine library does not write user input or query logs to disk.
 
-Mobile keyboard integrations, personal dictionaries, and platform-specific privacy guarantees are not yet implemented and are planned for future milestones.
+Mobile keyboard integrations, personal dictionaries, and platform-specific privacy guarantees are planned for future platform updates.
 
 ## Supported Versions
 

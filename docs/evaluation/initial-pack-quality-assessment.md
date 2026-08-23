@@ -1,12 +1,12 @@
 # Initial Controlled-Pack Quality Assessment
 
-Authoritative record of the first three-pack evaluation run on the Kurmancî (`ku-Latn`) language platform, closing Milestone 4B.3B and establishing the baseline for Milestone 4C (*Pack Quality Assessment and Reviewed Lexicon Enrichment*).
+Authoritative record of the first three-pack evaluation run on the Kurmancî (`ku-Latn`) language platform, establishing the baseline for pack quality assessment and reviewed lexicon enrichment.
 
 ---
 
 ## Executive Summary
 
-The controlled evaluation pipeline is operational, and the first authoritative benchmark contains 20 human-reviewed cases. The `seed` and `reviewed` packs are currently byte-identical and behaviorally identical because zero external lexical entries have been approved in `reviewed` yet. On this small, seed-oriented benchmark, the `experimental-full` pack produced no measured improvements and four candidate-ranking regressions, while introducing no false acceptance in the single eligible negative case. No authoritative no-candidate behavior was evaluated. The evidence is insufficient to establish production linguistic readiness or to promote a new default pack. `seed` remains the default pack while Milestone 4C expands benchmark coverage and performs targeted human review of imported lexical entries.
+The controlled evaluation pipeline is operational, and the first authoritative benchmark contains 20 human-reviewed cases. The `seed` and `reviewed` packs are currently byte-identical and behaviorally identical because zero external lexical entries have been approved in `reviewed` yet. On this small, seed-oriented benchmark, the `experimental-full` pack produced no measured improvements and four candidate-ranking regressions, while introducing no false acceptance in the single eligible negative case. No authoritative no-candidate behavior was evaluated. The evidence is insufficient to establish production linguistic readiness or to promote a new default pack. `seed` remains the default pack while performing targeted human review of imported lexical entries.
 
 ---
 
@@ -149,17 +149,17 @@ The 20-case benchmark establishes workflow validity, but has major structural li
 
 ---
 
-## 6. Milestone 4C Structure & Default-Pack Decision
+## 6. Pack Quality Assessment Structure & Default-Pack Decision
 
-### Milestone 4C: Pack Quality Assessment & Reviewed Lexicon Enrichment
+### Pack Quality Assessment & Reviewed Lexicon Enrichment
 
-- **4C.1 Initial Pack Quality Assessment** (*Completed by this document*): Established baseline comparison across `seed`, `reviewed`, and `experimental-full`.
-- **4C.2 Benchmark-Driven Lexical Review** (*Next Active Stage*): For each observed benchmark gap or regression, identify the exact imported entries affecting the result. Human-review those entries for lexical validity and provenance, and separately determine whether any remaining ranking problem requires an engine-policy change. Do not reject a linguistically valid entry solely because it ranks ahead of the benchmark target.
-- **4C.3 Reviewed-Pack Rebuild & Re-evaluation**: Rebuild `reviewed` pack after targeted human decisions, rerun authoritative evaluation, and verify zero regressions against `seed`.
-- **4C.4 Explicit Default-Pack Decision**: Submit a dedicated policy PR presenting benchmark evidence before considering any change to `default_pack`.
+- **Initial Pack Quality Assessment**: Established baseline comparison across `seed`, `reviewed`, and `experimental-full`.
+- **Benchmark-Driven Lexical Review**: For each observed benchmark gap or regression, identify the exact imported entries affecting the result. Human-review those entries for lexical validity and provenance, and separately determine whether any remaining ranking problem requires an engine-policy change. Do not reject a linguistically valid entry solely because it ranks ahead of the benchmark target.
+- **Reviewed-Pack Rebuild & Re-evaluation**: Rebuild `reviewed` pack after targeted human decisions, rerun authoritative evaluation, and verify zero regressions against `seed`.
+- **Explicit Default-Pack Decision**: Submit a dedicated policy PR presenting benchmark evidence before considering any change to `default_pack`.
 
 ### Default Pack Recommendation
 
 `default_pack = seed` **remains the default policy**.
 
-No production linguistic readiness claim is made. `seed` provides a clean, zero-regression baseline while Milestone 4C performs targeted human review of imported lexical entries.
+No production linguistic readiness claim is made. `seed` provides a clean, zero-regression baseline while performing targeted human review of imported lexical entries.

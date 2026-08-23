@@ -1,6 +1,6 @@
 # Controlled Lexicon Review Infrastructure (`review-decision-v1`)
 
-This document specifies the design, data structures, and operational rules for the Kurmancî controlled lexicon review infrastructure (Milestone 4A.1).
+This document specifies the design, data structures, and operational rules for the Kurmancî controlled lexicon review infrastructure.
 
 ## Architecture Overview
 
@@ -17,7 +17,7 @@ Audit (audit-lexicon)
 Review Infrastructure (generate-review-queues / validate-review-decisions)
       │
       ▼
-Controlled Pack Policy & Builds (Milestone 4A.2)
+Controlled Pack Policy & Builds
 ```
 
 ## Data Boundaries

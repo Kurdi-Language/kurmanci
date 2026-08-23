@@ -1,4 +1,4 @@
-name: Release Kurmancî Android SDK to Maven Central (5E)
+name: Maven Central Release
 
 on:
   push:

@@ -1,9 +1,9 @@
-# Kurmancî Swift SDK & Apple XCFramework Distribution (Milestone 5C.1 & 5C.2)
+# Kurmancî Swift SDK & Apple XCFramework Distribution
 
 `Kurmanci` is an idiomatic Swift wrapper package built on top of the stable Kurmancî C ABI (`kurmanci-ffi`).
 
-- **Milestone 5C.1**: Repository-local Swift wrapper foundation (`swift/Package.swift`) validated on macOS and Linux against local native builds (`CKurmanci`).
-- **Milestone 5C.2**: Zero-Rust-dependency Apple SDK distribution (`dist/swift-package/Package.swift`) precompiled as an XCFramework for macOS (arm64 & x86_64), iOS Device (arm64), and iOS Simulator (arm64 & x86_64) published to `Kurdi-Language/kurmanci-swift`.
+- **Repository-Local Swift Wrapper**: Source package foundation (`swift/Package.swift`) validated on macOS and Linux against local native builds (`CKurmanci`).
+- **Precompiled Apple SDK Distribution**: Zero-Rust-dependency Apple SDK distribution (`dist/swift-package/Package.swift`) precompiled as an XCFramework for macOS (arm64 & x86_64), iOS Device (arm64), and iOS Simulator (arm64 & x86_64) published to `Kurdi-Language/kurmanci-swift`.
 
 ---
 
@@ -96,7 +96,7 @@ The monorepo provides one-command automated scripts under `scripts/apple/`:
 
 ---
 
-## 4. Local Development & Source Library Commands (5C.1)
+## 4. Local Development & Source Library Commands
 
 For monorepo development and Linux/macOS source testing against a local `cargo build -p kurmanci-ffi`:
 

@@ -13,7 +13,7 @@ The evaluation infrastructure defines the benchmark schema, canonical case ident
                                               ▼
 ┌───────────────────────────────┐     ┌───────────────┐     ┌───────────────────────────────┐
 │  evaluation/spelling/         ├──►  │  Validator    ├──►  │  data/reports/                │
-│  reviewed-cases.jsonl         │     │ (4B.1 Schema) │     │  evaluation-provenance/       │
+│  reviewed-cases.jsonl         │     │ (Benchmark Schema) │     │  evaluation-provenance/       │
 └───────────────────────────────┘     └───────────────┘     └───────────────────────────────┘
 ```
 

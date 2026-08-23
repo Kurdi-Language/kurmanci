@@ -1,4 +1,4 @@
-//! Controlled Lexicon Review Infrastructure (Milestone 4A.1) & Vocabulary Review Batch Generator.
+//! Controlled Lexicon Review Infrastructure & Vocabulary Review Batch Generator.
 
 pub mod merger;
 pub mod queues;

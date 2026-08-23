@@ -1,4 +1,4 @@
-//! Integration tests for Milestone 3B: Deterministic Trigram Language Model & Pack v4.
+//! Integration tests for Deterministic Trigram Language Model & Pack v4.
 
 use data_builder_lib::corpus::ngrams::{
     build_corpus_bigrams, build_corpus_ngrams, build_corpus_trigrams, split_into_sentences,

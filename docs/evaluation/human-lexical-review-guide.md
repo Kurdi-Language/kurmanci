@@ -1,4 +1,4 @@
-# 4C.2B Human Lexical Review Guide
+# Human Lexical Review Guide
 
 Operational procedure for human reviewers conducting genuine linguistic review of imported Kurmancî lexical entries that rank ahead of expected candidates across the four `experimental-full` regressions.
 
@@ -6,9 +6,9 @@ Operational procedure for human reviewers conducting genuine linguistic review o
 
 ## 1. Purpose & Non-Authoritative Status
 
-- **Milestone Stage**: `Milestone 4C.2B (Human Lexical Review Guide - Prepared; Human Review Pending)`
+- **Document Purpose**: Guidance for human review of lexical regression candidates.
 - **Comparison Baseline SHA**: `7db99ee676bf81c8db25df57ee0fbb7dca74b2a0`
-- **Canonical Worksheet**: `evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.csv`
+- **Canonical Worksheet**: `evaluation/spelling/review-worksheets/regression-interfering-entries.csv`
 - **Authoritative Status**: **Non-authoritative procedural guide**. This document provides review instructions and schema conversion rules. It does not make any linguistic decisions, approve/reject entries, populate reviewer metadata, or edit `data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl`.
 
 The CSV worksheet remains the single canonical source of truth for mechanical metadata, line numbers, entry IDs, provenance, and ranking positions.

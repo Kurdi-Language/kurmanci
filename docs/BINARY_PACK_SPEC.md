@@ -6,12 +6,12 @@ This document formally specifies the binary language pack format (`lexicon.bin`)
 
 ## Pack Format Version History
 
-| Version | Milestone | Key Additions |
+| Version | Format Capability | Key Additions |
 | :--- | :--- | :--- |
-| **v1** | Milestone 1 | Initial binary format storing word, lemma, normalized form, POS, frequency, status, regions, and sources. |
-| **v2** | Milestone 2E | Added `FrequencyMetadata` (`token_count`, `document_count`, `zipf_milli`) to Lexicon entries. |
-| **v3** | Milestone 3A | Added **Bigram Section** storing context-aware next-word predictions using **lexicon indices** (`u32 LE`). Zero duplicate strings. |
-| **v4** | Milestone 3B | Appended **Trigram Section** storing two-word context predictions using **lexicon indices** (`u32 LE`). Strict hard backoff support. |
+| **v1** | Initial Binary Format | Stores word, lemma, normalized form, POS, frequency, status, regions, and sources. |
+| **v2** | Frequency Metadata | Added `FrequencyMetadata` (`token_count`, `document_count`, `zipf_milli`) to Lexicon entries. |
+| **v3** | Bigram Language Model | Added **Bigram Section** storing context-aware next-word predictions using **lexicon indices** (`u32 LE`). Zero duplicate strings. |
+| **v4** | Trigram Language Model | Appended **Trigram Section** storing two-word context predictions using **lexicon indices** (`u32 LE`). Strict hard backoff support. |
 
 ---
 

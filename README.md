@@ -6,34 +6,23 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 
 ---
 
-## 🌟 Capabilities & Roadmap
+## 🌟 Platform Capabilities
 
-### Current Capabilities
-- [x] **Rust Core Engine** (`kurmanci-engine`): Fast Trie prefix autocomplete, weighted Damerau-Levenshtein distance, and diacritic-sensitive candidate ranking (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
-- [x] **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`, pack format v4) with embedded SHA-256 payload validation and a deterministic release manifest.
-- [x] **CLI Demonstration** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration and `predict-next` context prediction.
-- [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
-- [x] **Corpus Infrastructure & Partitioning** *(Milestone 3C1)*: Format-sensitive registry validation, canonical JSONL document ingestion, atomic staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning.
-- [x] **Controlled Review Infrastructure** *(Milestone 4A.1)*: Length-prefixed u64 SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
-- [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
-- [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
-- [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
-- [x] **Benchmark Review Governance** *(Milestone 4B.3A - Completed)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone added no benchmark cases.
-- [x] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Completed)*: Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules.
-- [x] **Pack Quality Assessment & Lexicon Enrichment** (*Milestone 4C - Completed*): Initial controlled-pack quality assessment (`docs/evaluation/initial-pack-quality-assessment.md`), targeted human review of imported lexical entries, and benchmark-driven pack enrichment.
-
-
-### Experimental & Integration Capabilities
-> [!NOTE]
-> **Statistical & Language Models Status**: Engineering implemented; linguistic validation pending.
-> Frequency tables, bigrams, and trigrams are experimental. They are disabled in current production packs (`model_profile = "none"`).
-
-- [x] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python.
-- [x] **Distributable Apple SDK & XCFramework Packaging** (*Milestone 5C - Released*): Precompiled XCFramework packaging (`KurmanciFFI.xcframework`) and SwiftPM package distribution (`Kurdi-Language/kurmanci-swift` v0.1.0).
-- [x] **Android SDK & JNI Packaging** (*Milestone 5D - Completed*): Idiomatic Kotlin SDK (`org.kurmanci.KurmanciEngine`), JNI bridge (`libkurmanci_jni.so`), cross-compiled native ABIs (`arm64-v8a`, `armeabi-v7a`, `x86_64`), and AAR packaging.
-- [x] **Public Android Maven Central Distribution** (*Milestone 5E - Release-Ready*): Android SDK implemented; Maven Central distribution release-ready (`io.github.ferhatguneri:kurmanci-android:0.1.0`).
-- [ ] **Mobile Keyboards & Text Services** (*Planned*): Custom reference keyboard extensions for iOS and Android.
-- [ ] **WebAssembly Bindings** (*Planned*): Browser and WebAssembly client library target.
+Kurmancî (`ku-Latn`) language infrastructure providing:
+- **Lexicon & Spell Checking**: Fast Trie prefix autocomplete, weighted Damerau-Levenshtein distance, and diacritic-sensitive candidate ranking (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
+- **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`, pack format v4) with embedded SHA-256 payload validation and a deterministic release manifest.
+- **Context & Next-Word Prediction**: N-gram statistical models (bigram and trigram backoff prediction) embedded in binary language packs.
+- **Provenanced Language Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
+- **Corpus Ingestion & Deterministic Partitioning**: Format-sensitive registry validation, canonical JSONL document ingestion, atomic staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning.
+- **Controlled Lexicon Review**: Length-prefixed u64 SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
+- **Controlled Pack Policy & Builds**: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
+- **Reproducible Multi-Pack Evaluation**: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), pairwise classification reports (`data/reports/pack-comparison/`), and three-pack comparison engine (`evaluate-packs`).
+- **Human-Reviewed Benchmark Datasets**: Reviewed benchmark cases promoted following human verification, snapshot transition validation, and metadata-only promotion rules.
+- **Pack Quality Assessment**: Initial controlled-pack quality assessment (`docs/evaluation/initial-pack-quality-assessment.md`), targeted human review of imported lexical entries, and benchmark-driven pack enrichment.
+- **Stable Rust API & C ABI**: High-level thread-safe Rust API (`kurmanci-engine`) and panic-safe C99/C++11 interface (`kurmanci-ffi`, `ffi/include/kurmanci.h`).
+- **Apple Swift SDK & XCFramework Distribution**: Precompiled XCFramework packaging (`KurmanciFFI.xcframework`) and SwiftPM package distribution (`Kurdi-Language/kurmanci-swift` v0.1.0).
+- **Android SDK & JNI Packaging**: Idiomatic Kotlin SDK (`org.kurmanci.KurmanciEngine`), JNI bridge (`libkurmanci_jni.so`), cross-compiled native ABIs (`arm64-v8a`, `armeabi-v7a`, `x86_64`), AAR packaging, and Maven Central distribution (`io.github.ferhatguneri:kurmanci-android:0.1.0`).
+- **CLI Demonstration Tool** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration and `predict-next` context prediction.
 
 ---
 
@@ -60,7 +49,7 @@ kurmanci/
 ├── LICENSE                   # Apache License 2.0
 ├── NOTICE                    # Copyright & attribution notice
 ├── README.md                 # Project overview and quickstart
-├── ROADMAP.md                # Development roadmap & feature milestones
+├── ROADMAP.md                # Development roadmap & capability priorities
 ├── SECURITY.md               # Offline security guarantees
 └── rust-toolchain.toml       # Pinned Rust toolchain (1.85.0)
 ```
@@ -89,7 +78,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 ### Compiling Language Packs (`data-builder`)
 
 ```bash
-# Build controlled language packs (Milestone 4A.2)
+# Build controlled language packs
 cargo run -p kurmanci-data-builder -- build-pack seed
 cargo run -p kurmanci-data-builder -- build-pack reviewed
 cargo run -p kurmanci-data-builder -- build-pack experimental-full
@@ -149,7 +138,7 @@ KurmanciExample data/build/packs/seed/lexicon.bin
 
 ## 🎯 Frequency-Aware Suggestion Ranking
 
-Milestone 2E integrates frequency metadata into the binary pack (`PACK_VERSION = 2`) and candidate suggestion ranking.
+Frequency metadata is integrated into the binary pack (`PACK_VERSION = 2`) and candidate suggestion ranking.
 
 ### 1. Frequency-to-Lexicon Join
 During `cargo run -p kurmanci-data-builder -- build`, frequency records from `data/build/frequencies.jsonl` are joined to canonical lexicon entries by exact normalized form. Zipf values are stored as fixed-point integers (`zipf_milli`, e.g. `4.823` -> `4823`). Missing entries default to zero values.

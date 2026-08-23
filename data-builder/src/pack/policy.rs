@@ -96,7 +96,7 @@ impl PackPolicyConfig {
         for (pack_id, def) in &self.packs {
             if def.model_profile != "none" {
                 return Err(format!(
-                    "Pack '{}' specifies model_profile '{}' (only 'none' supported in 4A.2)",
+                    "Pack '{}' specifies model_profile '{}' (only 'none' supported currently)",
                     pack_id, def.model_profile
                 ));
             }

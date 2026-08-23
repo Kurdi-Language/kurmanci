@@ -152,15 +152,15 @@ jobs:
           diff /tmp/ci-check/comp1/checksums.txt /tmp/ci-check/comp2/checksums.txt
           echo "Three-pack comparison report 2-pass determinism verification passed."
 
-      - name: Verify 4C Review Infrastructure & 4C.3 Reviewed Pack
+      - name: Verify Review Infrastructure & Reviewed Pack
         run: |
-          python3 scripts/verify_4c2a_regression_worksheet.py
-          python3 scripts/verify_4c2b_review_guide.py
-          python3 scripts/verify_4c3_reviewed_pack.py --candidate-root . --compare-root-a /tmp/ci-check/pass1_packs --compare-root-b /tmp/ci-check/pass2_packs
-          python3 scripts/verify_4c3_reviewed_pack.py --self-test
+          python3 scripts/verify_regression_worksheet.py
+          python3 scripts/verify_human_lexical_review_guide.py
+          python3 scripts/verify_reviewed_pack.py --candidate-root . --compare-root-a /tmp/ci-check/pass1_packs --compare-root-b /tmp/ci-check/pass2_packs
+          python3 scripts/verify_reviewed_pack.py --self-test
 
 
-      - name: Run 3C1 Pipeline (First Pass)
+      - name: Run Corpus Ingestion Pipeline (First Pass)
 
         run: |
           cargo run -p kurmanci-data-builder -- import-all-corpora
@@ -168,24 +168,24 @@ jobs:
           cargo run -p kurmanci-data-builder -- audit-corpora
           cargo run -p kurmanci-data-builder -- partition-corpora
 
-      - name: Record 3C1 First Pass Checksums
+      - name: Record Corpus Ingestion First Pass Checksums
         run: |
           mkdir -p /tmp/ci-check/c31_pass1
           find data/imported-canonical data/build/corpus-partitions data/reports/corpus-inventory data/reports/corpus-quality data/reports/corpus-partitions -type f -exec sha256sum {} + | sort > /tmp/ci-check/c31_pass1/checksums.txt
 
-      - name: Run 3C1 Pipeline (Second Pass - Determinism Verification)
+      - name: Run Corpus Ingestion Pipeline (Second Pass - Determinism Verification)
         run: |
           cargo run -p kurmanci-data-builder -- import-all-corpora
           cargo run -p kurmanci-data-builder -- inventory-corpora
           cargo run -p kurmanci-data-builder -- audit-corpora
           cargo run -p kurmanci-data-builder -- partition-corpora
 
-      - name: Verify 3C1 Determinism
+      - name: Verify Corpus Ingestion Determinism
         run: |
           mkdir -p /tmp/ci-check/c31_pass2
           find data/imported-canonical data/build/corpus-partitions data/reports/corpus-inventory data/reports/corpus-quality data/reports/corpus-partitions -type f -exec sha256sum {} + | sort > /tmp/ci-check/c31_pass2/checksums.txt
           diff /tmp/ci-check/c31_pass1/checksums.txt /tmp/ci-check/c31_pass2/checksums.txt
-          echo "Milestone 3C1 build determinism verification passed."
+          echo "Corpus ingestion build determinism verification passed."
 
       - name: Run Frequency Builder (First Pass)
         run: cargo run -p kurmanci-data-builder -- build-frequencies
@@ -367,7 +367,7 @@ jobs:
           cargo run -p kurmanci-cli -- predict-next ez ji --explain
 
   swift-macos:
-    name: Local Swift Package on macOS (5C.1)
+    name: Swift Package Consumer
     runs-on: macos-latest
 
     steps:
@@ -388,7 +388,7 @@ jobs:
         run: |
           cmp ffi/include/kurmanci.h swift/Sources/CKurmanci/include/kurmanci.h
 
-      - name: Test local Swift package (5C.1)
+      - name: Test local Swift package
         run: |
           DYLD_LIBRARY_PATH="$PWD/target/debug" swift test --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug"
 
@@ -401,7 +401,7 @@ jobs:
           DYLD_LIBRARY_PATH="$PWD/target/debug" swift build --package-path swift -c release -Xlinker -L -Xlinker "$PWD/target/debug"
 
   apple-artifact-build:
-    name: Build Apple XCFramework & Package (5C.2)
+    name: Apple XCFramework Consumer
     runs-on: macos-latest
 
     steps:
@@ -539,7 +539,7 @@ jobs:
             CODE_SIGN_IDENTITY=""
 
   android-aar-build:
-    name: Local Android AAR & Kotlin Consumer (5D)
+    name: Android AAR + Emulator Consumer
     runs-on: ubuntu-latest
 
     steps:
@@ -585,7 +585,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Milestone 5D: Kotlin/JNI + Android SDK & Emulator Instrumentation
+      # Android SDK & Emulator Instrumentation
       - name: Run Android AAR Build & Emulator Instrumentation Tests
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -600,7 +600,7 @@ jobs:
             ./scripts/android/build-aar.sh
             ./scripts/android/test-consumers.sh
 
-      # Milestone 5E: Signed Central Bundle Layout & Verification CI Preflight
+      # Maven Central Bundle Layout & Verification Preflight
       - name: Run Signed Central-Bundle CI Preflight
         shell: bash
         run: |

@@ -1,8 +1,8 @@
-# Milestone 4C.3 — Reviewed-Pack Rebuild and Re-evaluation Report
+# Reviewed-Pack Rebuild and Re-evaluation Report
 
-> **Assessment status**: reproduced on this branch; milestone completion is effective after merge.
+> **Assessment status**: reproduced on this branch.
 
-This report documents the rebuild and re-evaluation of the `reviewed` language pack incorporating the 13 Milestone 4C.2C human lexical review decisions.
+This report documents the rebuild and re-evaluation of the `reviewed` language pack incorporating human lexical review decisions.
 
 ---
 
@@ -77,7 +77,7 @@ The approved entry-level decision for `sê` does not currently cause the entry t
 This assessment records the observed behavior as current resolver logic but does not decide whether:
 1. entry-level approval should select that exact member;
 2. conflict-group `select_member` resolution is always required; or
-3. decision and pack-builder semantics need clarification in a future milestone.
+3. decision and pack-builder semantics need clarification in future iterations.
 
 ---
 

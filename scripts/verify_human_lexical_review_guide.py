@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic verifier for Milestone 4C.2B Human Lexical Review Guide.
+"""Deterministic verifier for Human Lexical Review Guide.
 
 Verifies:
 1. File invariants (UTF-8, no BOM, LF-only, final newline).
@@ -186,11 +186,11 @@ def verify_review_guide(guide_path: Path, csv_path: Path, schema_path: Path) -> 
     if "ranking_policy_followup_needed" not in text:
         sys.exit("FAIL: Guide missing ranking_policy_followup_needed operational documentation")
 
-    print("⚡ Milestone 4C.2B Review Guide Verification PASSED successfully!")
+    print("⚡ Human Lexical Review Guide Verification PASSED successfully!")
 
 
 if __name__ == "__main__":
-    g_file = Path("docs/evaluation/4c2b-human-lexical-review-guide.md")
-    c_file = Path("evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.csv")
+    g_file = Path("docs/evaluation/human-lexical-review-guide.md")
+    c_file = Path("evaluation/spelling/review-worksheets/regression-interfering-entries.csv")
     s_file = Path("data-builder/src/review/schema.rs")
     verify_review_guide(g_file, c_file, s_file)

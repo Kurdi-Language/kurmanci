@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Kurmancî Milestone 4C.3 — Reviewed-Pack Rebuild & Determinism Verifier
+Kurmancî Reviewed-Pack Rebuild & Determinism Verifier
 
-This script is a read-only verifier for Milestone 4C.3. It:
+This script is a read-only verifier for reviewed pack rebuilds. It:
 1. Dynamically parses review decisions, imported records, and conflict groups by target_id.
 2. Decodes actual binary pack entries from seed and reviewed lexicon.bin files.
 3. Computes external_reviewed_additions = reviewed_entries - seed_entries and verifies exact content invariants.
@@ -25,7 +25,7 @@ SE_GROUP_ID = "ce6da264f7c9c318282532121fbdd7cf300ee1273f7549e555518525d35e838f"
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Verify 4C.3 Reviewed Pack Rebuild & Invariants")
+    parser = argparse.ArgumentParser(description="Verify Reviewed Pack Rebuild & Invariants")
     parser.add_argument("--candidate-root", type=str, default=".", help="Path to workspace root to verify")
     parser.add_argument("--compare-root-a", type=str, help="Path to Pass 1 output root for tree comparison")
     parser.add_argument("--compare-root-b", type=str, help="Path to Pass 2 output root for tree comparison")
@@ -201,14 +201,14 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
         if t_norm and t_norm in ext_additions:
             raise AssertionError(f"Non-approved entry '{t_norm}' (id {t_id}) must be absent from external reviewed additions")
 
-    print("⚡ 4C.3 Content membership & policy invariants PASSED!")
+    print("⚡ Content membership & policy invariants PASSED!")
 
 
 def assert_snapshot(derived: Dict[str, Any]):
     ext_additions = derived["external_additions"]
     if ext_additions != {"şeq", "şer"}:
         raise AssertionError(f"Snapshot assertion failed: external additions must be {{'şeq', 'şer'}}, got {ext_additions}")
-    print("⚡ 4C.3 Milestone baseline snapshot PASSED!")
+    print("⚡ Reviewed pack baseline snapshot PASSED!")
 
 
 def verify_tree_determinism(root_a: Path, root_b: Path):

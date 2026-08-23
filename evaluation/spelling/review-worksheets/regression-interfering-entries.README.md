@@ -1,4 +1,4 @@
-# 4C.2A Regression Entry Review Packet
+# Regression Entry Review Packet
 
 Non-authoritative review worksheet pre-populating factual provenance and ranking metadata for all 13 imported entries ranked ahead of expected candidates across the 4 candidate-ranking regressions observed in the initial controlled-pack quality assessment.
 
@@ -6,10 +6,10 @@ Non-authoritative review worksheet pre-populating factual provenance and ranking
 
 ## 1. Overview & Scope
 
-- **Milestone Stage**: `Milestone 4C.2A (Regression Entry Review Packet Preparation)`
+- **Document Purpose**: Guidance for human review of lexical regression candidates.
 - **Comparison Baseline SHA**: `7db99ee676bf81c8db25df57ee0fbb7dca74b2a0`
 - **Assessment Reference**: `docs/evaluation/initial-pack-quality-assessment.md`
-- **Worksheet File**: `evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.csv`
+- **Worksheet File**: `evaluation/spelling/review-worksheets/regression-interfering-entries.csv`
 - **Total Ranking-Interfering Entries**: 13 entries (excluding `şeş` at rank 10, which appears after expected candidate `şev` at rank 9)
 - **Authoritative Status**: **Non-authoritative draft packet**. No human linguistic decision, decision store edit (`decisions.jsonl`), benchmark modification, or pack policy change is included in this PR.
 

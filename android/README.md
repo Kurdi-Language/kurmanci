@@ -1,4 +1,4 @@
-# Kurmancî Android SDK (`kurmanci-android`) — Milestone 5E
+# Kurmancî Android SDK (`kurmanci-android`)
 
 `kurmanci-android` is an idiomatic, zero-Rust-dependency Android SDK built on top of the stable Kurmancî C ABI (`kurmanci-ffi`) via a JNI bridge (`libkurmanci_jni.so`).
 
