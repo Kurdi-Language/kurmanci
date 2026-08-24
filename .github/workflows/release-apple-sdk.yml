@@ -1,4 +1,4 @@
-# Kurmancî Language Platform — Apple SDK Distributable Release Pipeline (Milestone 5C.2)
+# Kurmancî Language Platform — Apple SDK Distributable Release Pipeline
 name: Release Apple SDK
 
 on:

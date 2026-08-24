@@ -1,4 +1,4 @@
-//! Controlled language pack build transaction manager (Milestone 4A.2).
+//! Controlled language pack build transaction manager.
 
 use serde_json;
 use sha2::{Digest, Sha256};

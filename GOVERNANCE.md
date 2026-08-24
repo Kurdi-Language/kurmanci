@@ -4,9 +4,9 @@ This document defines the decision-making structure, pull request review policie
 
 ---
 
-## 1. Operational Governance (Current Phase)
+## 1. Operational Governance
 
-During the initial platform setup phase, the project is maintained under single-maintainer leadership with open public community participation:
+The project is maintained under single-maintainer leadership with open public community participation:
 
 - **Maintainer**: Kurmancî Language Platform Core Maintainers (`@Kurdi-Language`).
 - **Merge Authority**: Code and dataset changes to `main` require maintainer approval, clean automated CI checks, and a reviewed Pull Request.

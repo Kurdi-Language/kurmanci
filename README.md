@@ -1,120 +1,49 @@
-# Kurmancî Language Platform
+# Kurmancî
 
-Early-stage offline Kurmancî (`ku-Latn`) language engine and deterministic lexicon compiler written in Rust. Current capabilities include prefix completion, ranked correction candidates, bigram and trigram context prediction models, compiled binary language-pack loading, Swift SDK, Android SDK, and a CLI demonstration.
+High-performance offline language infrastructure for Northern Kurdish / Kurmancî (`ku-Latn`). It provides spell checking, autocomplete, typo correction, diacritic restoration, and context prediction in a lightweight Rust core with native bindings for Apple (Swift/XCFramework) and Android (Kotlin/JNI).
 
 Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://github.com/Kurdi-Language/kurmanci)
 
 ---
 
-## 🌟 Capabilities & Roadmap
+## What It Provides
 
-### Current Capabilities
-- [x] **Rust Core Engine** (`kurmanci-engine`): Fast Trie prefix autocomplete, weighted Damerau-Levenshtein distance, and diacritic-sensitive candidate ranking (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
-- [x] **Deterministic Data Compiler** (`kurmanci-data-builder`): Compiles source JSONL records into binary language packs (`lexicon.bin`, pack format v4) with embedded SHA-256 payload validation and a deterministic release manifest.
-- [x] **CLI Demonstration** (`kurmanci-cli`): Command-line tool supporting `suggest` query demonstration and `predict-next` context prediction.
-- [x] **Provenanced Lexical Data**: Handcrafted canonical seed entries (`manual-seed`, Apache-2.0) and preserved KurdishHunspell dictionary (`kurdish-hunspell-kmr`, CC BY-SA 4.0).
-- [x] **Corpus Infrastructure & Partitioning** *(Milestone 3C1)*: Format-sensitive registry validation, canonical JSONL document ingestion, atomic staging import transactions, inventory/audit reports, and leakage-free train/dev/eval partitioning.
-- [x] **Controlled Review Infrastructure** *(Milestone 4A.1)*: Length-prefixed u64 SHA-256 canonical entry/group identity, rule-driven review queue generator (`review-queue-v1`), decision validator (`review-decision-v1`), and merged audit reporting (`controlled-review-report-v1`).
-- [x] **Controlled Pack Policy & Builds** *(Milestone 4A.2)*: Multi-pack policy configuration (`seed`, `reviewed`, `experimental-full`), explicit conflict resolution, atomic pack staging, and licensing attribution (`model_profile = "none"`).
-- [x] **Evaluation Schema & Workflow** *(Milestone 4B.1)*: Typed benchmark schema (`benchmark-case-v1`), canonical case ID generator, contradiction & duplicate validator (`validator.rs`), computed provenance overlap reporting (`data/reports/evaluation-provenance/`), and CLI command `validate-eval-cases`.
-- [x] **Three-Pack Comparison Engine** *(Milestone 4B.2 - Completed)*: Deterministic comparison engine (`evaluate-packs`) simultaneously evaluating `seed`, `reviewed`, and `experimental-full` packs against authoritative reviewed cases, generating task-specific metrics, case result logs, and pairwise classification reports (`data/reports/pack-comparison/`).
-- [x] **Benchmark Review Governance** *(Milestone 4B.3A - Completed)*: Reviewer/date validation, metadata-only promotion rules, snapshot transition validation, evidence standards, and CI protection. This milestone added no benchmark cases.
-- [x] **Initial Human-Reviewed Dataset** *(Milestone 4B.3B - Completed)*: Promoted initial 20 human-reviewed benchmark cases following genuine human review, snapshot transition validation, and metadata-only promotion rules.
-- [x] **Pack Quality Assessment & Lexicon Enrichment** (*Milestone 4C - Completed*): Initial controlled-pack quality assessment (`docs/evaluation/initial-pack-quality-assessment.md`), targeted human review of imported lexical entries, and benchmark-driven pack enrichment.
-
-
-### Experimental & Integration Capabilities
-> [!NOTE]
-> **Statistical & Language Models Status**: Engineering implemented; linguistic validation pending.
-> Frequency tables, bigrams, and trigrams are experimental. They are disabled in current production packs (`model_profile = "none"`).
-
-- [x] **Stable C ABI & FFI Bindings** (`kurmanci-ffi`): Panic-safe C99/C++11 interface (`ffi/include/kurmanci.h`) supporting native embedding in C, C++, Swift, Kotlin/JNI, C#, and Python.
-- [x] **Distributable Apple SDK & XCFramework Packaging** (*Milestone 5C - Released*): Precompiled XCFramework packaging (`KurmanciFFI.xcframework`) and SwiftPM package distribution (`Kurdi-Language/kurmanci-swift` v0.1.0).
-- [x] **Android SDK & JNI Packaging** (*Milestone 5D - Completed*): Idiomatic Kotlin SDK (`org.kurmanci.KurmanciEngine`), JNI bridge (`libkurmanci_jni.so`), cross-compiled native ABIs (`arm64-v8a`, `armeabi-v7a`, `x86_64`), and AAR packaging.
-- [x] **Public Android Maven Central Distribution** (*Milestone 5E - Release-Ready*): Android SDK implemented; Maven Central distribution release-ready (`io.github.ferhatguneri:kurmanci-android:0.1.0`).
-- [ ] **Mobile Keyboards & Text Services** (*Planned*): Custom reference keyboard extensions for iOS and Android.
-- [ ] **WebAssembly Bindings** (*Planned*): Browser and WebAssembly client library target.
+- **Spell Checking**: Fast Trie lookup and NFC-normalized exact match verification.
+- **Autocomplete**: Prefix completion over compiled lexicon entries.
+- **Typo Correction**: Weighted Damerau-Levenshtein edit distance tuned for Kurmancî.
+- **Diacritic Restoration**: Diacritic-aware candidate scoring (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
+- **Experimental Statistical Models**: Frequency-aware ranking plus bigram/trigram context prediction infrastructure, currently kept separate from the controlled production packs pending broader linguistic validation.
+- **Offline Deterministic Packs**: Zero network dependency compiled `.bin` language packs.
+- **Stable Core APIs**: High-level thread-safe Rust API (`kurmanci-engine`) and panic-safe C ABI (`kurmanci-ffi`).
+- **Apple SDK**: Idiomatic SwiftPM package and precompiled XCFramework.
+- **Android SDK**: Idiomatic Kotlin wrapper, JNI bridge, and Maven Central distribution.
 
 ---
 
-## 📁 Monorepo Overview
-
-```
-kurmanci/
-├── .github/                  # CI workflows, PR and issue templates
-├── cli/                      # Command-line interface tool (kurmanci-cli)
-├── data/                     # Source registry and canonical seed entries
-│   ├── reviewed/             # Manually reviewed canonical JSONL entries
-│   └── source-registry/      # Single authoritative registry (sources.toml)
-├── data-builder/             # Data compiler and binary generator crate
-├── docs/                     # Format and architecture specifications
-├── engine/                   # Core language engine library & test suite
-├── .editorconfig
-├── .gitignore
-├── CHANGELOG.md              # Version history
-├── CODE_OF_CONDUCT.md        # Contributor Covenant v2.1 code of conduct
-├── CONTRIBUTING.md           # Development workflow & provenance guidelines
-├── Cargo.lock                # Root Cargo workspace lockfile
-├── Cargo.toml                # Root workspace Cargo manifest
-├── GOVERNANCE.md             # Maintainer structure & decision rules
-├── LICENSE                   # Apache License 2.0
-├── NOTICE                    # Copyright & attribution notice
-├── README.md                 # Project overview and quickstart
-├── ROADMAP.md                # Development roadmap & feature milestones
-├── SECURITY.md               # Offline security guarantees
-└── rust-toolchain.toml       # Pinned Rust toolchain (1.85.0)
-```
-
----
-
-## ⚡ Quick Start
+## Quick Start
 
 ### Prerequisites
-
 - Rust 1.85.0+ (managed via [rust-toolchain.toml](rust-toolchain.toml))
 
 ### Building & Testing
-
 ```bash
 # Run all workspace unit and integration tests
 cargo test --workspace
 
-# Execute formatting check
+# Check formatting and Clippy linting
 cargo fmt --all --check
-
-# Execute Clippy linter
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 ```
 
 ### Compiling Language Packs (`data-builder`)
-
 ```bash
-# Build controlled language packs (Milestone 4A.2)
+# Build controlled language packs
 cargo run -p kurmanci-data-builder -- build-pack seed
 cargo run -p kurmanci-data-builder -- build-pack reviewed
 cargo run -p kurmanci-data-builder -- build-pack experimental-full
-
-# Validate pack manifests and invariants
-cargo run -p kurmanci-data-builder -- validate-pack-manifest
 ```
-
-### Evaluation Governance and Validation
-
-```bash
-# Validate the current draft and reviewed benchmark files
-cargo run -p kurmanci-data-builder -- validate-eval-cases
-
-# Evaluate controlled packs against authoritative reviewed cases
-cargo run -p kurmanci-data-builder -- evaluate-packs
-
-# Show the explicit snapshot-transition validator interface
-cargo run -p kurmanci-data-builder -- validate-eval-transition --help
-```
-
-Benchmark promotion policy, evidence standards, and reviewer responsibilities are documented in [`docs/benchmark-review.md`](docs/benchmark-review.md).
 
 ### Command-Line Querying (`cli`)
-
 ```bash
 # Prefix autocomplete: 'rojb' -> 'rojbaş'
 cargo run -p kurmanci-cli -- suggest rojb
@@ -124,97 +53,169 @@ cargo run -p kurmanci-cli -- suggest biji
 
 # Typo correction: 'spaz' -> 'spas'
 cargo run -p kurmanci-cli -- suggest spaz
-
-# Diagnostic ranking explanation
-cargo run -p kurmanci-cli -- suggest spaz --explain
-```
-
-### Swift Package SDK (`swift/`)
-
-```bash
-# Build native C ABI library first
-cargo build -p kurmanci-ffi
-
-# Run Swift Package test suite
-LD_LIBRARY_PATH="$PWD/target/debug" DYLD_LIBRARY_PATH="$PWD/target/debug" \
-swift test --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug"
-
-# Run Swift Command-Line Example
-LD_LIBRARY_PATH="$PWD/target/debug" DYLD_LIBRARY_PATH="$PWD/target/debug" \
-swift run --package-path swift -Xlinker -L -Xlinker "$PWD/target/debug" \
-KurmanciExample data/build/packs/seed/lexicon.bin
 ```
 
 ---
 
-## 🎯 Frequency-Aware Suggestion Ranking
+## Language Packs & Data Model
 
-Milestone 2E integrates frequency metadata into the binary pack (`PACK_VERSION = 2`) and candidate suggestion ranking.
+The platform compiles source JSONL records into deterministic, zero-copy binary language packs (`lexicon.bin`, format v4) verified by embedded SHA-256 manifests.
 
-### 1. Frequency-to-Lexicon Join
-During `cargo run -p kurmanci-data-builder -- build`, frequency records from `data/build/frequencies.jsonl` are joined to canonical lexicon entries by exact normalized form. Zipf values are stored as fixed-point integers (`zipf_milli`, e.g. `4.823` -> `4823`). Missing entries default to zero values.
+- **`seed` (Current Default)**: Small curated baseline used as the current default pack.
+- **`reviewed`**: Extends the curated baseline with imported entries that have received authoritative human approval. Changes are evaluated for regressions before default-pack policy changes are considered.
+- **`experimental-full`**: Contains unreviewed imported dictionary sources (e.g. 41,000+ KurdishHunspell entries) for controlled evaluation, candidate discovery, and linguistic review.
+- **Deterministic Generation**: Identical inputs and configuration produce deterministic pack artifacts, with byte-for-byte repeatability verified in CI.
+- **Human Lexical Review**: Unreviewed imported entries are held in staging until reviewed for spelling validity, morphology, and provenance.
 
-### 2. Candidate Ranking Policy
-Frequency is used strictly as a **secondary** signal after exact match and edit distance:
-- **Exact Matches**: `SuggestionKind::Exact` candidates are strictly prioritized above non-exact candidates.
-- **Spelling Corrections**: 1) Kind priority (`Exact` -> `DiacriticCorrection` -> `Completion` -> `Correction`), 2) Edit cost (ascending), 3) Exact diacritic match, 4) Zipf frequency (`zipf_milli`), 5) Document count, 6) Lexical tie-breaker.
-- **Prefix Completions**: 1) Kind priority, 2) Prefix match quality, 3) Zipf frequency, 4) Document count, 5) Completion length, 6) Lexical tie-breaker.
-
-### 3. Ranking Evaluation & Benchmarking
-To evaluate candidate ranking accuracy on reviewed spelling cases:
-```bash
-cargo run -p kurmanci-data-builder -- evaluate-ranking
-```
-Compares baseline (`use_frequency: false`) against experiment (`use_frequency: true`) and writes evaluation reports to `data/reports/ranking-evaluation/`.
-*Note*: The evaluation suite validates pipeline integration, exact-word preservation, and determinism. Statistical effectiveness will scale as larger text corpora are registered.
+For binary format details, see [`docs/BINARY_PACK_SPEC.md`](docs/BINARY_PACK_SPEC.md).
 
 ---
 
-## 📊 Corpus Frequency Pipeline
+## Core Engine (Rust)
 
-The platform includes a deterministic corpus frequency pipeline (`kurmanci-data-builder`) for importing text corpora and building word and document frequency metadata.
+Add `kurmanci-engine` to your `Cargo.toml`:
 
-### 1. Corpus Registry & Format
-Corpora are registered in [`data/source-registry/corpora.toml`](data/source-registry/corpora.toml). Every corpus entry requires:
-- `corpus_id`, `language` (`ku-Latn`), `license`, `url`, `sha256`, `description`, `attribution`.
-- Preserved text files in `data/original/<corpus-id>/` validated against SHA-256 checksums.
+```rust
+use kurmanci_engine::{KurmanciEngine, CorrectionOptions, SuggestOptions};
 
-### 2. Importing a Corpus
-To import a registered corpus:
-```bash
-cargo run -p kurmanci-data-builder -- import-corpus opensubtitles-kmr
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load binary pack from disk
+    let engine = KurmanciEngine::from_pack_file("data/build/packs/seed/lexicon.bin")?;
+
+    // Is 'welat' a known word?
+    if engine.is_known_word("welat") {
+        println!("Known word!");
+    }
+
+    // Combined suggest query (typo correction + diacritics + autocomplete)
+    let suggestions = engine.suggest("spaz", SuggestOptions { limit: 5 });
+    for sug in suggestions {
+        println!("Candidate: {} (kind: {:?})", sug.text, sug.kind);
+    }
+
+    Ok(())
+}
 ```
-This verifies registration, validates SHA-256 checksums, copies preserved text files into `data/imported/<corpus-id>/`, and writes `data/reports/corpora/<corpus-id>/import-summary.json`.
 
-### 3. Tokenizer Rules
-The tokenizer operates deterministically:
-1. **Unicode Normalization**: Canonical Composition (NFC).
-2. **Case Normalization**: Lowercase, preserving full Kurmancî diacritics (`ç`, `ê`, `î`, `ş`, `û`).
-3. **Word Boundaries**: Splits on whitespace and Unicode Punctuation (`P*`) and Symbols (`S*`). Apostrophes and hyphens split clitics and compound forms (e.g. `l'amour` -> `l`, `amour`).
-4. **Filtering**: Discards pure numbers, letterless strings, and empty tokens.
-
-### 4. Frequency Builder & Output
-To generate word and document frequencies across all imported corpora:
-```bash
-cargo run -p kurmanci-data-builder -- build-frequencies
-```
-- **Document Boundary**: In text corpus files, each non-empty line represents a single document boundary (line-delimited document format). `document_count` tracks how many distinct lines contain a given token.
-- **Output Record**: `data/build/frequencies.jsonl` containing `word`, `token_count`, `document_count`, `normalized_frequency`, and `zipf` (`log10(count_per_billion)`).
-- **Deterministic Sort**: Primary sort by `token_count` descending, secondary sort by `word` ascending.
-- **Statistical Reports**: Generated under `data/reports/frequencies/` (`summary.json`, `top-100.json`, `length-distribution.json`, `character-analysis.json`, `coverage.json`, `README.md`, `artifacts.sha256`).
-
-### 5. Determinism & Provenance Guarantees
-- **Strict Provenance Filtering**: `build-frequencies` loads `corpora.toml` and processes *only* registered corpora and explicitly declared corpus files verified against SHA-256 checksums. Unregistered directories or undeclared stale files under `data/imported/` are strictly ignored.
-- **Staged Generation & Rollback**: `import-corpus` and `build-frequencies` use atomic staged directory replacement with backup-and-rollback safety.
-- **Artifact Manifest**: `data/reports/frequencies/artifacts.sha256` covers `data/build/frequencies.jsonl` as well as all statistical report files. Executing `build-frequencies` consecutively produces 100% byte-identical output verified in CI.
+For API documentation, see [`docs/architecture.md`](docs/architecture.md).
 
 ---
 
-## ⚠️ Data Licensing & Provenance Notice
+## Apple SDK
 
-- **Source Code**: All software logic across `engine/`, `data-builder/`, and `cli/` is licensed under the [Apache License 2.0](LICENSE).
-- **Linguistic Datasets**: Datasets in `data/` preserve their upstream open licenses as explicitly registered in [data/source-registry/sources.toml](data/source-registry/sources.toml).
-- **Generated Packs**: Binary language packs (`data/build/lexicon.bin`) are build outputs generated reproducibly by `data-builder`.
+### Swift Package Manager
+Add the remote package dependency to your `Package.swift` or Xcode project:
+```swift
+.package(url: "https://github.com/Kurdi-Language/kurmanci-swift", from: "0.1.0")
+```
 
-For contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-For security policy, see [SECURITY.md](SECURITY.md).
+### Swift Usage Example
+```swift
+import Kurmanci
+
+let engine = try KurmanciEngine(packURL: packURL)
+
+let isKnown = try engine.isKnownWord("welat")
+let suggestions = try engine.suggest("spaz", limit: 5)
+for sug in suggestions {
+    print("\(sug.text) (editCost: \(sug.editCost))")
+}
+```
+
+For Apple integration details, see [`swift/README.md`](swift/README.md).
+
+---
+
+## Android SDK
+
+### Maven Central Dependency
+Add `mavenCentral()` to your repositories and add the dependency:
+```kotlin
+dependencies {
+    implementation("io.github.ferhatguneri:kurmanci-android:0.1.0")
+}
+```
+
+### Kotlin Usage Example
+```kotlin
+import org.kurmanci.KurmanciEngine
+
+KurmanciEngine.open(packBytes).use { engine ->
+    val isKnown = engine.isKnownWord("welat")
+    val suggestions = engine.suggest("spaz", limit = 5)
+    for (sug in suggestions) {
+        println("${sug.text} (${sug.kind})")
+    }
+}
+```
+
+For Android integration details, see [`android/README.md`](android/README.md).
+
+---
+
+## Language Data & Provenance
+
+Language data is managed under strict provenance and licensing rules in [`data/source-registry/sources.toml`](data/source-registry/sources.toml).
+
+- **Seed Lexicon**: Handcrafted entries (`manual-seed`, Apache-2.0).
+- **Imported Lexicons**: Upstream dictionaries (e.g. `kurdish-hunspell-kmr`, CC BY-SA 4.0) acquired reproducibly with SHA-256 verification.
+- **Controlled Review Policy**: Imported candidates are **not** automatically promoted to default packs. Every candidate undergoes automated queue generation (`review-queue-v1`) and human review (`review-decision-v1`) before entry into `reviewed` language packs.
+
+For review procedures, see [`docs/lexicon-review.md`](docs/lexicon-review.md).
+
+---
+
+## Evaluation & Benchmarks
+
+The platform includes an automated three-pack comparison engine (`evaluate-packs`) and benchmark validation framework.
+
+- **Benchmark Dataset**: Authoritative human-reviewed cases (`evaluation/spelling/reviewed-cases.jsonl`) testing spelling correction, diacritic restoration, and completion tasks.
+- **Three-Pack Comparison**: Simultaneously evaluates `seed`, `reviewed`, and `experimental-full` packs to measure Top-1/3/5 accuracy, Mean Reciprocal Rank (MRR), false acceptance rates, and candidate ranking regressions.
+- **Human-Reviewed Benchmark Workflow**: Review, promotion, provenance, and transition-safety rules are documented in [`docs/benchmark-review.md`](docs/benchmark-review.md).
+
+For evaluation documentation, see [`docs/evaluation.md`](docs/evaluation.md).
+
+---
+
+## Repository Structure
+
+```
+kurmanci/
+├── .github/                  # CI workflows and release automation
+├── android/                  # Android SDK (Kotlin/JNI) & integration tests
+├── cli/                      # Command-line interface tool (kurmanci-cli)
+├── data/                     # Source registry, seed entries & review stores
+├── data-builder/             # Data compiler and binary generator crate
+├── docs/                     # Specifications, architecture & evaluation guides
+├── engine/                   # Core Rust language engine & test suite
+├── ffi/                      # Stable C ABI bindings (kurmanci-ffi)
+├── integration/              # Xcode and Android app test hosts
+├── scripts/                  # XCFramework, AAR, and verification scripts
+└── swift/                    # Swift Package SDK & Clang module wrapper
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Key high-value contribution areas include:
+- **Linguistic Review**: Reviewing candidate queues in `data/review-queues/` for possible inclusion in reviewed language packs.
+- **Corpus & Lexical Sources**: Registering new open-licensed Kurmancî text corpora and word lists.
+- **Benchmark Expansion**: Adding realistic human-reviewed test cases to `evaluation/spelling/`.
+- **Platform Integrations**: Building native IME keyboard extensions for iOS and Android.
+- **Engine Optimization**: Improving search Trie performance and memory efficiency.
+
+Please review [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`GOVERNANCE.md`](GOVERNANCE.md) before submitting pull requests.
+
+---
+
+## Roadmap
+
+Platform priorities, planned features, and integration roadmap are documented in [`ROADMAP.md`](ROADMAP.md).
+
+---
+
+## License & Attribution
+
+- **Software Logic**: All code across `engine/`, `data-builder/`, `ffi/`, `swift/`, `android/`, `cli/`, and `scripts/` is licensed under the [Apache License 2.0](LICENSE).
+- **Language Data**: Datasets in `data/` retain their upstream open licenses (e.g. CC BY-SA 4.0, Apache-2.0) as declared in [`data/source-registry/sources.toml`](data/source-registry/sources.toml).

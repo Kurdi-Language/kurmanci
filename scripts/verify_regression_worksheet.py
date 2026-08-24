@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic verifier for Milestone 4C.2C Regression Entry Review Worksheet & Decisions.
+"""Deterministic verifier for Regression Entry Review Worksheet & Decisions.
 
 Verifies schema, exact canonical entry identity, review queue structured resolution,
 conflict-group membership, source registry pinned revision & license ID, comparison constants,
@@ -311,7 +311,7 @@ def verify_worksheet(worksheet_path: Path) -> None:
         if r["candidate_is_ahead_of_expected"] != "true":
             sys.exit(f"Row {idx}: candidate_is_ahead_of_expected must be 'true'")
 
-        # 9. Human decision field validation (Milestone 4C.2C populated state)
+        # 9. Human decision field validation
         h_status = r["human_lexical_decision"]
         if h_status not in ("approved", "approved_with_metadata_change", "rejected_from_default_pack", "experimental_only", "needs_linguist", "needs_source_investigation"):
             sys.exit(f"Row {idx}: Invalid human_lexical_decision '{h_status}'")
@@ -393,7 +393,7 @@ def verify_worksheet(worksheet_path: Path) -> None:
         if expected_ev != d.get("evidence", []):
             sys.exit(f"Mismatched evidence for entry {eid}: CSV '{expected_ev}' != JSONL '{d.get('evidence')}'")
 
-    print("⚡ Milestone 4C.2C Decision & Worksheet Verification PASSED successfully!")
+    print("⚡ Decision & Worksheet Verification PASSED successfully!")
 
 
 
@@ -440,7 +440,7 @@ def run_self_test(worksheet_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    csv_file = Path("evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.csv")
+    csv_file = Path("evaluation/spelling/review-worksheets/regression-interfering-entries.csv")
 
     if "--self-test" in sys.argv:
         run_self_test(csv_file)

@@ -1,4 +1,4 @@
-//! Integration & Unit tests for Milestone 2E: Frequency-Aware Suggestion Ranking,
+//! Integration & Unit tests for Frequency-Aware Suggestion Ranking,
 //! Binary Pack v2 format, Frequency Join, Engine Ranking Policy, and Evaluation Suite.
 
 use data_builder_lib::eval_ranking::run_ranking_evaluation;

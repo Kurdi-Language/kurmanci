@@ -1,4 +1,4 @@
-//! Integration test suite for Milestone 4A.2 Controlled Pack Policy and Pack Builds.
+//! Integration test suite for Controlled Pack Policy and Pack Builds.
 
 use data_builder_lib::pack::{
     builder::build_pack, policy::PackPolicyConfig, selection::select_candidates_for_pack,

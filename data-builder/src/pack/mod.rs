@@ -1,4 +1,4 @@
-//! Controlled language pack policy and build module (Milestone 4A.2).
+//! Controlled language pack policy and build module.
 
 pub mod builder;
 pub mod collisions;
