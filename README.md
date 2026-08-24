@@ -62,9 +62,10 @@ cargo run -p kurmanci-cli -- suggest spaz
 
 The platform compiles source JSONL records into deterministic, zero-copy binary language packs (`lexicon.bin`, format v4) verified by embedded SHA-256 manifests.
 
-- **`seed` / `reviewed` (Default)**: Contains handcrafted seed entries and external entries that have passed human lexical review. Guaranteed zero regression baseline for production distribution.
-- **`experimental-full`**: Contains unreviewed imported dictionary sources (e.g. 41,000+ entries from KurdishHunspell). Used in controlled evaluation to identify gaps and triage candidates.
-- **Deterministic Generation**: Executing `build-pack` produces 100% byte-identical output across platforms.
+- **`seed` (Current Default)**: Small curated baseline used as the current default pack.
+- **`reviewed`**: Extends the curated baseline with imported entries that have received authoritative human approval. Changes are evaluated for regressions before default-pack policy changes are considered.
+- **`experimental-full`**: Contains unreviewed imported dictionary sources (e.g. 41,000+ KurdishHunspell entries) for controlled evaluation, candidate discovery, and linguistic review.
+- **Deterministic Generation**: Identical inputs and configuration produce deterministic pack artifacts, with byte-for-byte repeatability verified in CI.
 - **Human Lexical Review**: Unreviewed imported entries are held in staging until reviewed for spelling validity, morphology, and provenance.
 
 For binary format details, see [`docs/BINARY_PACK_SPEC.md`](docs/BINARY_PACK_SPEC.md).
@@ -171,7 +172,7 @@ The platform includes an automated three-pack comparison engine (`evaluate-packs
 
 - **Benchmark Dataset**: Authoritative human-reviewed cases (`evaluation/spelling/reviewed-cases.jsonl`) testing spelling correction, diacritic restoration, and completion tasks.
 - **Three-Pack Comparison**: Simultaneously evaluates `seed`, `reviewed`, and `experimental-full` packs to measure Top-1/3/5 accuracy, Mean Reciprocal Rank (MRR), false acceptance rates, and candidate ranking regressions.
-- **Benchmark Governance**: Rules for benchmark promotion and transition safety documented in [`docs/benchmark-review.md`](docs/benchmark-review.md).
+- **Human-Reviewed Benchmark Workflow**: Review, promotion, provenance, and transition-safety rules are documented in [`docs/benchmark-review.md`](docs/benchmark-review.md).
 
 For evaluation documentation, see [`docs/evaluation.md`](docs/evaluation.md).
 
@@ -199,7 +200,7 @@ kurmanci/
 ## Contributing
 
 Contributions are welcome! Key high-value contribution areas include:
-- **Linguistic Review**: Reviewing candidate queues in `data/review-queues/` to approve entries for default packs.
+- **Linguistic Review**: Reviewing candidate queues in `data/review-queues/` for possible inclusion in reviewed language packs.
 - **Corpus & Lexical Sources**: Registering new open-licensed Kurmancî text corpora and word lists.
 - **Benchmark Expansion**: Adding realistic human-reviewed test cases to `evaluation/spelling/`.
 - **Platform Integrations**: Building native IME keyboard extensions for iOS and Android.

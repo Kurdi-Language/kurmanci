@@ -98,7 +98,7 @@ In the worksheet CSV, `evidence_or_reference` uses multi-line text (one referenc
 
 ## 8. Compact 13-Entry Reference Table
 
-Canonical metadata is maintained in `evaluation/spelling/review-worksheets/4c2a-regression-interfering-entries.csv`.
+Canonical metadata is maintained in `evaluation/spelling/review-worksheets/regression-interfering-entries.csv`.
 
 | Benchmark Input | Display | Normalized | Entry ID (`entry_id`) | Line | Conflict Group ID (`conflict_group_id`) |
 | :--- | :--- | :--- | :--- | ---: | :--- |
@@ -172,6 +172,6 @@ After genuine human decisions are populated, run:
 cargo run -p kurmanci-data-builder -- validate-review-decisions kurdish-hunspell-kmr
 
 # Run worksheet completeness and schema verifiers
-python3 scripts/verify_4c2a_regression_worksheet.py
-python3 scripts/verify_4c2b_review_guide.py
+python3 scripts/verify_regression_worksheet.py
+python3 scripts/verify_human_lexical_review_guide.py
 ```
