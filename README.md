@@ -12,8 +12,7 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 - **Autocomplete**: Prefix completion over compiled lexicon entries.
 - **Typo Correction**: Weighted Damerau-Levenshtein edit distance tuned for Kurmancî.
 - **Diacritic Restoration**: Diacritic-aware candidate scoring (`i ↔ î`, `u ↔ û`, `s ↔ ş`, `c ↔ ç`, `e ↔ ê`).
-- **Frequency/Context Ranking**: Zipf-scaled frequency metadata and n-gram scoring.
-- **Next-Word Prediction**: Statistical bigram and trigram backoff prediction.
+- **Experimental Statistical Models**: Frequency-aware ranking plus bigram/trigram context prediction infrastructure, currently kept separate from the controlled production packs pending broader linguistic validation.
 - **Offline Deterministic Packs**: Zero network dependency compiled `.bin` language packs.
 - **Stable Core APIs**: High-level thread-safe Rust API (`kurmanci-engine`) and panic-safe C ABI (`kurmanci-ffi`).
 - **Apple SDK**: Idiomatic SwiftPM package and precompiled XCFramework.
