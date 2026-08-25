@@ -8,7 +8,9 @@
 /data/imported-canonical/
 
 # Generated reports
-/data/reports/
+/data/reports/*
+!/data/reports/vocabulary-review/
+!/data/reports/vocabulary-review/kurmanci-review-batch.py
 
 # Secrets
 .env
@@ -28,6 +30,8 @@ Thumbs.db
 *.tmp
 *.swp
 *~
+__pycache__/
+*.pyc
 
 # Gradle & Android
 .gradle/

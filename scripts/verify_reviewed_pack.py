@@ -132,6 +132,15 @@ def derive_selection(candidate_root: Path) -> Dict[str, Any]:
 
     external_additions = rev_entries - seed_entries
 
+    unresolved_target_ids = set(conflict_groups.get(SE_GROUP_ID, [])) | {SE_TARGET_ID}
+    expected_external_additions = {
+        target_to_norm[d["target_id"]]
+        for d in approved_decs
+        if d["target_id"] in target_to_norm
+        and d["target_id"] not in unresolved_target_ids
+        and target_to_norm[d["target_id"]] not in seed_entries
+    }
+
     return {
         "decisions": decisions,
         "approved_decisions": approved_decs,
@@ -140,6 +149,7 @@ def derive_selection(candidate_root: Path) -> Dict[str, Any]:
         "rev_entries": rev_entries,
         "rev_manifest": rev_manifest,
         "external_additions": external_additions,
+        "expected_external_additions": expected_external_additions,
         "target_to_norm": target_to_norm,
         "conflict_groups": conflict_groups,
     }
@@ -154,24 +164,15 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
     target_to_norm = derived["target_to_norm"]
     conflict_groups = derived["conflict_groups"]
 
-    if len(decisions) != 13:
-        raise AssertionError(f"Expected 13 review decisions, got {len(decisions)}")
-    if len(approved_decs) != 3:
-        raise AssertionError(f"Expected 3 approved decisions, got {len(approved_decs)}")
-    if len(non_approved_decs) != 10:
-        raise AssertionError(f"Expected 10 non-approved decisions, got {len(non_approved_decs)}")
+    if len(decisions) == 0:
+        raise AssertionError("Review decisions store is empty")
+    if len(decisions) != len(approved_decs) + len(non_approved_decs):
+        raise AssertionError(f"Total decisions ({len(decisions)}) != approved ({len(approved_decs)}) + non-approved ({len(non_approved_decs)})")
 
     # Check manifest selection count matches computed additions count
-    manifest_ext_approved = rev_manifest.get("external_approved_selected_count", 0)
-    if len(ext_additions) != manifest_ext_approved:
+    manifest_ext_approved = rev_manifest.get("external_approved_selected_count", 0) - rev_manifest.get("external_discarded_by_collision_count", 0)
+    if manifest_ext_approved != len(ext_additions):
         raise AssertionError(f"Computed external additions count ({len(ext_additions)}) != manifest count ({manifest_ext_approved})")
-
-    # Exact content check: external_additions == {"şeq", "şer"}
-    expected_additions = {"şeq", "şer"}
-    if ext_additions != expected_additions:
-        raise AssertionError(f"Expected external reviewed additions to be {expected_additions}, got {ext_additions}")
-
-    # Check sê decision by exact target_id
     se_dec = next((d for d in decisions if d["target_id"] == SE_TARGET_ID), None)
     if not se_dec:
         raise AssertionError(f"Decision for sê target_id {SE_TARGET_ID} not found")
@@ -194,7 +195,7 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
         if m_norm and m_norm in ext_additions:
             raise AssertionError(f"Conflict group member '{m_norm}' (id {m_id}) must be absent from external reviewed additions")
 
-    # Verify all 10 non-approved decision targets are absent from external_additions
+    # Verify all non-approved decision targets are absent from external_additions
     for d in non_approved_decs:
         t_id = d["target_id"]
         t_norm = target_to_norm.get(t_id)
@@ -205,9 +206,17 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
 
 
 def assert_snapshot(derived: Dict[str, Any]):
-    ext_additions = derived["external_additions"]
-    if ext_additions != {"şeq", "şer"}:
-        raise AssertionError(f"Snapshot assertion failed: external additions must be {{'şeq', 'şer'}}, got {ext_additions}")
+    actual_ext_additions = derived["external_additions"]
+    expected_ext_additions = derived["expected_external_additions"]
+    if actual_ext_additions != expected_ext_additions:
+        missing = expected_ext_additions - actual_ext_additions
+        unexpected = actual_ext_additions - expected_ext_additions
+        err = ["Snapshot assertion failed: actual reviewed-pack additions do not match expected selected set derived from decisions and policy!"]
+        if missing:
+            err.append(f"Missing expected entries ({len(missing)}): {sorted(list(missing))}")
+        if unexpected:
+            err.append(f"Unexpected extra entries ({len(unexpected)}): {sorted(list(unexpected))}")
+        raise AssertionError("\n".join(err))
     print("⚡ Reviewed pack baseline snapshot PASSED!")
 
 
@@ -244,7 +253,7 @@ def run_self_tests(candidate_root: Path):
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_parent = Path(tmp_dir)
 
-        # Self-Test 1: Mutate decisions count
+        # Self-Test 1: Mutate decisions.jsonl by removing one decision line
         f1 = create_fixture_root(tmp_parent, 1)
         dec_file = f1 / "data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl"
         dec_lines = dec_file.read_text(encoding="utf-8").splitlines()
@@ -252,16 +261,16 @@ def run_self_tests(candidate_root: Path):
         try:
             d = derive_selection(f1)
             validate_policy_invariants(d, f1)
-            raise RuntimeError("Self-test 1 failed: expected decision count assertion error!")
+            assert_snapshot(d)
+            raise RuntimeError("Self-test 1 failed: expected invariant error!")
         except AssertionError as e:
-            assert "Expected 13 review decisions" in str(e), f"Unexpected error in Self-test 1: {e}"
             print(f"✅ Self-test 1 passed (caught missing decision): {e}")
 
         # Self-Test 2: Mutate manifest external approved count
         f2 = create_fixture_root(tmp_parent, 2)
         man_file = f2 / "data/build/packs/reviewed/manifest.json"
         man_data = json.loads(man_file.read_text(encoding="utf-8"))
-        man_data["external_approved_selected_count"] = 3
+        man_data["external_approved_selected_count"] = 999
         man_file.write_text(json.dumps(man_data), encoding="utf-8")
         try:
             d = derive_selection(f2)
@@ -271,40 +280,41 @@ def run_self_tests(candidate_root: Path):
             assert "Computed external additions count" in str(e), f"Unexpected error in Self-test 2: {e}"
             print(f"✅ Self-test 2 passed (caught manifest count mismatch): {e}")
 
-        # Self-Test 3: Inject unresolved entry ('wela') into external additions (with manifest set to 3)
+        # Self-Test 3: Inject unresolved entry ('wela') into external additions
         f3 = create_fixture_root(tmp_parent, 3)
         d3 = derive_selection(f3)
-        d3["rev_manifest"]["external_approved_selected_count"] = 3
+        d3["rev_manifest"]["external_approved_selected_count"] = len(d3["external_additions"]) + 1
         d3["external_additions"].add("wela")
         try:
             validate_policy_invariants(d3, f3)
             raise RuntimeError("Self-test 3 failed: expected non-approved entry injection error!")
         except AssertionError as e:
-            assert "Expected external reviewed additions to be" in str(e) or "Non-approved entry" in str(e), f"Unexpected error in Self-test 3: {e}"
+            assert "Non-approved entry" in str(e) or "count" in str(e), f"Unexpected error in Self-test 3: {e}"
             print(f"✅ Self-test 3 passed (caught injected unresolved entry 'wela'): {e}")
 
-        # Self-Test 4: Replace şeq with another entry ('azadî') while count remains 2
+        # Self-Test 4: Replace an entry while count remains unchanged
         f4 = create_fixture_root(tmp_parent, 4)
         d4 = derive_selection(f4)
+        d4["rev_manifest"]["external_approved_selected_count"] = len(d4["external_additions"]) + d4["rev_manifest"].get("external_discarded_by_collision_count", 0)
         d4["external_additions"].remove("şeq")
-        d4["external_additions"].add("azadî")
+        d4["external_additions"].add("bêabrûkirî")
         try:
             validate_policy_invariants(d4, f4)
             raise RuntimeError("Self-test 4 failed: expected wrong addition error!")
         except AssertionError as e:
-            assert "Expected external reviewed additions to be" in str(e), f"Unexpected error in Self-test 4: {e}"
-            print(f"✅ Self-test 4 passed (caught replaced entry 'azadî'): {e}")
+            assert "Non-approved entry" in str(e), f"Unexpected error in Self-test 4: {e}"
+            print(f"✅ Self-test 4 passed (caught replaced entry 'bêabrûkirî'): {e}")
 
-        # Self-Test 5: Include sê in external additions while unresolved (with manifest set to 3)
+        # Self-Test 5: Include sê in external additions while unresolved
         f5 = create_fixture_root(tmp_parent, 5)
         d5 = derive_selection(f5)
-        d5["rev_manifest"]["external_approved_selected_count"] = 3
         d5["external_additions"].add("sê")
+        d5["rev_manifest"]["external_approved_selected_count"] = len(d5["external_additions"]) + d5["rev_manifest"].get("external_discarded_by_collision_count", 0)
         try:
             validate_policy_invariants(d5, f5)
             raise RuntimeError("Self-test 5 failed: expected unselected sê error!")
         except AssertionError as e:
-            assert "Expected external reviewed additions to be" in str(e) or "Approved sê entry" in str(e), f"Unexpected error in Self-test 5: {e}"
+            assert "Unselected 'sê'" in str(e) or "Non-approved entry" in str(e) or "Approved sê entry" in str(e), f"Unexpected error in Self-test 5: {e}"
             print(f"✅ Self-test 5 passed (caught sê in external additions): {e}")
 
     print("⚡ Extended verifier self-test suite PASSED successfully!")

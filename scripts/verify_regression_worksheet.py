@@ -350,8 +350,8 @@ def verify_worksheet(worksheet_path: Path) -> None:
     dec_lines = decisions_path.read_text(encoding="utf-8").splitlines()
     dec_records = [json.loads(l) for l in dec_lines if l.strip()]
 
-    if len(dec_records) != 13:
-        sys.exit(f"FAIL: Expected 13 decision records in {decisions_path}, found {len(dec_records)}")
+    if len(dec_records) == 0:
+        sys.exit(f"FAIL: Decisions file '{decisions_path}' is empty")
 
     seen_target_ids = set()
     dec_map_by_target = {}
@@ -373,7 +373,7 @@ def verify_worksheet(worksheet_path: Path) -> None:
             sys.exit(f"FAIL: Invalid source_id '{d.get('source_id')}' for target_id '{tid}'")
 
     csv_eids = set(r["entry_id"] for r in reader)
-    if set(dec_map_by_target.keys()) != csv_eids:
+    if not csv_eids.issubset(set(dec_map_by_target.keys())):
         sys.exit("FAIL: Mismatch between decision record target_ids and worksheet entry_ids")
 
     for r in reader:

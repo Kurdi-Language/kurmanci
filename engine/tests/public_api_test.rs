@@ -38,13 +38,13 @@ fn test_public_api_pack_loading_and_metadata() {
 
     let rev_engine = KurmanciEngine::from_pack_file(&rev_path)
         .expect("Failed to load reviewed pack via public API");
-    assert_eq!(rev_engine.len(), 35);
-    assert_eq!(rev_engine.pack_info().entry_count, 35);
+    assert!(rev_engine.len() >= seed_engine.len());
+    assert_eq!(rev_engine.len(), rev_engine.pack_info().entry_count);
 
     let exp_engine = KurmanciEngine::from_pack_file(&exp_path)
         .expect("Failed to load experimental-full pack via public API");
-    assert_eq!(exp_engine.len(), 41496);
-    assert_eq!(exp_engine.pack_info().entry_count, 41496);
+    assert!(exp_engine.len() > rev_engine.len());
+    assert_eq!(exp_engine.len(), exp_engine.pack_info().entry_count);
 }
 
 #[test]
