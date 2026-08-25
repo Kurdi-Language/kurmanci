@@ -3,11 +3,11 @@
   "generator": "kurmanci-data-builder",
   "candidate_pool": "data/review-queues/kurdish-hunspell-kmr/hunspell-only.jsonl",
   "total_pool_candidates": 41498,
-  "excluded_existing_decisions": 13,
-  "eligible_pending_candidates": 41485,
+  "excluded_existing_decisions": 513,
+  "eligible_pending_candidates": 40985,
   "batch_size": 1000,
   "clean_candidates_count": 1000,
-  "corpus_matched_count": 22,
+  "corpus_matched_count": 0,
   "output_tsv": "data/reports/vocabulary-review/top-1000.tsv",
   "output_jsonl": "data/reports/vocabulary-review/top-1000.jsonl"
 }
