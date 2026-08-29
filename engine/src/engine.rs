@@ -845,20 +845,27 @@ impl Engine {
         ranked_list.sort_by(|a, b| a.cmp_with_config(b, config));
         ranked_list.truncate(limit);
 
-        // Convert RankedCandidate to public Suggestion
+        // Convert RankedCandidate to public Suggestion with query-case-preserving display text
+        let query_is_lowercase = is_all_lowercase(query);
         ranked_list
             .into_iter()
             .map(|rc| {
+                let display_text = if query_is_lowercase && is_title_case_like(&rc.word) {
+                    rc.word.to_lowercase()
+                } else {
+                    rc.word.clone()
+                };
+
                 let score = calculate_score(
                     &norm_query,
-                    &rc.word,
+                    &display_text,
                     rc.frequency.token_count,
                     1000,
                     rc.edit_cost as f64 / 10.0,
                     rc.kind.clone(),
                 );
                 Suggestion {
-                    text: rc.word.clone(),
+                    text: display_text,
                     score,
                     kind: rc.kind.clone(),
                     edit_cost: rc.edit_cost,
@@ -869,6 +876,36 @@ impl Engine {
             })
             .collect()
     }
+}
+
+fn is_title_case_like(s: &str) -> bool {
+    let mut alpha_chars = s.chars().filter(|c| c.is_alphabetic());
+    match alpha_chars.next() {
+        Some(first) if first.is_uppercase() => {
+            let mut subsequent_count = 0;
+            for c in alpha_chars {
+                if !c.is_lowercase() {
+                    return false;
+                }
+                subsequent_count += 1;
+            }
+            subsequent_count > 0
+        }
+        _ => false,
+    }
+}
+
+fn is_all_lowercase(query: &str) -> bool {
+    let mut has_alpha = false;
+    for c in query.chars() {
+        if c.is_alphabetic() {
+            has_alpha = true;
+            if !c.is_lowercase() {
+                return false;
+            }
+        }
+    }
+    has_alpha
 }
 
 fn read_string(bytes: &[u8], cursor: usize) -> Result<(String, usize), PackLoadError> {

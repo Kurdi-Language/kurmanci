@@ -67,3 +67,79 @@ fn test_typo_correction() {
     assert!(!suggestions_hevall.is_empty());
     assert!(suggestions_hevall.iter().any(|s| s.text == "heval"));
 }
+
+fn make_entry(word: &str, norm: &str) -> LexiconEntry {
+    LexiconEntry {
+        word: word.to_string(),
+        normalized: norm.to_string(),
+        lemma: word.to_string(),
+        part_of_speech: "noun_fem".to_string(),
+        frequency: 1,
+        regions: vec![],
+        status: "canonical".to_string(),
+        sources: vec![],
+        frequency_metadata: kurmanci_engine::FrequencyMetadata::default(),
+    }
+}
+
+#[test]
+fn test_query_case_preserving_suggestion_output() {
+    let mut engine = Engine::new();
+    let entries = vec![
+        make_entry("Kurdî", "kurdî"),
+        make_entry("Hêrs", "hêrs"),
+        make_entry("Kurmancî", "kurmancî"),
+        make_entry("pirtûk", "pirtûk"),
+        make_entry("USA", "usa"),
+        make_entry("McDonald", "mcdonald"),
+        make_entry("Ê", "ê"),
+        make_entry("A", "a"),
+    ];
+    engine.load_lexicon(entries);
+
+    // 1. Lowercase query + title-case candidate -> lowercase output
+    let s_kurdi = engine.suggest("kurdi", 5);
+    assert!(!s_kurdi.is_empty());
+    assert_eq!(s_kurdi[0].text, "kurdî");
+
+    let s_hers = engine.suggest("hers", 5);
+    assert!(!s_hers.is_empty());
+    assert_eq!(s_hers[0].text, "hêrs");
+
+    let s_kûrmanci = engine.suggest("kûrmancî", 5);
+    assert!(!s_kûrmanci.is_empty());
+    assert_eq!(s_kûrmanci[0].text, "kurmancî");
+
+    // 2. Lowercase query + already-lowercase candidate unchanged
+    let s_pirtuk = engine.suggest("pirtuk", 5);
+    assert!(!s_pirtuk.is_empty());
+    assert_eq!(s_pirtuk[0].text, "pirtûk");
+
+    // 3. Lowercase query + ALL-CAPS candidate (including single-letter uppercase "Ê", "A", "USA") unchanged
+    let s_usa = engine.suggest("usa", 5);
+    assert!(!s_usa.is_empty());
+    assert_eq!(s_usa[0].text, "USA");
+
+    let s_e = engine.suggest("ê", 5);
+    assert!(!s_e.is_empty());
+    assert_eq!(s_e[0].text, "Ê");
+
+    let s_a = engine.suggest("a", 5);
+    assert!(!s_a.is_empty());
+    assert_eq!(s_a[0].text, "A");
+
+    // 4. Lowercase query + mixed-case candidate unchanged
+    let s_mc = engine.suggest("mcdonald", 5);
+    assert!(!s_mc.is_empty());
+    assert_eq!(s_mc[0].text, "McDonald");
+
+    // 5. Title-case query unchanged
+    let s_title = engine.suggest("Kurdi", 5);
+    assert!(!s_title.is_empty());
+    assert_eq!(s_title[0].text, "Kurdî");
+
+    // 6. Uppercase query unchanged
+    let s_upper = engine.suggest("KURDI", 5);
+    assert!(!s_upper.is_empty());
+    assert_eq!(s_upper[0].text, "Kurdî");
+}
