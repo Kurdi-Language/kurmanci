@@ -92,6 +92,8 @@ fn test_query_case_preserving_suggestion_output() {
         make_entry("pirtûk", "pirtûk"),
         make_entry("USA", "usa"),
         make_entry("McDonald", "mcdonald"),
+        make_entry("Ê", "ê"),
+        make_entry("A", "a"),
     ];
     engine.load_lexicon(entries);
 
@@ -113,10 +115,18 @@ fn test_query_case_preserving_suggestion_output() {
     assert!(!s_pirtuk.is_empty());
     assert_eq!(s_pirtuk[0].text, "pirtûk");
 
-    // 3. Lowercase query + ALL-CAPS candidate unchanged
+    // 3. Lowercase query + ALL-CAPS candidate (including single-letter uppercase "Ê", "A", "USA") unchanged
     let s_usa = engine.suggest("usa", 5);
     assert!(!s_usa.is_empty());
     assert_eq!(s_usa[0].text, "USA");
+
+    let s_e = engine.suggest("ê", 5);
+    assert!(!s_e.is_empty());
+    assert_eq!(s_e[0].text, "Ê");
+
+    let s_a = engine.suggest("a", 5);
+    assert!(!s_a.is_empty());
+    assert_eq!(s_a[0].text, "A");
 
     // 4. Lowercase query + mixed-case candidate unchanged
     let s_mc = engine.suggest("mcdonald", 5);

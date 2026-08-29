@@ -881,7 +881,16 @@ impl Engine {
 fn is_title_case_like(s: &str) -> bool {
     let mut alpha_chars = s.chars().filter(|c| c.is_alphabetic());
     match alpha_chars.next() {
-        Some(first) if first.is_uppercase() => alpha_chars.all(|c| c.is_lowercase()),
+        Some(first) if first.is_uppercase() => {
+            let mut subsequent_count = 0;
+            for c in alpha_chars {
+                if !c.is_lowercase() {
+                    return false;
+                }
+                subsequent_count += 1;
+            }
+            subsequent_count > 0
+        }
         _ => false,
     }
 }
