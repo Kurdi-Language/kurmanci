@@ -357,3 +357,157 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     lock.release()?;
     Ok(manifest)
 }
+
+/// Builds a temporary frequency-aware binary pack for experiment candidate evaluation without mutating production pack policy or production pack binaries.
+pub fn build_temp_frequency_pack<P: AsRef<Path>>(
+    pack_id: &str,
+    root_dir: P,
+    output_binary_path: P,
+) -> Result<crate::corpus::join::FrequencyJoinSummaryReport, String> {
+    use crate::compile::{compile_binary_pack_with_config, CompilerModelConfig};
+    use crate::corpus::join::join_frequencies_to_lexicon;
+
+    let root = root_dir.as_ref();
+    let out_p = output_binary_path.as_ref();
+
+    let lock_path = root.join("data/pack-builds.lock");
+    let lock = LockFileGuard::acquire(&lock_path)?;
+
+    let policy_path = root.join("data/pack-policy.toml");
+    let policy = PackPolicyConfig::load_from_file(&policy_path)?;
+    let _pack_def = policy.packs.get(pack_id).ok_or_else(|| {
+        format!(
+            "Pack ID '{}' not declared in data/pack-policy.toml",
+            pack_id
+        )
+    })?;
+
+    let seed_file = root.join("data/reviewed/lexicon.jsonl");
+    let s_file = File::open(&seed_file).map_err(|e| format!("Failed to open seed file: {}", e))?;
+    let mut manual_seed_entries = Vec::new();
+    for (l_idx, line_res) in BufReader::new(s_file).lines().enumerate() {
+        let line = line_res.map_err(|e| format!("Read error in seed line {}: {}", l_idx + 1, e))?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        let entry: SourceLexiconEntry = serde_json::from_str(&line)
+            .map_err(|e| format!("JSON error in seed file line {}: {}", l_idx + 1, e))?;
+        manual_seed_entries.push(entry);
+    }
+
+    let mut decisions = Vec::new();
+    let mut entry_queues = BTreeMap::new();
+    let mut conflict_group_queues = BTreeMap::new();
+    let mut valid_queue_targets = BTreeSet::new();
+    let source_id = "kurdish-hunspell-kmr";
+
+    if pack_id != "seed" {
+        let _review_summary = load_validated_review_snapshot(source_id, root)?;
+
+        let queues_dir = root.join(format!("data/review-queues/{}", source_id));
+        for entry_res in fs::read_dir(&queues_dir).map_err(|e| e.to_string())? {
+            let entry = entry_res.map_err(|e| e.to_string())?;
+            let fname = entry.file_name().to_string_lossy().to_string();
+            if fname.ends_with(".jsonl") {
+                let path = queues_dir.join(&fname);
+                let f = File::open(&path).map_err(|e| e.to_string())?;
+
+                if fname == "metadata-conflict-groups.jsonl" {
+                    for (l_idx, line_res) in BufReader::new(f).lines().enumerate() {
+                        let line = line_res.map_err(|e| e.to_string())?;
+                        if line.trim().is_empty() {
+                            continue;
+                        }
+                        let rec: MetadataConflictGroupQueueRecord = serde_json::from_str(&line)
+                            .map_err(|e| {
+                                format!(
+                                    "Invalid conflict group queue record in {:?} at line {}: {}",
+                                    path,
+                                    l_idx + 1,
+                                    e
+                                )
+                            })?;
+                        valid_queue_targets
+                            .insert(("conflict_group".to_string(), rec.target_id.clone()));
+                        conflict_group_queues.insert(rec.target_id.clone(), rec);
+                    }
+                } else {
+                    for (l_idx, line_res) in BufReader::new(f).lines().enumerate() {
+                        let line = line_res.map_err(|e| e.to_string())?;
+                        if line.trim().is_empty() {
+                            continue;
+                        }
+                        let rec: EntryQueueRecord = serde_json::from_str(&line).map_err(|e| {
+                            format!(
+                                "Invalid entry queue record in {:?} at line {}: {}",
+                                path,
+                                l_idx + 1,
+                                e
+                            )
+                        })?;
+                        valid_queue_targets.insert(("entry".to_string(), rec.target_id.clone()));
+                        entry_queues.insert(rec.target_id.clone(), rec);
+                    }
+                }
+            }
+        }
+
+        let decisions_file = root.join(format!(
+            "data/review-decisions/{}/decisions.jsonl",
+            source_id
+        ));
+        let d_file = File::open(&decisions_file).map_err(|e| e.to_string())?;
+        for (l_idx, line_res) in BufReader::new(d_file).lines().enumerate() {
+            let line = line_res
+                .map_err(|e| format!("Read error in decisions line {}: {}", l_idx + 1, e))?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            let dec: ReviewDecisionRecord = serde_json::from_str(&line)
+                .map_err(|e| format!("JSON error in decisions line {}: {}", l_idx + 1, e))?;
+            decisions.push(dec);
+        }
+    }
+
+    let (raw_candidates, _counts) = select_candidates_for_pack(
+        pack_id,
+        &manual_seed_entries,
+        &entry_queues,
+        &conflict_group_queues,
+        &decisions,
+        &valid_queue_targets,
+        source_id,
+    )?;
+
+    let collision_result = resolve_collisions(pack_id, raw_candidates)?;
+
+    let mut compiler_entries = Vec::new();
+    for cand in &collision_result.resolved_entries {
+        compiler_entries.push(cand.to_source_lexicon_entry());
+    }
+
+    let join_report = join_frequencies_to_lexicon(root, &mut compiler_entries)?;
+
+    let config = CompilerModelConfig {
+        include_frequencies: true,
+        include_bigrams: false,
+        include_trigrams: false,
+    };
+
+    let binary_bytes = compile_binary_pack_with_config(root, &compiler_entries, config)?;
+
+    if let Some(parent) = out_p.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create output parent dir {:?}: {}", parent, e))?;
+    }
+    fs::write(out_p, &binary_bytes)
+        .map_err(|e| format!("Failed to write candidate binary {:?}: {}", out_p, e))?;
+
+    let mut engine = kurmanci_engine::Engine::new();
+    engine
+        .load_binary_pack(&binary_bytes)
+        .map_err(|e| format!("Engine load failed for temp pack: {}", e))?;
+
+    lock.release()?;
+    Ok(join_report)
+}

@@ -1,0 +1,74 @@
+<mediawiki xmlns="http://www.mediawiki.org/xml/export-0.10/" version="0.10">
+  <siteinfo>
+    <sitename>Wikipedia</sitename>
+    <dbname>kuwiki</dbname>
+    <base>https://ku.wikipedia.org/wiki/Destp%C3%AAk</base>
+    <generator>MediaWiki 1.43.0-wmf.17</generator>
+    <case>first-letter</case>
+    <namespaces>
+      <namespace key="-2" case="first-letter">Medyakar</namespace>
+      <namespace key="-1" case="first-letter">Taybet</namespace>
+      <namespace key="0" case="first-letter" />
+      <namespace key="1" case="first-letter">Gotûbêj</namespace>
+      <namespace key="2" case="first-letter">Bikarhêner</namespace>
+      <namespace key="10" case="first-letter">Şablon</namespace>
+      <namespace key="14" case="first-letter">Kategori</namespace>
+    </namespaces>
+  </siteinfo>
+  <page>
+    <title>Amed</title>
+    <ns>0</ns>
+    <id>12345</id>
+    <revision>
+      <id>99901</id>
+      <timestamp>2026-01-01T12:00:00Z</timestamp>
+      <text bytes="1200" xml:space="preserve">{{Infobox Bajar | nav = Amed | welat = Kurdistan }}
+'''Amed''' an jî ''Diyarbekir'' bajarekî mezin ê [[Kurdistan|bakurê Kurdistanê]] ye.&lt;ref&gt;Nivîsa referansê.&lt;/ref&gt;
+
+== Dîrok ==
+Dîroka Amedê gelek kevnar e. Li bajarê Amedê gelek avahiyên dîrokî hene.
+{| class="wikitable"
+|-
+! Nav !! Sal
+|-
+| Sûr || 2000
+|}
+
+[[Kategori:Bajarên Kurdistanê]]
+[[Wêne:Amed_view.jpg|thumb|Wêneya Amedê]]
+[[en:Diyarbakır]]
+</text>
+    </revision>
+  </page>
+  <page>
+    <title>Diyarbekir</title>
+    <ns>0</ns>
+    <id>12346</id>
+    <redirect title="Amed" />
+    <revision>
+      <id>99902</id>
+      <timestamp>2026-01-01T12:01:00Z</timestamp>
+      <text bytes="50" xml:space="preserve">#REDIRECT [[Amed]]</text>
+    </revision>
+  </page>
+  <page>
+    <title>Şablon:Infobox</title>
+    <ns>10</ns>
+    <id>88801</id>
+    <revision>
+      <id>99903</id>
+      <timestamp>2026-01-01T12:02:00Z</timestamp>
+      <text bytes="100" xml:space="preserve">Ev şablona infoboxê ye.</text>
+    </revision>
+  </page>
+  <page>
+    <title>Kategori:Bajarên Kurdistanê</title>
+    <ns>14</ns>
+    <id>77701</id>
+    <revision>
+      <id>99904</id>
+      <timestamp>2026-01-01T12:03:00Z</timestamp>
+      <text bytes="100" xml:space="preserve">Daxuyaniya kategoriyê.</text>
+    </revision>
+  </page>
+</mediawiki>

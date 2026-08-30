@@ -115,6 +115,34 @@ enum Commands {
     },
     /// Evaluates seed, reviewed, and experimental-full packs against reviewed cases
     EvaluatePacks,
+    /// Extracts main-namespace article prose from a MediaWiki XML / XML.bz2 artifact
+    ExtractWikimedia {
+        #[arg(short, long)]
+        input: PathBuf,
+        #[arg(short, long)]
+        output: PathBuf,
+        #[arg(long)]
+        expected_sha1: Option<String>,
+    },
+    /// Builds unigram frequency statistics strictly from the TRAIN partition canonical representatives
+    BuildTrainFrequencies,
+    /// Evaluates a candidate experiment binary pack against base binary pack using 357-case benchmark logic
+    EvaluateFrequencyExperiment {
+        #[arg(long, default_value = "data/build/packs/experimental-full/lexicon.bin")]
+        base_pack: PathBuf,
+        #[arg(long)]
+        candidate_pack: PathBuf,
+    },
+    /// Builds a temporary frequency-aware binary pack for experiment candidate evaluation
+    BuildTempFreqPack {
+        #[arg(long, default_value = "experimental-full")]
+        pack_id: String,
+        #[arg(
+            long,
+            default_value = "data/build/packs/temp-freq-experimental/lexicon.bin"
+        )]
+        output: PathBuf,
+    },
     /// Generates a deterministic ranked 1,000-entry human review batch from existing review queue and frequencies
     GenerateVocabularyReviewBatch,
 }
@@ -612,6 +640,165 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error evaluating packs: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::ExtractWikimedia {
+            input,
+            output,
+            expected_sha1,
+        } => {
+            println!("=== Kurmancî Wikimedia MediaWiki XML Extractor ===");
+            match data_builder_lib::corpus::extractors::extract_wikimedia_file(
+                &input,
+                &output,
+                expected_sha1.as_deref(),
+            ) {
+                Ok(report) => {
+                    println!("⚡ WIKIMEDIA EXTRACTION SUCCESSFUL!");
+                    println!("  Source Artifact:          {}", report.source_artifact);
+                    println!("  Total Pages Seen:         {}", report.total_pages_seen);
+                    println!(
+                        "  Main NS Pages (ns:0):     {}",
+                        report.main_namespace_pages
+                    );
+                    println!(
+                        "  Redirects Excluded:       {}",
+                        report.redirect_pages_excluded
+                    );
+                    println!(
+                        "  Non-Main Excluded:        {}",
+                        report.non_main_pages_excluded
+                    );
+                    println!("  Extracted JSONL Docs:     {}", report.extracted_documents);
+                    println!(
+                        "  Total Extracted Tokens:   {}",
+                        report.total_extracted_tokens
+                    );
+                    println!(
+                        "  Output SHA-256 Checksum:  {}",
+                        report.output_checksum_sha256
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error extracting Wikimedia dump: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildTrainFrequencies => {
+            println!("=== Kurmancî TRAIN-Partition Unigram Frequency Builder ===");
+            match data_builder_lib::build_corpus_train_frequencies(".") {
+                Ok(stats) => {
+                    println!("⚡ TRAIN FREQUENCY BUILD SUCCESSFUL!");
+                    println!("  Total Canonical Documents: {}", stats.total_documents);
+                    println!("  Total TRAIN Tokens:       {}", stats.total_tokens);
+                    println!("  Unique Vocabulary Records: {}", stats.records.len());
+                }
+                Err(e) => {
+                    eprintln!("Error building train frequencies: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::EvaluateFrequencyExperiment {
+            base_pack,
+            candidate_pack,
+        } => {
+            println!("=== Kurmancî Frequency Experiment Benchmark Evaluator ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::evaluate_candidate_experiment_pack(
+                &root,
+                &base_pack,
+                &candidate_pack,
+            ) {
+                Ok(comp) => {
+                    println!("⚡ EXPERIMENT EVALUATION COMPLETED!");
+                    println!("  Total Reviewed Cases:        {}", comp.total_cases);
+                    println!(
+                        "  Raw Pass (Base -> Candidate): {} -> {} / 357",
+                        comp.base_raw_pass_count, comp.candidate_raw_pass_count
+                    );
+                    println!(
+                        "  Top-1 Accuracy:              {} / {} -> {} / {}",
+                        comp.top_1_base,
+                        comp.total_eligible_correct_word,
+                        comp.top_1_cand,
+                        comp.total_eligible_correct_word
+                    );
+                    println!(
+                        "  Top-3 Accuracy:              {} / {} -> {} / {}",
+                        comp.top_3_base,
+                        comp.total_eligible_correct_word,
+                        comp.top_3_cand,
+                        comp.total_eligible_correct_word
+                    );
+                    println!(
+                        "  Top-5 Accuracy:              {} / {} -> {} / {}",
+                        comp.top_5_base,
+                        comp.total_eligible_correct_word,
+                        comp.top_5_cand,
+                        comp.total_eligible_correct_word
+                    );
+                    println!(
+                        "  MRR:                         {:.4} -> {:.4}",
+                        comp.mrr_base, comp.mrr_cand
+                    );
+                    println!(
+                        "  Completion Recall:           {} / {} -> {} / {}",
+                        comp.comp_recall_base,
+                        comp.total_eligible_complete_prefix,
+                        comp.comp_recall_cand,
+                        comp.total_eligible_complete_prefix
+                    );
+                    println!(
+                        "  Known-Word Coverage:         {} / {} -> {} / {}",
+                        comp.kw_coverage_base,
+                        comp.total_eligible_accept_word,
+                        comp.kw_coverage_cand,
+                        comp.total_eligible_accept_word
+                    );
+                    println!(
+                        "  False-Acceptance Rate:       {} / {} -> {} / {}",
+                        comp.fa_rate_base,
+                        comp.total_eligible_false_acceptance,
+                        comp.fa_rate_cand,
+                        comp.total_eligible_false_acceptance
+                    );
+                    println!(
+                        "  Improvements (count={}):      {:?}",
+                        comp.improvements.len(),
+                        comp.improvements
+                    );
+                    println!(
+                        "  Regressions (count={}):       {:?}",
+                        comp.regressions.len(),
+                        comp.regressions
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error evaluating experiment candidate pack: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildTempFreqPack { pack_id, output } => {
+            println!("=== Kurmancî Temporary Frequency-Aware Pack Builder ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::build_temp_frequency_pack(&pack_id, &root, &output) {
+                Ok(report) => {
+                    println!("⚡ TEMPORARY FREQUENCY PACK BUILT SUCCESSFULLY!");
+                    println!("  Output Binary:              {:?}", output);
+                    println!("  Lexicon Entries:            {}", report.lexicon_entries);
+                    println!("  Frequency Covered Entries:  {}", report.matched_entries);
+                    println!(
+                        "  Coverage Percent:           {:.2}%",
+                        report.lexicon_coverage_percent
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error building temp frequency pack: {}", e);
                     std::process::exit(1);
                 }
             }

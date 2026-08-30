@@ -997,3 +997,224 @@ pub fn evaluate_packs<P: AsRef<Path>>(root_dir: P) -> Result<ThreePackComparison
     lock.release()?;
     Ok(summary)
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CandidateExperimentComparison {
+    pub total_cases: usize,
+    pub base_raw_pass_count: usize,
+    pub candidate_raw_pass_count: usize,
+    pub top_1_base: usize,
+    pub top_1_cand: usize,
+    pub top_3_base: usize,
+    pub top_3_cand: usize,
+    pub top_5_base: usize,
+    pub top_5_cand: usize,
+    pub mrr_base: f64,
+    pub mrr_cand: f64,
+    pub comp_recall_base: usize,
+    pub comp_recall_cand: usize,
+    pub kw_coverage_base: usize,
+    pub kw_coverage_cand: usize,
+    pub fa_rate_base: usize,
+    pub fa_rate_cand: usize,
+    pub total_eligible_correct_word: usize,
+    pub total_eligible_complete_prefix: usize,
+    pub total_eligible_accept_word: usize,
+    pub total_eligible_false_acceptance: usize,
+    pub improvements: Vec<(String, String)>,
+    pub regressions: Vec<(String, String)>,
+}
+
+/// Evaluates a candidate experiment binary pack against a base binary pack using exact 357-case benchmark logic.
+pub fn evaluate_candidate_experiment_pack<P: AsRef<Path>>(
+    root_dir: P,
+    base_binary_path: P,
+    candidate_binary_path: P,
+) -> Result<CandidateExperimentComparison, String> {
+    let root = root_dir.as_ref();
+    let base_p = base_binary_path.as_ref();
+    let cand_p = candidate_binary_path.as_ref();
+
+    let benchmark_path = root.join("evaluation/spelling/reviewed-cases.jsonl");
+    let cases = super::reports::load_benchmark_cases(&benchmark_path)?;
+
+    let base_bytes =
+        fs::read(base_p).map_err(|e| format!("Failed to read base binary {:?}: {}", base_p, e))?;
+    let cand_bytes = fs::read(cand_p)
+        .map_err(|e| format!("Failed to read candidate binary {:?}: {}", cand_p, e))?;
+
+    let mut base_engine = Engine::new();
+    base_engine
+        .load_binary_pack(&base_bytes)
+        .map_err(|e| format!("Failed to load base engine: {}", e))?;
+
+    let mut cand_engine = Engine::new();
+    cand_engine
+        .load_binary_pack(&cand_bytes)
+        .map_err(|e| format!("Failed to load candidate engine: {}", e))?;
+
+    let mut base_raw_pass = 0;
+    let mut cand_raw_pass = 0;
+
+    let mut top_1_b = 0;
+    let mut top_1_c = 0;
+    let mut top_3_b = 0;
+    let mut top_3_c = 0;
+    let mut top_5_b = 0;
+    let mut top_5_c = 0;
+    let mut mrr_b_sum = 0.0;
+    let mut mrr_c_sum = 0.0;
+    let mut comp_b = 0;
+    let mut comp_c = 0;
+    let mut kw_b = 0;
+    let mut kw_c = 0;
+    let mut fa_b = 0;
+    let mut fa_c = 0;
+
+    let mut el_cw = 0;
+    let mut el_cp = 0;
+    let mut el_kw = 0;
+    let mut el_fa = 0;
+
+    let mut improvements = Vec::new();
+    let mut regressions = Vec::new();
+
+    for case in &cases {
+        let q_base = query_engine_for_case(&base_engine, case);
+        let q_cand = query_engine_for_case(&cand_engine, case);
+
+        let class = classify_pairwise_comparison(&q_base, &q_cand, &case.expectation, case.task);
+
+        match class {
+            PairwiseComparisonClass::Improvement => {
+                improvements.push((case.case_id.clone(), case.input.clone()))
+            }
+            PairwiseComparisonClass::Regression => {
+                regressions.push((case.case_id.clone(), case.input.clone()))
+            }
+            PairwiseComparisonClass::Unchanged => {}
+        }
+
+        // Raw Pass evaluation (matching PR #45 definition)
+        let pass_b = match case.task {
+            BenchmarkTask::AcceptWord => case.expectation.accepted == Some(q_base.accepted),
+            BenchmarkTask::CorrectWord => q_base.best_expected_rank == Some(1),
+            BenchmarkTask::CompletePrefix => q_base.best_expected_rank.is_some_and(|r| r <= 5),
+        };
+
+        let pass_c = match case.task {
+            BenchmarkTask::AcceptWord => case.expectation.accepted == Some(q_cand.accepted),
+            BenchmarkTask::CorrectWord => q_cand.best_expected_rank == Some(1),
+            BenchmarkTask::CompletePrefix => q_cand.best_expected_rank.is_some_and(|r| r <= 5),
+        };
+
+        if pass_b {
+            base_raw_pass += 1;
+        }
+        if pass_c {
+            cand_raw_pass += 1;
+        }
+
+        match case.task {
+            BenchmarkTask::CorrectWord => {
+                if !case.expectation.expected_candidates.is_empty() {
+                    el_cw += 1;
+                    if q_base.best_expected_rank == Some(1) {
+                        top_1_b += 1;
+                    }
+                    if q_cand.best_expected_rank == Some(1) {
+                        top_1_c += 1;
+                    }
+
+                    if q_base.best_expected_rank.is_some_and(|r| r <= 3) {
+                        top_3_b += 1;
+                    }
+                    if q_cand.best_expected_rank.is_some_and(|r| r <= 3) {
+                        top_3_c += 1;
+                    }
+
+                    if q_base.best_expected_rank.is_some_and(|r| r <= 5) {
+                        top_5_b += 1;
+                    }
+                    if q_cand.best_expected_rank.is_some_and(|r| r <= 5) {
+                        top_5_c += 1;
+                    }
+
+                    if let Some(r) = q_base.best_expected_rank {
+                        mrr_b_sum += 1.0 / (r as f64);
+                    }
+                    if let Some(r) = q_cand.best_expected_rank {
+                        mrr_c_sum += 1.0 / (r as f64);
+                    }
+                }
+            }
+            BenchmarkTask::CompletePrefix => {
+                if !case.expectation.expected_candidates.is_empty() {
+                    el_cp += 1;
+                    if q_base.best_expected_rank.is_some() {
+                        comp_b += 1;
+                    }
+                    if q_cand.best_expected_rank.is_some() {
+                        comp_c += 1;
+                    }
+                }
+            }
+            BenchmarkTask::AcceptWord => {
+                if case.expectation.accepted == Some(true) {
+                    el_kw += 1;
+                    if q_base.accepted {
+                        kw_b += 1;
+                    }
+                    if q_cand.accepted {
+                        kw_c += 1;
+                    }
+                } else if case.expectation.accepted == Some(false) {
+                    el_fa += 1;
+                    if q_base.accepted {
+                        fa_b += 1;
+                    }
+                    if q_cand.accepted {
+                        fa_c += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    let mrr_b = if el_cw == 0 {
+        0.0
+    } else {
+        mrr_b_sum / (el_cw as f64)
+    };
+    let mrr_c = if el_cw == 0 {
+        0.0
+    } else {
+        mrr_c_sum / (el_cw as f64)
+    };
+
+    Ok(CandidateExperimentComparison {
+        total_cases: cases.len(),
+        base_raw_pass_count: base_raw_pass,
+        candidate_raw_pass_count: cand_raw_pass,
+        top_1_base: top_1_b,
+        top_1_cand: top_1_c,
+        top_3_base: top_3_b,
+        top_3_cand: top_3_c,
+        top_5_base: top_5_b,
+        top_5_cand: top_5_c,
+        mrr_base: mrr_b,
+        mrr_cand: mrr_c,
+        comp_recall_base: comp_b,
+        comp_recall_cand: comp_c,
+        kw_coverage_base: kw_b,
+        kw_coverage_cand: kw_c,
+        fa_rate_base: fa_b,
+        fa_rate_cand: fa_c,
+        total_eligible_correct_word: el_cw,
+        total_eligible_complete_prefix: el_cp,
+        total_eligible_accept_word: el_kw,
+        total_eligible_false_acceptance: el_fa,
+        improvements,
+        regressions,
+    })
+}
