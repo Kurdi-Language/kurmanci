@@ -20,6 +20,20 @@ pub struct FrequencyRecord {
     pub zipf: f64,
 }
 
+/// Frequency build provenance manifest written to `data/build/frequency_manifest.json`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FrequencyBuildManifest {
+    pub schema_version: String,
+    pub canonical_manifest_sha256: String,
+    pub partition_manifest_sha256: String,
+    pub train_partition_sha256: String,
+    pub partition_policy_version: String,
+    pub total_documents: usize,
+    pub total_tokens: usize,
+    pub unique_records: usize,
+    pub frequencies_sha256: String,
+}
+
 /// Statistics collected during frequency building across all corpus files.
 #[derive(Debug, Clone)]
 pub struct FrequencyBuildStats {
@@ -369,6 +383,31 @@ pub fn build_corpus_train_frequencies<P: AsRef<Path>>(
         writeln!(file, "{}", line)
             .map_err(|e| format!("Failed to write to {:?}: {}", frequencies_path, e))?;
     }
+
+    let freqs_sha256 = super::importer::calculate_file_sha256(&frequencies_path)?;
+    let canonical_manifest_sha256 =
+        super::importer::calculate_file_sha256(root.join("data/imported-canonical/manifest.json"))?;
+    let partition_manifest_sha256 = super::importer::calculate_file_sha256(
+        root.join("data/build/corpus-partitions/manifest.json"),
+    )?;
+    let train_partition_sha256 = super::importer::calculate_file_sha256(&train_path)?;
+
+    let freq_manifest = FrequencyBuildManifest {
+        schema_version: "frequency-build-v1".to_string(),
+        canonical_manifest_sha256,
+        partition_manifest_sha256,
+        train_partition_sha256,
+        partition_policy_version: super::partition::PARTITION_POLICY_VERSION.to_string(),
+        total_documents,
+        total_tokens,
+        unique_records: records.len(),
+        frequencies_sha256: freqs_sha256,
+    };
+    let freq_manifest_path = build_dir.join("frequency_manifest.json");
+    let freq_manifest_bytes = serde_json::to_vec_pretty(&freq_manifest)
+        .map_err(|e| format!("Failed to serialize frequency manifest: {}", e))?;
+    fs::write(&freq_manifest_path, freq_manifest_bytes)
+        .map_err(|e| format!("Failed to write frequency_manifest.json: {}", e))?;
 
     let stats = FrequencyBuildStats {
         total_documents,

@@ -9,13 +9,15 @@ use std::path::Path;
 
 use crate::compile::{compile_entries_to_directory, CompilerModelConfig};
 use crate::corpus::importer::LockFileGuard;
-use crate::pack::collisions::{resolve_collisions, write_collision_report};
+use crate::pack::collisions::{
+    resolve_collisions, write_collision_report, CollisionResolutionResult,
+};
 use crate::pack::manifest::{
     calculate_file_sha256, generate_licensing_and_attribution, PackManifest,
     LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
 };
 use crate::pack::policy::PackPolicyConfig;
-use crate::pack::selection::select_candidates_for_pack;
+use crate::pack::selection::{select_candidates_for_pack, SelectionCounts};
 use crate::review::merger::load_validated_review_snapshot;
 use crate::review::queues::{EntryQueueRecord, MetadataConflictGroupQueueRecord};
 use crate::review::schema::ReviewDecisionRecord;
@@ -33,34 +35,35 @@ fn remove_dir_or_file<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
     }
 }
 
-/// Builds a controlled language pack for `pack_id` under `data/build/packs/<pack_id>/`.
-pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackManifest, String> {
+/// Payload returned by pure authoritative pack selection and collision resolution.
+pub struct AuthoritativePackResolution {
+    pub resolved_entries: Vec<SourceLexiconEntry>,
+    pub candidate_counts: SelectionCounts,
+    pub collision_result: CollisionResolutionResult,
+    pub policy_sha256: String,
+    pub decisions_sha256: Option<String>,
+    pub queue_manifest_sha256: Option<String>,
+    pub review_report_manifest_sha256: Option<String>,
+}
+
+/// Single common pure resolver for authoritative pack selection and collision resolution.
+pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
+    pack_id: &str,
+    root_dir: P,
+) -> Result<AuthoritativePackResolution, String> {
     let root = root_dir.as_ref();
 
-    // 1. Acquire global build lock data/pack-builds.lock held for entire transaction
-    let lock_path = root.join("data/pack-builds.lock");
-    let lock = LockFileGuard::acquire(&lock_path)?;
-
-    // 2. Load and validate pack policy
     let policy_path = root.join("data/pack-policy.toml");
     let policy = PackPolicyConfig::load_from_file(&policy_path)?;
-    let pack_def = policy.packs.get(pack_id).ok_or_else(|| {
-        format!(
+    if !policy.packs.contains_key(pack_id) {
+        return Err(format!(
             "Pack ID '{}' not declared in data/pack-policy.toml",
             pack_id
-        )
-    })?;
-
+        ));
+    }
     let policy_sha256 = calculate_file_sha256(&policy_path)?;
 
-    println!("=== Kurmancî Controlled Pack Builder ===");
-    println!("  Pack ID:        {}", pack_id);
-    println!("  Description:    {}", pack_def.description);
-    println!("  Model Profile:  {}", pack_def.model_profile);
-    println!("  Is Default:     {}", policy.default_pack == pack_id);
-    println!("  Opt In:         {}", pack_def.opt_in);
-
-    // 3. Load manual seed entries (Single authoritative path)
+    // Load manual seed entries (single authoritative file)
     let seed_file = root.join("data/reviewed/lexicon.jsonl");
     if !seed_file.exists() {
         return Err(format!(
@@ -81,7 +84,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         manual_seed_entries.push(entry);
     }
 
-    // 4. Handle Stale-Input & Review Pipeline Validation
     let mut decisions = Vec::new();
     let mut entry_queues = BTreeMap::new();
     let mut conflict_group_queues = BTreeMap::new();
@@ -91,7 +93,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     let mut valid_queue_targets = BTreeSet::new();
     let source_id = "kurdish-hunspell-kmr";
 
-    // Load source registry dynamically
     let registry_path = root.join("data/source-registry/sources.toml");
     let registry = SourceRegistry::load_from_file(&registry_path)?;
     let src_entry = registry
@@ -107,7 +108,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     let _source_revision = &src_entry.version;
 
     if pack_id != "seed" {
-        // Load immutable validated snapshot without rewriting reports
         let review_summary = load_validated_review_snapshot(source_id, root)?;
         decisions_sha256 = Some(review_summary.decision_file_sha256.clone());
         queue_manifest_sha256 = Some(review_summary.provenance.queue_manifest_sha256.clone());
@@ -116,8 +116,14 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         let r_manifest = reports_dir.join("artifacts.sha256");
         review_report_manifest_sha256 = Some(calculate_file_sha256(&r_manifest)?);
 
-        // Load typed review queues
         let queues_dir = root.join(format!("data/review-queues/{}", source_id));
+        if !queues_dir.exists() {
+            return Err(format!(
+                "Review queues directory missing at {:?}. Run review pipeline first.",
+                queues_dir
+            ));
+        }
+
         for entry_res in fs::read_dir(&queues_dir).map_err(|e| e.to_string())? {
             let entry = entry_res.map_err(|e| e.to_string())?;
             let fname = entry.file_name().to_string_lossy().to_string();
@@ -165,11 +171,17 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
             }
         }
 
-        // Load decisions file
         let decisions_file = root.join(format!(
             "data/review-decisions/{}/decisions.jsonl",
             source_id
         ));
+        if !decisions_file.exists() {
+            return Err(format!(
+                "Review decisions file missing at {:?}. Run review pipeline first.",
+                decisions_file
+            ));
+        }
+
         let d_file = File::open(&decisions_file).map_err(|e| e.to_string())?;
         for (l_idx, line_res) in BufReader::new(d_file).lines().enumerate() {
             let line = line_res
@@ -183,7 +195,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         }
     }
 
-    // 5. Select candidates for pack
     let (raw_candidates, counts) = select_candidates_for_pack(
         pack_id,
         &manual_seed_entries,
@@ -194,12 +205,63 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         source_id,
     )?;
 
-    // 6. Resolve collisions
     let collision_result = resolve_collisions(pack_id, raw_candidates)?;
+
+    let resolved_entries = collision_result
+        .resolved_entries
+        .iter()
+        .map(|cand| cand.to_source_lexicon_entry())
+        .collect();
+
+    Ok(AuthoritativePackResolution {
+        resolved_entries,
+        candidate_counts: counts,
+        collision_result,
+        policy_sha256,
+        decisions_sha256,
+        queue_manifest_sha256,
+        review_report_manifest_sha256,
+    })
+}
+
+/// Pure helper that resolves authoritative lexical entries for `pack_id` ("seed", "reviewed", "experimental-full")
+/// using the exact single common resolver `resolve_authoritative_pack_payload`.
+pub fn resolve_authoritative_pack_lexicon<P: AsRef<Path>>(
+    pack_id: &str,
+    root_dir: P,
+) -> Result<Vec<SourceLexiconEntry>, String> {
+    resolve_authoritative_pack_payload(pack_id, root_dir).map(|res| res.resolved_entries)
+}
+
+/// Builds a controlled language pack for `pack_id` under `data/build/packs/<pack_id>/`.
+pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackManifest, String> {
+    let root = root_dir.as_ref();
+
+    let lock_path = root.join("data/pack-builds.lock");
+    let lock = LockFileGuard::acquire(&lock_path)?;
+
+    let policy_path = root.join("data/pack-policy.toml");
+    let policy = PackPolicyConfig::load_from_file(&policy_path)?;
+    let pack_def = policy.packs.get(pack_id).ok_or_else(|| {
+        format!(
+            "Pack ID '{}' not declared in data/pack-policy.toml",
+            pack_id
+        )
+    })?;
+
+    println!("=== Kurmancî Controlled Pack Builder ===");
+    println!("  Pack ID:        {}", pack_id);
+    println!("  Description:    {}", pack_def.description);
+    println!("  Model Profile:  {}", pack_def.model_profile);
+    println!("  Is Default:     {}", policy.default_pack == pack_id);
+    println!("  Opt In:         {}", pack_def.opt_in);
+
+    // Resolve authoritative pack payload via common pure resolver
+    let payload = resolve_authoritative_pack_payload(pack_id, root)?;
 
     let mut included_sources_set = BTreeSet::new();
     let mut compiler_entries = Vec::new();
-    for cand in &collision_result.resolved_entries {
+    for cand in &payload.collision_result.resolved_entries {
         included_sources_set.insert(cand.source_id.clone());
         compiler_entries.push(cand.to_source_lexicon_entry());
     }
@@ -208,7 +270,7 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     let (licenses, attribution_text) =
         generate_licensing_and_attribution(root, &included_sources_vec)?;
 
-    // 7. Atomic Staging Layout
+    // Atomic Staging Layout
     let stage_dir = root.join(format!("data/build/packs/.{}.tmp-stage", pack_id));
     let backup_dir = root.join(format!("data/build/packs/.{}.tmp-backup", pack_id));
     let pack_dir = root.join(format!("data/build/packs/{}", pack_id));
@@ -218,7 +280,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     }
     fs::create_dir_all(&stage_dir).map_err(|e| format!("Failed to create stage dir: {}", e))?;
 
-    // 8. Invoke compiler with CompilerModelConfig::none()
     let binary_path = compile_entries_to_directory(
         root,
         &compiler_entries,
@@ -229,7 +290,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     let binary_sha256 = format!("{:x}", Sha256::digest(&binary_bytes));
     let binary_size_bytes = binary_bytes.len() as u64;
 
-    // Verify engine load
     let mut engine = kurmanci_engine::Engine::new();
     engine.load_binary_pack(&binary_bytes).map_err(|e| {
         format!(
@@ -238,19 +298,16 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         )
     })?;
 
-    // Write collision report
     let collision_report_path = stage_dir.join("collision-report.jsonl");
     write_collision_report(
         &collision_report_path,
-        &collision_result.collision_report_records,
+        &payload.collision_result.collision_report_records,
     )?;
 
-    // Write attribution.txt
     let attribution_path = stage_dir.join("attribution.txt");
     fs::write(&attribution_path, attribution_text)
         .map_err(|e| format!("Failed to write attribution.txt: {}", e))?;
 
-    // Build pack manifest
     let manifest = PackManifest {
         schema_version: LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION.to_string(),
         pack_id: pack_id.to_string(),
@@ -262,19 +319,26 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         frequency_entry_count: 0,
         bigram_count: 0,
         trigram_count: 0,
-        manual_seed_selected_count: counts.manual_seed_selected,
-        external_approved_selected_count: counts.external_approved_selected,
-        external_metadata_replacement_selected_count: counts.external_metadata_replacement_selected,
-        external_experimental_selected_count: counts.external_experimental_selected,
-        external_unreviewed_selected_count: counts.external_unreviewed_selected,
-        external_excluded_by_status_count: counts.external_excluded_by_status_count,
-        external_discarded_by_collision_count: collision_result
+        manual_seed_selected_count: payload.candidate_counts.manual_seed_selected,
+        external_approved_selected_count: payload.candidate_counts.external_approved_selected,
+        external_metadata_replacement_selected_count: payload
+            .candidate_counts
+            .external_metadata_replacement_selected,
+        external_experimental_selected_count: payload
+            .candidate_counts
+            .external_experimental_selected,
+        external_unreviewed_selected_count: payload.candidate_counts.external_unreviewed_selected,
+        external_excluded_by_status_count: payload
+            .candidate_counts
+            .external_excluded_by_status_count,
+        external_discarded_by_collision_count: payload
+            .collision_result
             .external_discarded_by_collision_count,
-        final_unique_entry_count: collision_result.resolved_entries.len(),
-        pack_policy_sha256: policy_sha256,
-        review_decisions_sha256: decisions_sha256,
-        review_queue_manifest_sha256: queue_manifest_sha256,
-        controlled_review_report_manifest_sha256: review_report_manifest_sha256,
+        final_unique_entry_count: payload.collision_result.resolved_entries.len(),
+        pack_policy_sha256: payload.policy_sha256,
+        review_decisions_sha256: payload.decisions_sha256,
+        review_queue_manifest_sha256: payload.queue_manifest_sha256,
+        controlled_review_report_manifest_sha256: payload.review_report_manifest_sha256,
         binary_sha256: binary_sha256.clone(),
         binary_size_bytes,
         data_licenses: licenses,
@@ -288,7 +352,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     )
     .map_err(|e| format!("Failed to write manifest.json: {}", e))?;
 
-    // 9. Generate self-excluding artifacts.sha256 (Hashes exactly 4 files)
     let artifact_files = [
         "lexicon.bin",
         "manifest.json",
@@ -310,7 +373,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     fs::write(stage_dir.join("artifacts.sha256"), manifest_bytes)
         .map_err(|e| format!("Write artifacts.sha256 failed: {}", e))?;
 
-    // 10. Atomic Swap
     if backup_dir.exists() {
         remove_dir_or_file(&backup_dir)
             .map_err(|e| format!("Failed to clean backup dir: {}", e))?;
@@ -373,118 +435,8 @@ pub fn build_temp_frequency_pack<P: AsRef<Path>>(
     let lock_path = root.join("data/pack-builds.lock");
     let lock = LockFileGuard::acquire(&lock_path)?;
 
-    let policy_path = root.join("data/pack-policy.toml");
-    let policy = PackPolicyConfig::load_from_file(&policy_path)?;
-    let _pack_def = policy.packs.get(pack_id).ok_or_else(|| {
-        format!(
-            "Pack ID '{}' not declared in data/pack-policy.toml",
-            pack_id
-        )
-    })?;
-
-    let seed_file = root.join("data/reviewed/lexicon.jsonl");
-    let s_file = File::open(&seed_file).map_err(|e| format!("Failed to open seed file: {}", e))?;
-    let mut manual_seed_entries = Vec::new();
-    for (l_idx, line_res) in BufReader::new(s_file).lines().enumerate() {
-        let line = line_res.map_err(|e| format!("Read error in seed line {}: {}", l_idx + 1, e))?;
-        if line.trim().is_empty() {
-            continue;
-        }
-        let entry: SourceLexiconEntry = serde_json::from_str(&line)
-            .map_err(|e| format!("JSON error in seed file line {}: {}", l_idx + 1, e))?;
-        manual_seed_entries.push(entry);
-    }
-
-    let mut decisions = Vec::new();
-    let mut entry_queues = BTreeMap::new();
-    let mut conflict_group_queues = BTreeMap::new();
-    let mut valid_queue_targets = BTreeSet::new();
-    let source_id = "kurdish-hunspell-kmr";
-
-    if pack_id != "seed" {
-        let _review_summary = load_validated_review_snapshot(source_id, root)?;
-
-        let queues_dir = root.join(format!("data/review-queues/{}", source_id));
-        for entry_res in fs::read_dir(&queues_dir).map_err(|e| e.to_string())? {
-            let entry = entry_res.map_err(|e| e.to_string())?;
-            let fname = entry.file_name().to_string_lossy().to_string();
-            if fname.ends_with(".jsonl") {
-                let path = queues_dir.join(&fname);
-                let f = File::open(&path).map_err(|e| e.to_string())?;
-
-                if fname == "metadata-conflict-groups.jsonl" {
-                    for (l_idx, line_res) in BufReader::new(f).lines().enumerate() {
-                        let line = line_res.map_err(|e| e.to_string())?;
-                        if line.trim().is_empty() {
-                            continue;
-                        }
-                        let rec: MetadataConflictGroupQueueRecord = serde_json::from_str(&line)
-                            .map_err(|e| {
-                                format!(
-                                    "Invalid conflict group queue record in {:?} at line {}: {}",
-                                    path,
-                                    l_idx + 1,
-                                    e
-                                )
-                            })?;
-                        valid_queue_targets
-                            .insert(("conflict_group".to_string(), rec.target_id.clone()));
-                        conflict_group_queues.insert(rec.target_id.clone(), rec);
-                    }
-                } else {
-                    for (l_idx, line_res) in BufReader::new(f).lines().enumerate() {
-                        let line = line_res.map_err(|e| e.to_string())?;
-                        if line.trim().is_empty() {
-                            continue;
-                        }
-                        let rec: EntryQueueRecord = serde_json::from_str(&line).map_err(|e| {
-                            format!(
-                                "Invalid entry queue record in {:?} at line {}: {}",
-                                path,
-                                l_idx + 1,
-                                e
-                            )
-                        })?;
-                        valid_queue_targets.insert(("entry".to_string(), rec.target_id.clone()));
-                        entry_queues.insert(rec.target_id.clone(), rec);
-                    }
-                }
-            }
-        }
-
-        let decisions_file = root.join(format!(
-            "data/review-decisions/{}/decisions.jsonl",
-            source_id
-        ));
-        let d_file = File::open(&decisions_file).map_err(|e| e.to_string())?;
-        for (l_idx, line_res) in BufReader::new(d_file).lines().enumerate() {
-            let line = line_res
-                .map_err(|e| format!("Read error in decisions line {}: {}", l_idx + 1, e))?;
-            if line.trim().is_empty() {
-                continue;
-            }
-            let dec: ReviewDecisionRecord = serde_json::from_str(&line)
-                .map_err(|e| format!("JSON error in decisions line {}: {}", l_idx + 1, e))?;
-            decisions.push(dec);
-        }
-    }
-
-    let (raw_candidates, _counts) = select_candidates_for_pack(
-        pack_id,
-        &manual_seed_entries,
-        &entry_queues,
-        &conflict_group_queues,
-        &decisions,
-        &valid_queue_targets,
-        source_id,
-    )?;
-
-    let collision_result = resolve_collisions(pack_id, raw_candidates)?;
-
-    let mut compiler_entries = Vec::new();
-    for cand in &collision_result.resolved_entries {
-        compiler_entries.push(cand.to_source_lexicon_entry());
-    }
+    let payload = resolve_authoritative_pack_payload(pack_id, root)?;
+    let mut compiler_entries = payload.resolved_entries;
 
     let join_report = join_frequencies_to_lexicon(root, &mut compiler_entries)?;
 

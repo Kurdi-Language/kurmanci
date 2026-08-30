@@ -8,13 +8,16 @@ pub mod inventory;
 pub mod join;
 pub mod ngrams;
 pub mod partition;
+pub mod quality;
 pub mod registry;
 pub mod reports;
 pub mod tokenizer;
+pub mod vocabulary_evidence;
 
 pub use audit::{audit_corpora, CorpusAuditSummary};
 pub use frequency::{
-    build_corpus_frequencies, build_corpus_train_frequencies, FrequencyBuildStats, FrequencyRecord,
+    build_corpus_frequencies, build_corpus_train_frequencies, FrequencyBuildManifest,
+    FrequencyBuildStats, FrequencyRecord,
 };
 pub use importer::{
     import_all_corpora, import_corpus, CanonicalDocumentRecord, CorpusImportSummaryReport,
@@ -27,7 +30,16 @@ pub use ngrams::{
     TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
 };
 pub use partition::{partition_corpora, PartitionSummary};
+pub use quality::{
+    analyze_corpus_quality, CorpusQualityMetrics, DocumentAnomalyMetrics,
+    LexicalTokenQualityMetrics, LexiconMatchingMetrics, ScriptDistribution,
+    SourceDocumentQualityMetrics, TopTokenRecord,
+};
 pub use registry::{
     validate_registry_relative_path, CorpusFile, CorpusRegistry, CorpusRegistryEntry,
 };
 pub use tokenizer::tokenize_text;
+pub use vocabulary_evidence::{
+    build_vocabulary_evidence, OovCandidateRecord, OovDocumentDistribution, RepresentativeContext,
+    SpecialTargetRecord, VocabularyEvidenceProvenance, VocabularyEvidenceSummaryReport,
+};

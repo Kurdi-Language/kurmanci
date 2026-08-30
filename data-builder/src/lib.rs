@@ -22,14 +22,17 @@ pub use compile::{
 };
 pub use config::BuilderConfig;
 pub use corpus::{
-    audit_corpora, build_corpus_bigrams, build_corpus_frequencies, build_corpus_ngrams,
-    build_corpus_train_frequencies, build_corpus_trigrams, generate_corpus_inventory,
-    import_all_corpora, import_corpus, join_frequencies_to_lexicon, partition_corpora,
-    split_into_sentences, tokenize_text, validate_registry_relative_path, BigramBuildStats,
-    BigramRecord, BigramSummaryReport, CanonicalDocumentRecord, CorpusAuditSummary,
-    CorpusImportSummaryReport, CorpusInventorySummary, CorpusRegistry, CorpusRegistryEntry,
-    FrequencyBuildStats, FrequencyJoinSummaryReport, FrequencyRecord, NgramBuildStats, NgramConfig,
-    PartitionSummary, TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
+    analyze_corpus_quality, audit_corpora, build_corpus_bigrams, build_corpus_frequencies,
+    build_corpus_ngrams, build_corpus_train_frequencies, build_corpus_trigrams,
+    build_vocabulary_evidence, generate_corpus_inventory, import_all_corpora, import_corpus,
+    join_frequencies_to_lexicon, partition_corpora, split_into_sentences, tokenize_text,
+    validate_registry_relative_path, BigramBuildStats, BigramRecord, BigramSummaryReport,
+    CanonicalDocumentRecord, CorpusAuditSummary, CorpusImportSummaryReport, CorpusInventorySummary,
+    CorpusQualityMetrics, CorpusRegistry, CorpusRegistryEntry, FrequencyBuildManifest,
+    FrequencyBuildStats, FrequencyJoinSummaryReport, FrequencyRecord, LexicalTokenQualityMetrics,
+    NgramBuildStats, NgramConfig, OovCandidateRecord, PartitionSummary, RepresentativeContext,
+    SourceDocumentQualityMetrics, TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
+    VocabularyEvidenceSummaryReport,
 };
 pub use eval::{evaluate_lexicon_impact, BenchmarkItem, EvaluationReport, LexiconMetrics};
 pub use eval_next_word::{run_next_word_evaluation, NextWordEvalSummaryReport};
@@ -43,6 +46,8 @@ pub use merge::merge_and_deduplicate;
 pub use normalize::normalize_text;
 pub use pack::{
     build_pack, build_temp_frequency_pack, manifest::PackManifest, policy::PackPolicyConfig,
+    resolve_authoritative_pack_lexicon, resolve_authoritative_pack_payload,
+    AuthoritativePackResolution,
 };
 pub use report::{generate_and_save_report, BuildReport};
 pub use review::{
