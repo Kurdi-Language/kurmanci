@@ -143,6 +143,16 @@ enum Commands {
         )]
         output: PathBuf,
     },
+    /// Analyzes document-level anomalies, script distribution, technical noise, and lexicon matching for a corpus
+    AnalyzeCorpusQuality {
+        #[arg(short, long, default_value = "kuwiki")]
+        corpus_id: String,
+    },
+    /// Builds deterministic OOV vocabulary evidence and human review queues from corpus frequencies and authoritative lexicons
+    BuildVocabularyEvidence {
+        #[arg(short, long, default_value = "kuwiki")]
+        corpus_id: String,
+    },
     /// Generates a deterministic ranked 1,000-entry human review batch from existing review queue and frequencies
     GenerateVocabularyReviewBatch,
 }
@@ -799,6 +809,88 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error building temp frequency pack: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::AnalyzeCorpusQuality { corpus_id } => {
+            println!("=== Kurmancî Corpus Quality Analyzer ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::analyze_corpus_quality(&root, &corpus_id) {
+                Ok(metrics) => {
+                    println!("⚡ CORPUS QUALITY ANALYSIS SUCCESSFUL for '{}'!", corpus_id);
+                    println!("  Total Documents:     {}", metrics.total_documents);
+                    println!("  Total Lexical Tokens: {}", metrics.total_lexical_tokens);
+                    println!("  Unique Lexical Tokens:{}", metrics.unique_lexical_tokens);
+                    println!(
+                        "  Latin Tokens:        {}",
+                        metrics.script_distribution.latin_tokens
+                    );
+                    println!(
+                        "  Reviewed Coverage:   {}%",
+                        metrics
+                            .lexicon_matching
+                            .reviewed_lexicon_token_coverage_percent
+                    );
+                    println!(
+                        "  Experimental Coverage: {}%",
+                        metrics
+                            .lexicon_matching
+                            .experimental_lexicon_token_coverage_percent
+                    );
+                    println!(
+                        "  Empty Documents:     {}",
+                        metrics.document_anomalies.empty_documents
+                    );
+                    println!(
+                        "  Low Content Docs:    {}",
+                        metrics.document_anomalies.low_content_documents
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error analyzing corpus quality: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildVocabularyEvidence { corpus_id } => {
+            println!("=== Kurmancî Vocabulary Evidence Pipeline ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::build_vocabulary_evidence(&root, &corpus_id) {
+                Ok(summary) => {
+                    println!(
+                        "⚡ VOCABULARY EVIDENCE PIPELINE SUCCESSFUL for '{}'!",
+                        corpus_id
+                    );
+                    println!(
+                        "  Unique TRAIN Tokens: {}",
+                        summary.total_unique_train_tokens
+                    );
+                    println!("  Total OOV Tokens:    {}", summary.total_oov_unique_tokens);
+                    println!(
+                        "  Eligible OOV Candidates: {}",
+                        summary.eligible_oov_candidates
+                    );
+                    println!(
+                        "  Technical Noise Exclusions: {}",
+                        summary.technical_noise_exclusions
+                    );
+                    println!("  Already Known Tokens: {}", summary.already_known_tokens);
+                    println!(
+                        "  Eligible OOV >=2 Docs: {}",
+                        summary.eligible_oov_distribution.gte_2_docs
+                    );
+                    println!(
+                        "  Eligible OOV >=5 Docs: {}",
+                        summary.eligible_oov_distribution.gte_5_docs
+                    );
+                    println!(
+                        "  Eligible OOV >=10 Docs: {}",
+                        summary.eligible_oov_distribution.gte_10_docs
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error building vocabulary evidence: {}", e);
                     std::process::exit(1);
                 }
             }

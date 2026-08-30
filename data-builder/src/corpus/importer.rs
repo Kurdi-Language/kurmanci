@@ -67,6 +67,14 @@ pub struct LockFileGuard {
 impl LockFileGuard {
     pub fn acquire<P: AsRef<Path>>(path: P) -> Result<Self, String> {
         let lock_path = path.as_ref().to_path_buf();
+        if let Some(parent) = lock_path.parent() {
+            fs::create_dir_all(parent).map_err(|e| {
+                format!(
+                    "Failed to create parent dir for lock {:?}: {}",
+                    lock_path, e
+                )
+            })?;
+        }
         let file = std::fs::OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -108,7 +116,7 @@ fn normalize_relative_path(path_str: &str) -> Result<String, String> {
 }
 
 /// Calculates SHA-256 of file contents on disk.
-fn calculate_file_sha256<P: AsRef<Path>>(path: P) -> Result<String, String> {
+pub fn calculate_file_sha256<P: AsRef<Path>>(path: P) -> Result<String, String> {
     let mut file = File::open(&path)
         .map_err(|e| format!("Failed to open for hashing {:?}: {}", path.as_ref(), e))?;
     let mut hasher = Sha256::new();
