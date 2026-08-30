@@ -1,6 +1,7 @@
 //! Corpus module for Kurmancî text corpora management, tokenization, frequency building, and statistical reporting.
 
 pub mod audit;
+pub mod extractors;
 pub mod frequency;
 pub mod importer;
 pub mod inventory;
@@ -12,7 +13,9 @@ pub mod reports;
 pub mod tokenizer;
 
 pub use audit::{audit_corpora, CorpusAuditSummary};
-pub use frequency::{build_corpus_frequencies, FrequencyBuildStats, FrequencyRecord};
+pub use frequency::{
+    build_corpus_frequencies, build_corpus_train_frequencies, FrequencyBuildStats, FrequencyRecord,
+};
 pub use importer::{
     import_all_corpora, import_corpus, CanonicalDocumentRecord, CorpusImportSummaryReport,
 };
