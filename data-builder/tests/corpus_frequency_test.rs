@@ -186,7 +186,10 @@ fn test_provenance_ignores_unregistered_and_stale_files() {
         .records
         .iter()
         .any(|r| r.word.contains("unregistered"));
-    let has_stale = stats.records.iter().any(|r| r.word.contains("stale"));
+    let has_stale = stats
+        .records
+        .iter()
+        .any(|r| r.word.contains("stale_token_text"));
 
     assert!(
         !has_unregistered,

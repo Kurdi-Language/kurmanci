@@ -155,6 +155,15 @@ enum Commands {
     },
     /// Generates a deterministic ranked 1,000-entry human review batch from existing review queue and frequencies
     GenerateVocabularyReviewBatch,
+    /// Generates a deterministic human vocabulary review batch from kuwiki OOV review queue
+    BuildKuwikiReviewBatch {
+        #[arg(short, long, default_value = "kuwiki")]
+        corpus_id: String,
+        #[arg(short, long, default_value = "kuwiki-batch-001")]
+        batch_id: String,
+        #[arg(short, long, default_value_t = 1000)]
+        batch_size: usize,
+    },
 }
 
 fn main() {
@@ -921,6 +930,49 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error generating vocabulary review batch: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildKuwikiReviewBatch {
+            corpus_id,
+            batch_id,
+            batch_size,
+        } => {
+            println!("=== Kurmancî Kuwiki Vocabulary Review Batch Generator ===");
+            let root = PathBuf::from(".");
+            match data_builder_lib::generate_kuwiki_review_batch(
+                &root, &corpus_id, &batch_id, batch_size,
+            ) {
+                Ok(summary) => {
+                    println!("⚡ KUWIKI VOCABULARY REVIEW BATCH GENERATED SUCCESSFULLY!");
+                    println!("  Batch ID:                {}", summary.batch_id);
+                    println!("  Corpus ID:               {}", summary.corpus_id);
+                    println!("  Batch Size:              {}", summary.batch_size);
+                    println!("  Input Queue SHA-256:     {}", summary.input_queue_sha256);
+                    println!(
+                        "  Experimental Fingerprint:{}",
+                        summary.experimental_fingerprint
+                    );
+                    println!(
+                        "  Doc Count (min/med/max): {} / {} / {}",
+                        summary.doc_count_min, summary.doc_count_median, summary.doc_count_max
+                    );
+                    println!(
+                        "  Token Count (min/med/max):{} / {} / {}",
+                        summary.token_count_min,
+                        summary.token_count_median,
+                        summary.token_count_max
+                    );
+                    println!(
+                        "  Non-ASCII Candidates:   {}",
+                        summary.non_ascii_candidate_count
+                    );
+                    println!("  Committed Output Dir:    {}", summary.output_dir);
+                    println!("  Local Review Guide:      {}", summary.local_guide_path);
+                }
+                Err(e) => {
+                    eprintln!("Error generating kuwiki vocabulary review batch: {}", e);
                     std::process::exit(1);
                 }
             }

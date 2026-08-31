@@ -24,15 +24,15 @@ pub use config::BuilderConfig;
 pub use corpus::{
     analyze_corpus_quality, audit_corpora, build_corpus_bigrams, build_corpus_frequencies,
     build_corpus_ngrams, build_corpus_train_frequencies, build_corpus_trigrams,
-    build_vocabulary_evidence, generate_corpus_inventory, import_all_corpora, import_corpus,
-    join_frequencies_to_lexicon, partition_corpora, split_into_sentences, tokenize_text,
-    validate_registry_relative_path, BigramBuildStats, BigramRecord, BigramSummaryReport,
-    CanonicalDocumentRecord, CorpusAuditSummary, CorpusImportSummaryReport, CorpusInventorySummary,
-    CorpusQualityMetrics, CorpusRegistry, CorpusRegistryEntry, FrequencyBuildManifest,
-    FrequencyBuildStats, FrequencyJoinSummaryReport, FrequencyRecord, LexicalTokenQualityMetrics,
-    NgramBuildStats, NgramConfig, OovCandidateRecord, PartitionSummary, RepresentativeContext,
-    SourceDocumentQualityMetrics, TrigramBuildStats, TrigramRecord, TrigramSummaryReport,
-    VocabularyEvidenceSummaryReport,
+    build_vocabulary_evidence, compute_experimental_lexicon_fingerprint, generate_corpus_inventory,
+    import_all_corpora, import_corpus, join_frequencies_to_lexicon, partition_corpora,
+    split_into_sentences, tokenize_text, validate_registry_relative_path, BigramBuildStats,
+    BigramRecord, BigramSummaryReport, CanonicalDocumentRecord, CorpusAuditSummary,
+    CorpusImportSummaryReport, CorpusInventorySummary, CorpusQualityMetrics, CorpusRegistry,
+    CorpusRegistryEntry, FrequencyBuildManifest, FrequencyBuildStats, FrequencyJoinSummaryReport,
+    FrequencyRecord, LexicalTokenQualityMetrics, NgramBuildStats, NgramConfig, OovCandidateRecord,
+    PartitionSummary, RepresentativeContext, SourceDocumentQualityMetrics, TrigramBuildStats,
+    TrigramRecord, TrigramSummaryReport, VocabularyEvidenceSummaryReport,
 };
 pub use eval::{evaluate_lexicon_impact, BenchmarkItem, EvaluationReport, LexiconMetrics};
 pub use eval_next_word::{run_next_word_evaluation, NextWordEvalSummaryReport};
@@ -51,9 +51,13 @@ pub use pack::{
 };
 pub use report::{generate_and_save_report, BuildReport};
 pub use review::{
-    compute_conflict_group_id, compute_entry_id, generate_review_queues, validate_review_decisions,
-    ReviewDecisionRecord, ReviewDecisionStatus, ReviewMergerSummary, ReviewQueueSummary,
-    ReviewTargetType, REVIEW_DECISION_SCHEMA_VERSION,
+    compute_conflict_group_id, compute_entry_id, generate_kuwiki_review_batch,
+    generate_review_queues, validate_review_decisions, verify_vocabulary_evidence_provenance,
+    ContextReference, KuwikiReviewBatchCandidate, KuwikiReviewBatchManifest,
+    KuwikiReviewBatchSummary, ReviewDecisionRecord, ReviewDecisionStatus, ReviewMergerSummary,
+    ReviewQueueSummary, ReviewTargetType, SpecialTargetBatchPresence, DEFAULT_KUWIKI_BATCH_ID,
+    DEFAULT_KUWIKI_BATCH_SIZE, KUWIKI_REVIEW_BATCH_MANIFEST_SCHEMA_VERSION,
+    KUWIKI_REVIEW_BATCH_SCHEMA_VERSION, REVIEW_DECISION_SCHEMA_VERSION,
 };
 pub use sources::{SourceRegistry, SourceRegistryEntry};
 pub use validate::{validate_entry, FrequencyMetadata, SourceLexiconEntry};
