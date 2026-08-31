@@ -40,6 +40,7 @@ pub use registry::{
 };
 pub use tokenizer::tokenize_text;
 pub use vocabulary_evidence::{
-    build_vocabulary_evidence, OovCandidateRecord, OovDocumentDistribution, RepresentativeContext,
-    SpecialTargetRecord, VocabularyEvidenceProvenance, VocabularyEvidenceSummaryReport,
+    build_vocabulary_evidence, compute_experimental_lexicon_fingerprint, OovCandidateRecord,
+    OovDocumentDistribution, RepresentativeContext, SpecialTargetRecord,
+    VocabularyEvidenceProvenance, VocabularyEvidenceSummaryReport,
 };

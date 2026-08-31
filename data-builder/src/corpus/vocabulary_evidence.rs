@@ -103,6 +103,43 @@ pub struct SpecialTargetRecord {
     pub representative_contexts: Vec<RepresentativeContext>,
 }
 
+/// Computes canonical SHA-256 fingerprint for authoritative `experimental-full` lexicon.
+pub fn compute_experimental_lexicon_fingerprint<P: AsRef<Path>>(
+    root_dir: P,
+) -> Result<String, String> {
+    let mut sorted_exp = resolve_authoritative_pack_lexicon("experimental-full", root_dir)
+        .map_err(|e| format!("Failed to resolve experimental-full lexicon: {}", e))?;
+    sorted_exp.sort_by(|a, b| {
+        a.normalized
+            .cmp(&b.normalized)
+            .then_with(|| a.word.cmp(&b.word))
+            .then_with(|| a.status.cmp(&b.status))
+    });
+
+    let mut fingerprint_hasher = Sha256::new();
+    for entry in &sorted_exp {
+        let norm_bytes = entry.normalized.as_bytes();
+        fingerprint_hasher.update((norm_bytes.len() as u32).to_le_bytes());
+        fingerprint_hasher.update(norm_bytes);
+
+        let word_bytes = entry.word.as_bytes();
+        fingerprint_hasher.update((word_bytes.len() as u32).to_le_bytes());
+        fingerprint_hasher.update(word_bytes);
+
+        let status_bytes = entry.status.as_bytes();
+        fingerprint_hasher.update((status_bytes.len() as u32).to_le_bytes());
+        fingerprint_hasher.update(status_bytes);
+
+        fingerprint_hasher.update((entry.sources.len() as u32).to_le_bytes());
+        for src in &entry.sources {
+            let src_bytes = src.as_bytes();
+            fingerprint_hasher.update((src_bytes.len() as u32).to_le_bytes());
+            fingerprint_hasher.update(src_bytes);
+        }
+    }
+    Ok(format!("{:x}", fingerprint_hasher.finalize()))
+}
+
 /// Runs the full deterministic vocabulary evidence pipeline for `corpus_id`.
 pub fn build_vocabulary_evidence<P: AsRef<Path>>(
     root_dir: P,
@@ -227,37 +264,7 @@ pub fn build_vocabulary_evidence<P: AsRef<Path>>(
         .filter(|w| !w.is_empty())
         .collect();
 
-    // Fingerprint actual resolved experimental-full entries
-    let mut sorted_exp = exp_entries.clone();
-    sorted_exp.sort_by(|a, b| {
-        a.normalized
-            .cmp(&b.normalized)
-            .then_with(|| a.word.cmp(&b.word))
-            .then_with(|| a.status.cmp(&b.status))
-    });
-
-    let mut fingerprint_hasher = Sha256::new();
-    for entry in &sorted_exp {
-        let norm_bytes = entry.normalized.as_bytes();
-        fingerprint_hasher.update((norm_bytes.len() as u32).to_le_bytes());
-        fingerprint_hasher.update(norm_bytes);
-
-        let word_bytes = entry.word.as_bytes();
-        fingerprint_hasher.update((word_bytes.len() as u32).to_le_bytes());
-        fingerprint_hasher.update(word_bytes);
-
-        let status_bytes = entry.status.as_bytes();
-        fingerprint_hasher.update((status_bytes.len() as u32).to_le_bytes());
-        fingerprint_hasher.update(status_bytes);
-
-        fingerprint_hasher.update((entry.sources.len() as u32).to_le_bytes());
-        for src in &entry.sources {
-            let src_bytes = src.as_bytes();
-            fingerprint_hasher.update((src_bytes.len() as u32).to_le_bytes());
-            fingerprint_hasher.update(src_bytes);
-        }
-    }
-    let lexicon_fingerprint = format!("{:x}", fingerprint_hasher.finalize());
+    let lexicon_fingerprint = compute_experimental_lexicon_fingerprint(root)?;
 
     let provenance = VocabularyEvidenceProvenance {
         corpus_registry_sha256: registry_sha256,
