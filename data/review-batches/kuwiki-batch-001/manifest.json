@@ -1,0 +1,19 @@
+{
+  "schema_version": "kuwiki-review-batch-manifest-v1",
+  "batch_id": "kuwiki-batch-001",
+  "source_corpus_id": "kuwiki",
+  "source_version": "20260801",
+  "input_oov_review_queue_sha256": "03e8e9c59688fff3ea553b10a056bf54c6ca3f9310aa1e235b1df184f3466c17",
+  "vocabulary_evidence_artifacts_manifest_sha256": "acf6b490f2b1b5ec721a0a5f91fe49c2e4c177aeb692220cec4360c85d95eb44",
+  "corpus_registry_sha256": "1a4f81c0ced15f35b05fbf7458e93dd4835e6eb6474c8c5a95455b55aa95aa2c",
+  "canonical_manifest_sha256": "3a3e6348dfcbf052fb479f0e6797c29c8f1ce181be8de987df702be953ac6a5c",
+  "partition_manifest_sha256": "c9de23236b2c9df7ca96821f277a3cf00937b082ca250528a00bc47857eb576b",
+  "train_partition_sha256": "14eba38bf998c937d05e26860aa5f90ac89692acf7c91ede57d547e98c394683",
+  "frequency_artifact_sha256": "b0e8cc00fc486d64344611d8b89f5d6d41d5e3d398b5ee3971c0df2db3fca52b",
+  "frequency_build_manifest_sha256": "b6c9adbbf8330f51eb8591f758e9a4910ad64cdd43f98d765f9fc7aad16c0486",
+  "experimental_lexicon_fingerprint": "f08ba63a48f8395a032687d2cce4ac340c3550d3a25b671c12f2754d9aac777b",
+  "selection_policy": "top-1000-eligible",
+  "batch_size": 1000,
+  "candidates_file": "candidates.jsonl",
+  "candidates_sha256": "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d"
+}
