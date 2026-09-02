@@ -42,6 +42,7 @@ fn copy_repo_fixtures(root: &Path) {
         "data/reports",
         "data/review-decisions",
         "data/review-queues",
+        "data/review-batches",
     ];
 
     for d in &dirs_to_copy {

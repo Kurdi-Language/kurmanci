@@ -1,0 +1,22 @@
+{
+  "schema_version": "kuwiki-decision-provenance-v1",
+  "source_id": "kuwiki-batch-001",
+  "batch_id": "kuwiki-batch-001",
+  "candidate_sha256": "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d",
+  "worksheet_sha256": "7c1341d75a2a1e8530495d9c69c45e10e7ba991f745ccf8a69a8c75db81af4b2",
+  "decisions_sha256": "4ff95ee54de2170137dc8965b16e1ebd1e3724159e6964b1bf8c47465137103f",
+  "reviewer_id": "ferhatguneri",
+  "audit_confirmation_date": "2026-09-02",
+  "counts": {
+    "approved": 733,
+    "approved_with_metadata_change": 0,
+    "rejected_from_default_pack": 214,
+    "experimental_only": 3,
+    "needs_linguist": 50,
+    "needs_source_investigation": 0,
+    "pending": 0,
+    "total": 1000
+  },
+  "human_confirmed_date_year_policy_count": 26,
+  "unresolved_auto_decisions": 0
+}

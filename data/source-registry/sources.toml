@@ -55,3 +55,26 @@ path = "data/original/kurdish-hunspell-kmr/README.md"
 upstream_path = "README.md"
 url = "https://raw.githubusercontent.com/sinaahmadi/KurdishHunspell/88131d6878ef7fa3ee114aa554adc385ff85b44c/README.md"
 sha256 = "5a88976d52e2238eb5e4cba019208b68d4453c320400ce112134a857af8872d9"
+
+[[sources]]
+source_id = "kuwiki-batch-001"
+source_name = "Kurmancî Wikipedia OOV Candidate Review Batch 001"
+source_type = "wikipedia_oov_review_batch"
+language = "kmr"
+script = "Latn"
+author = "Kurmancî Platform / Wikimedia Contributors"
+license = "CC-BY-SA-4.0"
+license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
+url = "https://github.com/Kurdi-Language/kurmanci"
+version = "4941c9c26dd5d242f4bd4e00e45dfcf0c681ff30"
+redistribution = "allowed"
+attribution_required = true
+share_alike_required = true
+disclosed_upstream_sources = ["Kurmancî Wikipedia (version 20260801)"]
+retrieval_date = "2026-09-02"
+notes = "Reviewed lexical evidence batch of top 1,000 OOV candidates extracted from Kurmancî Wikipedia corpus (version 20260801)."
+
+[[sources.files]]
+path = "data/review-batches/kuwiki-batch-001/candidates.jsonl"
+sha256 = "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d"
+

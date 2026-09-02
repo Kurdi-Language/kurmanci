@@ -35,6 +35,11 @@ fn remove_dir_or_file<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
     }
 }
 
+use crate::pack::manifest::SourceReviewProvenance;
+use crate::review::kuwiki_decisions::{
+    load_and_validate_kuwiki_decisions, select_kuwiki_candidates_for_pack,
+};
+
 /// Payload returned by pure authoritative pack selection and collision resolution.
 pub struct AuthoritativePackResolution {
     pub resolved_entries: Vec<SourceLexiconEntry>,
@@ -44,6 +49,7 @@ pub struct AuthoritativePackResolution {
     pub decisions_sha256: Option<String>,
     pub queue_manifest_sha256: Option<String>,
     pub review_report_manifest_sha256: Option<String>,
+    pub source_provenance: Vec<SourceReviewProvenance>,
 }
 
 /// Single common pure resolver for authoritative pack selection and collision resolution.
@@ -91,6 +97,7 @@ pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
     let mut queue_manifest_sha256 = None;
     let mut review_report_manifest_sha256 = None;
     let mut valid_queue_targets = BTreeSet::new();
+    let mut source_provenance = Vec::new();
     let source_id = "kurdish-hunspell-kmr";
 
     let registry_path = root.join("data/source-registry/sources.toml");
@@ -107,14 +114,26 @@ pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
         })?;
     let _source_revision = &src_entry.version;
 
-    if pack_id != "seed" {
+    let (raw_candidates, counts) = if pack_id == "seed" {
+        select_candidates_for_pack(
+            pack_id,
+            &manual_seed_entries,
+            &entry_queues,
+            &conflict_group_queues,
+            &decisions,
+            &valid_queue_targets,
+            source_id,
+        )?
+    } else {
+        // 1. Process Hunspell source
         let review_summary = load_validated_review_snapshot(source_id, root)?;
         decisions_sha256 = Some(review_summary.decision_file_sha256.clone());
         queue_manifest_sha256 = Some(review_summary.provenance.queue_manifest_sha256.clone());
 
         let reports_dir = root.join("data/reports/controlled-lexicon-review");
         let r_manifest = reports_dir.join("artifacts.sha256");
-        review_report_manifest_sha256 = Some(calculate_file_sha256(&r_manifest)?);
+        let r_manifest_sha = calculate_file_sha256(&r_manifest)?;
+        review_report_manifest_sha256 = Some(r_manifest_sha.clone());
 
         let queues_dir = root.join(format!("data/review-queues/{}", source_id));
         if !queues_dir.exists() {
@@ -193,17 +212,52 @@ pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
                 .map_err(|e| format!("JSON error in decisions line {}: {}", l_idx + 1, e))?;
             decisions.push(dec);
         }
-    }
 
-    let (raw_candidates, counts) = select_candidates_for_pack(
-        pack_id,
-        &manual_seed_entries,
-        &entry_queues,
-        &conflict_group_queues,
-        &decisions,
-        &valid_queue_targets,
-        source_id,
-    )?;
+        let (mut raw_candidates, mut counts) = select_candidates_for_pack(
+            pack_id,
+            &manual_seed_entries,
+            &entry_queues,
+            &conflict_group_queues,
+            &decisions,
+            &valid_queue_targets,
+            source_id,
+        )?;
+
+        source_provenance.push(SourceReviewProvenance {
+            source_id: source_id.to_string(),
+            decisions_sha256: Some(review_summary.decision_file_sha256.clone()),
+            candidates_artifact_sha256: None,
+            batch_manifest_sha256: None,
+            decision_provenance_manifest_sha256: None,
+            review_queue_manifest_sha256: Some(
+                review_summary.provenance.queue_manifest_sha256.clone(),
+            ),
+            controlled_review_report_manifest_sha256: Some(r_manifest_sha),
+        });
+
+        // 2. Process Kuwiki source (kuwiki-batch-001)
+        if let Some(kuwiki_snapshot) = load_and_validate_kuwiki_decisions(root)? {
+            let kuwiki_cands =
+                select_kuwiki_candidates_for_pack(pack_id, &kuwiki_snapshot, &mut counts)?;
+            raw_candidates.extend(kuwiki_cands);
+
+            source_provenance.push(SourceReviewProvenance {
+                source_id: "kuwiki-batch-001".to_string(),
+                decisions_sha256: Some(kuwiki_snapshot.decision_file_sha256.clone()),
+                candidates_artifact_sha256: Some(kuwiki_snapshot.candidate_artifact_sha256.clone()),
+                batch_manifest_sha256: Some(kuwiki_snapshot.batch_manifest_sha256.clone()),
+                decision_provenance_manifest_sha256: Some(
+                    kuwiki_snapshot.decision_provenance_manifest_sha256.clone(),
+                ),
+                review_queue_manifest_sha256: None,
+                controlled_review_report_manifest_sha256: None,
+            });
+        }
+
+        source_provenance.sort_by(|a, b| a.source_id.cmp(&b.source_id));
+
+        (raw_candidates, counts)
+    };
 
     let collision_result = resolve_collisions(pack_id, raw_candidates)?;
 
@@ -221,6 +275,7 @@ pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
         decisions_sha256,
         queue_manifest_sha256,
         review_report_manifest_sha256,
+        source_provenance,
     })
 }
 
@@ -339,6 +394,7 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         review_decisions_sha256: payload.decisions_sha256,
         review_queue_manifest_sha256: payload.queue_manifest_sha256,
         controlled_review_report_manifest_sha256: payload.review_report_manifest_sha256,
+        source_provenance: payload.source_provenance,
         binary_sha256: binary_sha256.clone(),
         binary_size_bytes,
         data_licenses: licenses,
