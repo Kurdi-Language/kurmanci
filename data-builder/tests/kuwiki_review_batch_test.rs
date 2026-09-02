@@ -190,10 +190,9 @@ sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 "#;
     fs::write(corpora_dir.join("sources.toml"), sources_toml).unwrap();
 
-    let exp_dir = root.join("data/build/packs/experimental-full");
-    fs::create_dir_all(&exp_dir).unwrap();
-    let exp_lexicon = r#"{"schema_version":"source-lexicon-v1","word":"pêşbirk","normalized":"pêşbirk","status":"experimental","sources":["test"]}"#;
-    fs::write(exp_dir.join("lexicon.jsonl"), exp_lexicon).unwrap();
+    let _ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
 
     let exp_fingerprint = data_builder_lib::compute_experimental_lexicon_fingerprint(root).unwrap();
 
@@ -625,4 +624,448 @@ fn test_kuwiki_batch_preserves_existing_decisions_and_vocabulary() {
         mock_decision,
         "Human review decisions must NEVER be mutated by candidate batch generation"
     );
+}
+
+#[test]
+fn test_kuwiki_decisions_snapshot_validation_and_counts() {
+    use data_builder_lib::review::kuwiki_decisions::{
+        load_and_validate_kuwiki_decisions, EXPECTED_APPROVED_COUNT,
+        EXPECTED_DATE_POLICY_CONFIRMED_COUNT, EXPECTED_EXPERIMENTAL_ONLY_COUNT,
+        EXPECTED_NEEDS_LINGUIST_COUNT, EXPECTED_REJECTED_FROM_DEFAULT_PACK_COUNT,
+        EXPECTED_TOTAL_DECISIONS_COUNT,
+    };
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let snapshot = load_and_validate_kuwiki_decisions(ws_root)
+        .expect("Failed to load and validate kuwiki decisions")
+        .expect("Kuwiki decisions snapshot missing");
+
+    assert_eq!(snapshot.batch_id, "kuwiki-batch-001");
+    assert_eq!(snapshot.candidates.len(), EXPECTED_TOTAL_DECISIONS_COUNT);
+    assert_eq!(snapshot.decisions.len(), EXPECTED_TOTAL_DECISIONS_COUNT);
+
+    let approved = *snapshot.counts_by_status.get("approved").unwrap_or(&0);
+    let rejected = *snapshot
+        .counts_by_status
+        .get("rejected_from_default_pack")
+        .unwrap_or(&0);
+    let experimental = *snapshot
+        .counts_by_status
+        .get("experimental_only")
+        .unwrap_or(&0);
+    let needs_ling = *snapshot
+        .counts_by_status
+        .get("needs_linguist")
+        .unwrap_or(&0);
+
+    assert_eq!(approved, EXPECTED_APPROVED_COUNT);
+    assert_eq!(rejected, EXPECTED_REJECTED_FROM_DEFAULT_PACK_COUNT);
+    assert_eq!(experimental, EXPECTED_EXPERIMENTAL_ONLY_COUNT);
+    assert_eq!(needs_ling, EXPECTED_NEEDS_LINGUIST_COUNT);
+
+    let date_policy_count = snapshot
+        .decisions
+        .iter()
+        .filter(|d| {
+            d.review_notes
+                .as_ref()
+                .map(|n| {
+                    n.to_lowercase()
+                        .contains("human-confirmed date/year policy")
+                })
+                .unwrap_or(false)
+        })
+        .count();
+
+    assert_eq!(date_policy_count, EXPECTED_DATE_POLICY_CONFIRMED_COUNT);
+}
+
+#[test]
+fn test_kuwiki_pack_promotion_and_set_invariants() {
+    use data_builder_lib::pack::builder::resolve_authoritative_pack_lexicon;
+    use data_builder_lib::review::kuwiki_decisions::load_and_validate_kuwiki_decisions;
+    use data_builder_lib::review::schema::compute_entry_id;
+    use std::collections::BTreeSet;
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let snapshot = load_and_validate_kuwiki_decisions(ws_root)
+        .unwrap()
+        .unwrap();
+
+    let seed_entries = resolve_authoritative_pack_lexicon("seed", ws_root).unwrap();
+    let reviewed_entries = resolve_authoritative_pack_lexicon("reviewed", ws_root).unwrap();
+    let exp_entries = resolve_authoritative_pack_lexicon("experimental-full", ws_root).unwrap();
+
+    assert_eq!(seed_entries.len(), 33);
+    assert_eq!(reviewed_entries.len(), 873); // 33 seed + 107 Hunspell + 733 Kuwiki
+    assert_eq!(exp_entries.len(), 41842); // 41106 + 733 Kuwiki approved + 3 Kuwiki experimental
+
+    let seed_set: BTreeSet<String> = seed_entries.iter().map(|e| e.normalized.clone()).collect();
+    let reviewed_set: BTreeSet<String> = reviewed_entries
+        .iter()
+        .map(|e| e.normalized.clone())
+        .collect();
+    let exp_set: BTreeSet<String> = exp_entries.iter().map(|e| e.normalized.clone()).collect();
+
+    // Invariant 1: seed ⊆ reviewed ⊆ experimental-full
+    for s in &seed_set {
+        assert!(
+            reviewed_set.contains(s),
+            "Seed entry '{}' missing from reviewed pack",
+            s
+        );
+        assert!(
+            exp_set.contains(s),
+            "Seed entry '{}' missing from experimental-full pack",
+            s
+        );
+    }
+    for r in &reviewed_set {
+        assert!(
+            exp_set.contains(r),
+            "Reviewed entry '{}' missing from experimental-full pack",
+            r
+        );
+    }
+
+    // Map Kuwiki target_id -> review_status & candidate
+    let mut approved_ku_tokens = BTreeSet::new();
+    let mut experimental_ku_tokens = BTreeSet::new();
+    let mut excluded_ku_tokens = BTreeSet::new();
+
+    let dec_map: std::collections::BTreeMap<
+        String,
+        &data_builder_lib::review::schema::ReviewDecisionRecord,
+    > = snapshot
+        .decisions
+        .iter()
+        .map(|d| (d.target_id.clone(), d))
+        .collect();
+
+    for cand in &snapshot.candidates {
+        let tid = compute_entry_id(
+            "kuwiki-batch-001",
+            "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d",
+            &cand.token,
+            &cand.normalized_token,
+            "",
+            &[],
+        )
+        .unwrap();
+        let dec = dec_map
+            .get(&tid)
+            .expect("Decision missing for candidate target_id");
+        match dec.review_status {
+            data_builder_lib::ReviewDecisionStatus::Approved => {
+                approved_ku_tokens.insert(cand.normalized_token.clone());
+            }
+            data_builder_lib::ReviewDecisionStatus::ExperimentalOnly => {
+                experimental_ku_tokens.insert(cand.normalized_token.clone());
+            }
+            data_builder_lib::ReviewDecisionStatus::RejectedFromDefaultPack
+            | data_builder_lib::ReviewDecisionStatus::NeedsLinguist => {
+                excluded_ku_tokens.insert(cand.normalized_token.clone());
+            }
+            _ => {}
+        }
+    }
+
+    // Invariant 2: All 733 approved Kuwiki entries are present in reviewed and experimental-full
+    for app in &approved_ku_tokens {
+        assert!(
+            reviewed_set.contains(app),
+            "Approved Kuwiki token '{}' missing from reviewed pack",
+            app
+        );
+        assert!(
+            exp_set.contains(app),
+            "Approved Kuwiki token '{}' missing from experimental-full pack",
+            app
+        );
+
+        // Verify technical fallback metadata for Kuwiki entry in reviewed pack
+        let entry = reviewed_entries
+            .iter()
+            .find(|e| e.normalized == *app)
+            .unwrap();
+        assert_eq!(
+            entry.part_of_speech, "unknown",
+            "POS fallback must be 'unknown'"
+        );
+        assert_eq!(
+            entry.lemma, entry.word,
+            "Lemma fallback must be display token"
+        );
+    }
+
+    // Invariant 3: Experimental-only entries present in experimental-full, NOT in reviewed
+    for exp in &experimental_ku_tokens {
+        assert!(
+            !reviewed_set.contains(exp),
+            "Experimental-only token '{}' should NOT be in reviewed pack",
+            exp
+        );
+        assert!(
+            exp_set.contains(exp),
+            "Experimental-only token '{}' missing from experimental-full pack",
+            exp
+        );
+    }
+
+    // Invariant 4: Rejected & needs_linguist entries NOT in reviewed or experimental-full
+    for excl in &excluded_ku_tokens {
+        assert!(
+            !reviewed_set.contains(excl),
+            "Excluded Kuwiki token '{}' found in reviewed pack",
+            excl
+        );
+        assert!(
+            !exp_set.contains(excl),
+            "Excluded Kuwiki token '{}' found in experimental-full pack",
+            excl
+        );
+    }
+}
+
+#[test]
+fn test_kuwiki_pack_build_two_pass_determinism() {
+    use data_builder_lib::pack::builder::build_pack;
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let m1 = build_pack("reviewed", ws_root).unwrap();
+    let m2 = build_pack("reviewed", ws_root).unwrap();
+
+    assert_eq!(
+        m1.binary_sha256, m2.binary_sha256,
+        "Binary pack SHA-256 must be 100% byte-identical across passes"
+    );
+    assert_eq!(m1.final_unique_entry_count, m2.final_unique_entry_count);
+    assert_eq!(m1.source_provenance, m2.source_provenance);
+
+    let e1 = build_pack("experimental-full", ws_root).unwrap();
+    let e2 = build_pack("experimental-full", ws_root).unwrap();
+
+    assert_eq!(
+        e1.binary_sha256, e2.binary_sha256,
+        "Experimental-full binary pack SHA-256 must be 100% byte-identical across passes"
+    );
+    assert_eq!(e1.final_unique_entry_count, e2.final_unique_entry_count);
+    assert_eq!(e1.source_provenance, e2.source_provenance);
+}
+
+#[test]
+fn test_kuwiki_decisions_negative_validation_cases() {
+    use data_builder_lib::review::kuwiki_decisions::load_and_validate_kuwiki_decisions;
+
+    fn make_mock_kuwiki_repo(root: &std::path::Path) {
+        let reg_dir = root.join("data/source-registry");
+        fs::create_dir_all(&reg_dir).unwrap();
+        let sources_toml = r#"
+[[sources]]
+source_id = "kuwiki-batch-001"
+source_name = "Kuwiki"
+author = "Wikimedia"
+license = "CC BY-SA 4.0"
+license_url = "https://creativecommons.org"
+url = "https://dumps.wikimedia.org"
+version = "4941c9c26dd5d242f4bd4e00e45dfcf0c681ff30"
+redistribution = "allowed"
+notes = "test"
+"#;
+        fs::write(reg_dir.join("sources.toml"), sources_toml).unwrap();
+
+        let batch_dir = root.join("data/review-batches/kuwiki-batch-001");
+        let dec_dir = root.join("data/review-decisions/kuwiki-batch-001");
+        fs::create_dir_all(&batch_dir).unwrap();
+        fs::create_dir_all(&dec_dir).unwrap();
+    }
+
+    // Case 1: Registered kuwiki source + missing candidates -> fail
+    {
+        let temp1 = TempDir::new().unwrap();
+        make_mock_kuwiki_repo(temp1.path());
+        let dec_dir = temp1.path().join("data/review-decisions/kuwiki-batch-001");
+        fs::write(dec_dir.join("decisions.jsonl"), "").unwrap();
+        fs::write(dec_dir.join("manifest.json"), "").unwrap();
+        let batch_dir = temp1.path().join("data/review-batches/kuwiki-batch-001");
+        fs::write(batch_dir.join("manifest.json"), "").unwrap();
+        fs::write(batch_dir.join("artifacts.sha256"), "").unwrap();
+
+        let res = load_and_validate_kuwiki_decisions(temp1.path());
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("candidate file missing"));
+    }
+
+    // Case 2: Registered kuwiki source + missing decisions -> fail
+    {
+        let temp2 = TempDir::new().unwrap();
+        make_mock_kuwiki_repo(temp2.path());
+        let batch_dir = temp2.path().join("data/review-batches/kuwiki-batch-001");
+        fs::write(batch_dir.join("candidates.jsonl"), "").unwrap();
+        fs::write(batch_dir.join("manifest.json"), "").unwrap();
+        fs::write(batch_dir.join("artifacts.sha256"), "").unwrap();
+        let dec_dir = temp2.path().join("data/review-decisions/kuwiki-batch-001");
+        fs::write(dec_dir.join("manifest.json"), "").unwrap();
+
+        let res = load_and_validate_kuwiki_decisions(temp2.path());
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("decision file missing"));
+    }
+
+    // Case 3: Missing batch manifest -> fail
+    {
+        let temp3 = TempDir::new().unwrap();
+        make_mock_kuwiki_repo(temp3.path());
+        let batch_dir = temp3.path().join("data/review-batches/kuwiki-batch-001");
+        fs::write(batch_dir.join("candidates.jsonl"), "").unwrap();
+        fs::write(batch_dir.join("artifacts.sha256"), "").unwrap();
+        let dec_dir = temp3.path().join("data/review-decisions/kuwiki-batch-001");
+        fs::write(dec_dir.join("decisions.jsonl"), "").unwrap();
+        fs::write(dec_dir.join("manifest.json"), "").unwrap();
+
+        let res = load_and_validate_kuwiki_decisions(temp3.path());
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("batch manifest missing"));
+    }
+
+    // Case 4: Missing artifacts.sha256 -> fail
+    {
+        let temp4 = TempDir::new().unwrap();
+        make_mock_kuwiki_repo(temp4.path());
+        let batch_dir = temp4.path().join("data/review-batches/kuwiki-batch-001");
+        fs::write(batch_dir.join("candidates.jsonl"), "").unwrap();
+        fs::write(batch_dir.join("manifest.json"), "").unwrap();
+        let dec_dir = temp4.path().join("data/review-decisions/kuwiki-batch-001");
+        fs::write(dec_dir.join("decisions.jsonl"), "").unwrap();
+        fs::write(dec_dir.join("manifest.json"), "").unwrap();
+
+        let res = load_and_validate_kuwiki_decisions(temp4.path());
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("artifacts.sha256 missing"));
+    }
+
+    // Case 5: Missing decision provenance manifest -> fail
+    {
+        let temp5 = TempDir::new().unwrap();
+        make_mock_kuwiki_repo(temp5.path());
+        let batch_dir = temp5.path().join("data/review-batches/kuwiki-batch-001");
+        fs::write(batch_dir.join("candidates.jsonl"), "").unwrap();
+        fs::write(batch_dir.join("manifest.json"), "").unwrap();
+        fs::write(batch_dir.join("artifacts.sha256"), "").unwrap();
+        let dec_dir = temp5.path().join("data/review-decisions/kuwiki-batch-001");
+        fs::write(dec_dir.join("decisions.jsonl"), "").unwrap();
+
+        let res = load_and_validate_kuwiki_decisions(temp5.path());
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("provenance manifest missing"));
+    }
+
+    // Case 6: Tampered candidates hash -> fail
+    {
+        let temp6 = TempDir::new().unwrap();
+        make_mock_kuwiki_repo(temp6.path());
+        let batch_dir = temp6.path().join("data/review-batches/kuwiki-batch-001");
+        fs::write(batch_dir.join("candidates.jsonl"), "tampered content").unwrap();
+        fs::write(batch_dir.join("manifest.json"), "").unwrap();
+        fs::write(batch_dir.join("artifacts.sha256"), "").unwrap();
+        let dec_dir = temp6.path().join("data/review-decisions/kuwiki-batch-001");
+        fs::write(dec_dir.join("decisions.jsonl"), "").unwrap();
+        fs::write(dec_dir.join("manifest.json"), "").unwrap();
+
+        let res = load_and_validate_kuwiki_decisions(temp6.path());
+        assert!(res.is_err());
+        assert!(res.unwrap_err().contains("SHA-256 mismatch"));
+    }
+}
+
+#[test]
+fn test_kuwiki_decisions_reordering_preserves_semantics() {
+    use data_builder_lib::pack::selection::SelectionCounts;
+    use data_builder_lib::review::kuwiki_decisions::{
+        load_and_validate_kuwiki_decisions, select_kuwiki_candidates_for_pack,
+    };
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+
+    let snapshot = load_and_validate_kuwiki_decisions(ws_root)
+        .unwrap()
+        .unwrap();
+
+    let mut counts_normal = SelectionCounts::default();
+    let selected_normal =
+        select_kuwiki_candidates_for_pack("reviewed", &snapshot, &mut counts_normal).unwrap();
+
+    // Create snapshot variant with reversed decisions array
+    let mut snapshot_reversed = snapshot.clone();
+    snapshot_reversed.decisions.reverse();
+
+    let mut counts_reversed = SelectionCounts::default();
+    let selected_reversed =
+        select_kuwiki_candidates_for_pack("reviewed", &snapshot_reversed, &mut counts_reversed)
+            .unwrap();
+
+    assert_eq!(selected_normal.len(), selected_reversed.len());
+    assert_eq!(
+        counts_normal.external_approved_selected,
+        counts_reversed.external_approved_selected
+    );
+
+    for (a, b) in selected_normal.iter().zip(selected_reversed.iter()) {
+        assert_eq!(a.entry_id, b.entry_id);
+        assert_eq!(a.normalized, b.normalized);
+        assert_eq!(a.status, b.status);
+    }
+}
+
+#[test]
+fn test_kuwiki_decisions_date_policy_wrong_target_id_rejection() {
+    use data_builder_lib::review::kuwiki_decisions::{
+        load_and_validate_kuwiki_decisions, validate_kuwiki_decision_records,
+    };
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+
+    let snapshot = load_and_validate_kuwiki_decisions(ws_root)
+        .unwrap()
+        .unwrap();
+
+    let mut tampered_decisions = snapshot.decisions.clone();
+
+    // Find a date/year policy decision (e.g. rank 608) and swap target_id with decision 0 (rank 1)
+    let mut date_policy_idx = None;
+    for (idx, dec) in tampered_decisions.iter().enumerate() {
+        let notes_combined = format!(
+            "{} {}",
+            dec.review_notes.as_deref().unwrap_or_default(),
+            serde_json::to_string(&dec.evidence).unwrap_or_default()
+        );
+        if notes_combined
+            .to_lowercase()
+            .contains("human-confirmed date/year policy")
+        {
+            date_policy_idx = Some(idx);
+            break;
+        }
+    }
+    let date_idx = date_policy_idx.unwrap();
+    let tid0 = tampered_decisions[0].target_id.clone();
+    let tid_date = tampered_decisions[date_idx].target_id.clone();
+
+    tampered_decisions[0].target_id = tid_date;
+    tampered_decisions[date_idx].target_id = tid0;
+
+    let res = validate_kuwiki_decision_records(&snapshot.candidates, &tampered_decisions);
+    assert!(res.is_err());
+    let err_msg = res.unwrap_err();
+    assert!(err_msg.contains("Date/year policy ranks set mismatch"));
 }

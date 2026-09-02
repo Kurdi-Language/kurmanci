@@ -17,6 +17,24 @@ pub struct DataLicenseEntry {
     pub spdx: String,
 }
 
+/// Source-level review provenance entry in manifest.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SourceReviewProvenance {
+    pub source_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decisions_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub candidates_artifact_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub batch_manifest_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub decision_provenance_manifest_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub review_queue_manifest_sha256: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub controlled_review_report_manifest_sha256: Option<String>,
+}
+
 /// Authoritative language pack manifest schema (`language-pack-manifest-v1`).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PackManifest {
@@ -45,6 +63,8 @@ pub struct PackManifest {
     pub review_queue_manifest_sha256: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controlled_review_report_manifest_sha256: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_provenance: Vec<SourceReviewProvenance>,
     pub binary_sha256: String,
     pub binary_size_bytes: u64,
     pub data_licenses: Vec<DataLicenseEntry>,
@@ -308,6 +328,100 @@ pub fn validate_all_pack_manifests<P: AsRef<Path>>(root_dir: P) -> Result<(), St
                 "Pack '{}' decoded entry count {} != manifest final_unique_entry_count {}",
                 pack_id, loaded_count, manifest.final_unique_entry_count
             ));
+        }
+
+        // Verify source_provenance array invariants if non-empty
+        if !manifest.source_provenance.is_empty() {
+            let mut prev_src: Option<&str> = None;
+            let mut seen_sources = BTreeSet::new();
+
+            for src_prov in &manifest.source_provenance {
+                if let Some(prev) = prev_src {
+                    if src_prov.source_id.as_str() <= prev {
+                        return Err(format!(
+                            "Pack '{}' source_provenance not strictly sorted by source_id: '{}' <= '{}'",
+                            pack_id, src_prov.source_id, prev
+                        ));
+                    }
+                }
+                if !seen_sources.insert(&src_prov.source_id) {
+                    return Err(format!(
+                        "Pack '{}' duplicate source_id in source_provenance: '{}'",
+                        pack_id, src_prov.source_id
+                    ));
+                }
+                prev_src = Some(&src_prov.source_id);
+
+                if src_prov.source_id == "kurdish-hunspell-kmr" {
+                    if src_prov.decisions_sha256 != manifest.review_decisions_sha256 {
+                        return Err(format!(
+                            "Pack '{}' source_provenance decisions_sha256 mismatch for kurdish-hunspell-kmr",
+                            pack_id
+                        ));
+                    }
+                    if src_prov.review_queue_manifest_sha256
+                        != manifest.review_queue_manifest_sha256
+                    {
+                        return Err(format!(
+                            "Pack '{}' source_provenance review_queue_manifest_sha256 mismatch for kurdish-hunspell-kmr",
+                            pack_id
+                        ));
+                    }
+                    if src_prov.controlled_review_report_manifest_sha256
+                        != manifest.controlled_review_report_manifest_sha256
+                    {
+                        return Err(format!(
+                            "Pack '{}' source_provenance controlled_review_report_manifest_sha256 mismatch for kurdish-hunspell-kmr",
+                            pack_id
+                        ));
+                    }
+                } else if src_prov.source_id == "kuwiki-batch-001" {
+                    if src_prov
+                        .decisions_sha256
+                        .as_deref()
+                        .unwrap_or_default()
+                        .is_empty()
+                    {
+                        return Err(format!(
+                            "Pack '{}' kuwiki-batch-001 decisions_sha256 empty",
+                            pack_id
+                        ));
+                    }
+                    if src_prov
+                        .candidates_artifact_sha256
+                        .as_deref()
+                        .unwrap_or_default()
+                        .is_empty()
+                    {
+                        return Err(format!(
+                            "Pack '{}' kuwiki-batch-001 candidates_artifact_sha256 empty",
+                            pack_id
+                        ));
+                    }
+                    if src_prov
+                        .batch_manifest_sha256
+                        .as_deref()
+                        .unwrap_or_default()
+                        .is_empty()
+                    {
+                        return Err(format!(
+                            "Pack '{}' kuwiki-batch-001 batch_manifest_sha256 empty",
+                            pack_id
+                        ));
+                    }
+                    if src_prov
+                        .decision_provenance_manifest_sha256
+                        .as_deref()
+                        .unwrap_or_default()
+                        .is_empty()
+                    {
+                        return Err(format!(
+                            "Pack '{}' kuwiki-batch-001 decision_provenance_manifest_sha256 empty",
+                            pack_id
+                        ));
+                    }
+                }
+            }
         }
 
         // Verify source-derived license consistency
