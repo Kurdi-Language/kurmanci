@@ -52,8 +52,9 @@ pub use pack::{
 pub use report::{generate_and_save_report, BuildReport};
 pub use review::{
     compute_conflict_group_id, compute_entry_id, generate_kuwiki_review_batch,
-    generate_review_queues, validate_review_decisions, verify_vocabulary_evidence_provenance,
-    ContextReference, KuwikiReviewBatchCandidate, KuwikiReviewBatchManifest,
+    generate_review_queues, load_and_validate_kuwiki_decisions, select_kuwiki_candidates_for_pack,
+    validate_review_decisions, verify_vocabulary_evidence_provenance, ContextReference,
+    KuwikiDecisionsSnapshot, KuwikiReviewBatchCandidate, KuwikiReviewBatchManifest,
     KuwikiReviewBatchSummary, ReviewDecisionRecord, ReviewDecisionStatus, ReviewMergerSummary,
     ReviewQueueSummary, ReviewTargetType, SpecialTargetBatchPresence, DEFAULT_KUWIKI_BATCH_ID,
     DEFAULT_KUWIKI_BATCH_SIZE, KUWIKI_REVIEW_BATCH_MANIFEST_SCHEMA_VERSION,

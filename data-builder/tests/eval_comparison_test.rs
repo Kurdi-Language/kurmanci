@@ -127,6 +127,7 @@ model_profile = "none"
             review_decisions_sha256: Some("decisions_sha256_mock".to_string()),
             review_queue_manifest_sha256: Some("queue_sha256_mock".to_string()),
             controlled_review_report_manifest_sha256: Some("report_sha256_mock".to_string()),
+            source_provenance: vec![],
             binary_sha256: bin_hash.clone(),
             binary_size_bytes: fs::metadata(&bin_path).unwrap().len(),
             data_licenses: vec![DataLicenseEntry {

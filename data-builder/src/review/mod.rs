@@ -1,6 +1,7 @@
 //! Controlled Lexicon Review Infrastructure & Vocabulary Review Batch Generator.
 
 pub mod kuwiki_batch;
+pub mod kuwiki_decisions;
 pub mod merger;
 pub mod queues;
 pub mod schema;
@@ -11,6 +12,9 @@ pub use kuwiki_batch::{
     KuwikiReviewBatchCandidate, KuwikiReviewBatchManifest, KuwikiReviewBatchSummary,
     SpecialTargetBatchPresence, DEFAULT_KUWIKI_BATCH_ID, DEFAULT_KUWIKI_BATCH_SIZE,
     KUWIKI_REVIEW_BATCH_MANIFEST_SCHEMA_VERSION, KUWIKI_REVIEW_BATCH_SCHEMA_VERSION,
+};
+pub use kuwiki_decisions::{
+    load_and_validate_kuwiki_decisions, select_kuwiki_candidates_for_pack, KuwikiDecisionsSnapshot,
 };
 pub use merger::{validate_review_decisions, ReviewMergerSummary};
 pub use queues::{generate_review_queues, ReviewQueueSummary};
