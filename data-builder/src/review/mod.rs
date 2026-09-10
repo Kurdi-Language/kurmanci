@@ -14,6 +14,7 @@ pub use kuwiki_batch::{
     KUWIKI_REVIEW_BATCH_MANIFEST_SCHEMA_VERSION, KUWIKI_REVIEW_BATCH_SCHEMA_VERSION,
 };
 pub use kuwiki_decisions::{
+    load_and_validate_all_kuwiki_decisions, load_and_validate_kuwiki_batch_002_decisions,
     load_and_validate_kuwiki_decisions, select_kuwiki_candidates_for_pack, KuwikiDecisionsSnapshot,
 };
 pub use merger::{validate_review_decisions, ReviewMergerSummary};

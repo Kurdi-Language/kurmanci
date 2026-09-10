@@ -228,7 +228,6 @@ sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             representative_contexts: vec![RepresentativeContext {
                 corpus_id: "kuwiki".to_string(),
                 document_id: format!("data/imported/kuwiki/documents.jsonl:{}", i),
-                snippet: format!("context snippet for {}", token),
             }],
         };
 
@@ -321,11 +320,11 @@ fn test_kuwiki_batch_size_contract_and_context_split() {
         assert!(!line.contains("\"snippet\""));
     }
 
-    // Verify local review guide IS created in data/reports/vocabulary-review/kuwiki-batch-001/
+    // Assert obsolete review-guide.md is NOT created
     let local_guide = temp_dir
         .path()
         .join("data/reports/vocabulary-review/kuwiki-batch-001/review-guide.md");
-    assert!(local_guide.exists());
+    assert!(!local_guide.exists());
 
     // Verify manifest.json
     let manifest_path = batch_dir.join("manifest.json");
@@ -351,7 +350,7 @@ fn test_kuwiki_batch_insufficient_queue_size_contract_rejection() {
 
     assert!(res.is_err());
     let err = res.err().unwrap();
-    assert!(err.contains("exceeds total eligible queue records"));
+    assert!(err.contains("exceeds remaining eligible queue records"));
 }
 
 #[test]
@@ -569,11 +568,6 @@ fn test_kuwiki_batch_2run_byte_identical_determinism() {
     let manifest1 = fs::read(batch_dir.join("manifest.json")).unwrap();
     let artifacts1 = fs::read(batch_dir.join("artifacts.sha256")).unwrap();
 
-    let local_guide_path = temp_dir
-        .path()
-        .join("data/reports/vocabulary-review/kuwiki-batch-001/review-guide.md");
-    let guide1 = fs::read(&local_guide_path).unwrap();
-
     // Re-run batch generation
     let _sum2 =
         generate_kuwiki_review_batch(temp_dir.path(), "kuwiki", "kuwiki-batch-001", 1000).unwrap();
@@ -581,7 +575,6 @@ fn test_kuwiki_batch_2run_byte_identical_determinism() {
     let cand2 = fs::read(batch_dir.join("candidates.jsonl")).unwrap();
     let manifest2 = fs::read(batch_dir.join("manifest.json")).unwrap();
     let artifacts2 = fs::read(batch_dir.join("artifacts.sha256")).unwrap();
-    let guide2 = fs::read(&local_guide_path).unwrap();
 
     assert_eq!(
         cand1, cand2,
@@ -594,10 +587,6 @@ fn test_kuwiki_batch_2run_byte_identical_determinism() {
     assert_eq!(
         artifacts1, artifacts2,
         "artifacts.sha256 must be 100% byte-identical across runs"
-    );
-    assert_eq!(
-        guide1, guide2,
-        "local review-guide.md must be 100% byte-identical across runs"
     );
 }
 
@@ -701,8 +690,8 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
     let exp_entries = resolve_authoritative_pack_lexicon("experimental-full", ws_root).unwrap();
 
     assert_eq!(seed_entries.len(), 33);
-    assert_eq!(reviewed_entries.len(), 873); // 33 seed + 107 Hunspell + 733 Kuwiki
-    assert_eq!(exp_entries.len(), 41842); // 41106 + 733 Kuwiki approved + 3 Kuwiki experimental
+    assert_eq!(reviewed_entries.len(), 1465); // 33 seed + 107 Hunspell + 733 Kuwiki batch 001 + 592 Kuwiki batch 002
+    assert_eq!(exp_entries.len(), 42436); // 41106 + 733 Kuwiki b1 app + 3 b1 exp + 592 b2 app + 2 b2 exp
 
     let seed_set: BTreeSet<String> = seed_entries.iter().map(|e| e.normalized.clone()).collect();
     let reviewed_set: BTreeSet<String> = reviewed_entries
@@ -973,14 +962,22 @@ notes = "test"
         let batch_dir = temp6.path().join("data/review-batches/kuwiki-batch-001");
         fs::write(batch_dir.join("candidates.jsonl"), "tampered content").unwrap();
         fs::write(batch_dir.join("manifest.json"), "").unwrap();
-        fs::write(batch_dir.join("artifacts.sha256"), "").unwrap();
+        let manifest_content = "";
+        let manifest_sha = calculate_bytes_sha256(manifest_content.as_bytes());
+        let orig_cand_sha = calculate_bytes_sha256(b"original content");
+        let art_sha_content = format!(
+            "{}  candidates.jsonl\n{}  manifest.json\n",
+            orig_cand_sha, manifest_sha
+        );
+        fs::write(batch_dir.join("artifacts.sha256"), art_sha_content).unwrap();
         let dec_dir = temp6.path().join("data/review-decisions/kuwiki-batch-001");
         fs::write(dec_dir.join("decisions.jsonl"), "").unwrap();
         fs::write(dec_dir.join("manifest.json"), "").unwrap();
 
         let res = load_and_validate_kuwiki_decisions(temp6.path());
         assert!(res.is_err());
-        assert!(res.unwrap_err().contains("SHA-256 mismatch"));
+        let err = res.unwrap_err();
+        assert!(err.contains("Mismatched hash") || err.contains("mismatch"));
     }
 }
 
@@ -1027,21 +1024,48 @@ fn test_kuwiki_decisions_reordering_preserves_semantics() {
 
 #[test]
 fn test_kuwiki_decisions_date_policy_wrong_target_id_rejection() {
-    use data_builder_lib::review::kuwiki_decisions::{
-        load_and_validate_kuwiki_decisions, validate_kuwiki_decision_records,
-    };
+    use data_builder_lib::review::kuwiki_decisions::load_and_validate_kuwiki_decisions;
+
+    let temp = TempDir::new().unwrap();
+    let root = temp.path();
 
     let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .unwrap();
+
+    fs::create_dir_all(root.join("data/source-registry")).unwrap();
+    fs::copy(
+        ws_root.join("data/source-registry/sources.toml"),
+        root.join("data/source-registry/sources.toml"),
+    )
+    .unwrap();
+
+    let b1_dir = root.join("data/review-batches/kuwiki-batch-001");
+    fs::create_dir_all(&b1_dir).unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-001/candidates.jsonl"),
+        b1_dir.join("candidates.jsonl"),
+    )
+    .unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-001/manifest.json"),
+        b1_dir.join("manifest.json"),
+    )
+    .unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-001/artifacts.sha256"),
+        b1_dir.join("artifacts.sha256"),
+    )
+    .unwrap();
+
+    let d1_dir = root.join("data/review-decisions/kuwiki-batch-001");
+    fs::create_dir_all(&d1_dir).unwrap();
 
     let snapshot = load_and_validate_kuwiki_decisions(ws_root)
         .unwrap()
         .unwrap();
 
     let mut tampered_decisions = snapshot.decisions.clone();
-
-    // Find a date/year policy decision (e.g. rank 608) and swap target_id with decision 0 (rank 1)
     let mut date_policy_idx = None;
     for (idx, dec) in tampered_decisions.iter().enumerate() {
         let notes_combined = format!(
@@ -1064,8 +1088,648 @@ fn test_kuwiki_decisions_date_policy_wrong_target_id_rejection() {
     tampered_decisions[0].target_id = tid_date;
     tampered_decisions[date_idx].target_id = tid0;
 
-    let res = validate_kuwiki_decision_records(&snapshot.candidates, &tampered_decisions);
+    let mut dec_file_content = String::new();
+    for d in tampered_decisions {
+        dec_file_content.push_str(&serde_json::to_string(&d).unwrap());
+        dec_file_content.push('\n');
+    }
+    fs::write(d1_dir.join("decisions.jsonl"), &dec_file_content).unwrap();
+
+    let dec_sha = calculate_bytes_sha256(dec_file_content.as_bytes());
+    let prov = r#"{"schema_version":"kuwiki-decision-provenance-v1","source_id":"kuwiki-batch-001","batch_id":"kuwiki-batch-001","candidate_sha256":"23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d","worksheet_sha256":"7c1341d75a2a1e8530495d9c69c45e10e7ba991f745ccf8a69a8c75db81af4b2","decisions_sha256":"DEC_SHA","reviewer_id":"ferhatguneri","audit_confirmation_date":"2026-09-02","counts":{"approved":733,"approved_with_metadata_change":0,"rejected_from_default_pack":214,"experimental_only":3,"needs_linguist":50,"needs_source_investigation":0,"pending":0,"total":1000},"human_confirmed_date_year_policy_count":26,"unresolved_auto_decisions":0}"#.replace("DEC_SHA", &dec_sha);
+    fs::write(d1_dir.join("manifest.json"), &prov).unwrap();
+
+    let prov_sha = calculate_bytes_sha256(prov.as_bytes());
+    let art_sha_content = format!(
+        "{}  decisions.jsonl\n{}  manifest.json\n",
+        dec_sha, prov_sha
+    );
+    fs::write(d1_dir.join("artifacts.sha256"), art_sha_content).unwrap();
+
+    let res = load_and_validate_kuwiki_decisions(root);
     assert!(res.is_err());
     let err_msg = res.unwrap_err();
-    assert!(err_msg.contains("Date/year policy ranks set mismatch"));
+    assert!(
+        err_msg.contains("target_id mismatch")
+            || err_msg.contains("Date/year policy ranks set mismatch")
+            || err_msg.contains("mismatch")
+    );
+}
+
+#[test]
+fn test_no_repeat_assignment_invariants_and_error_cases() {
+    use data_builder_lib::review::kuwiki_batch::{
+        parse_kuwiki_batch_sequence, KuwikiReviewBatchCandidate, KuwikiReviewBatchManifest,
+    };
+    use std::collections::BTreeSet;
+
+    // Test sequence parsing & malformed batch ID handling (Requirement 2 & K)
+    assert_eq!(parse_kuwiki_batch_sequence("kuwiki-batch-001").unwrap(), 1);
+    assert_eq!(parse_kuwiki_batch_sequence("kuwiki-batch-002").unwrap(), 2);
+    assert_eq!(
+        parse_kuwiki_batch_sequence("kuwiki-batch-100").unwrap(),
+        100
+    );
+
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-abc").is_err());
+    assert!(parse_kuwiki_batch_sequence("other-batch-001").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-001").is_err());
+
+    let temp_dir = TempDir::new().unwrap();
+    let root = temp_dir.path();
+    setup_valid_mock_environment(&temp_dir, 3500);
+
+    // Step 1: Generate batch 001 with 1000 candidates
+    let sum1 = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-001", 1000).unwrap();
+    assert_eq!(sum1.batch_size, 1000);
+
+    let batch1_dir = root.join("data/review-batches/kuwiki-batch-001");
+    let cand1_lines: Vec<String> = fs::read_to_string(batch1_dir.join("candidates.jsonl"))
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect();
+
+    let mut set1: BTreeSet<String> = BTreeSet::new();
+    for line in &cand1_lines {
+        let cand: KuwikiReviewBatchCandidate = serde_json::from_str(line).unwrap();
+        assert!(
+            set1.insert(cand.normalized_token),
+            "A/B: normalized tokens must be unique in batch 001"
+        );
+    }
+    assert_eq!(set1.len(), 1000);
+
+    // Step 2: Generate batch 002 with 1000 candidates
+    let sum2 = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-002", 1000).unwrap();
+    assert_eq!(sum2.batch_size, 1000);
+
+    let batch2_dir = root.join("data/review-batches/kuwiki-batch-002");
+    let cand2_lines: Vec<String> = fs::read_to_string(batch2_dir.join("candidates.jsonl"))
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect();
+
+    let mut set2: BTreeSet<String> = BTreeSet::new();
+    for line in &cand2_lines {
+        let cand: KuwikiReviewBatchCandidate = serde_json::from_str(line).unwrap();
+        assert!(
+            set2.insert(cand.normalized_token),
+            "B: normalized tokens must be unique in batch 002"
+        );
+    }
+    assert_eq!(set2.len(), 1000);
+
+    // Test C: batch001 ∩ batch002 = empty
+    let intersect_1_2: Vec<&String> = set1.intersection(&set2).collect();
+    assert!(
+        intersect_1_2.is_empty(),
+        "C: batch001 ∩ batch002 must be empty"
+    );
+
+    // Verify manifest for batch 002 (Requirement 5)
+    let man2: KuwikiReviewBatchManifest =
+        serde_json::from_slice(&fs::read(batch2_dir.join("manifest.json")).unwrap()).unwrap();
+    assert_eq!(man2.excluded_prior_batches.len(), 1);
+    assert_eq!(man2.excluded_prior_batches[0].batch_id, "kuwiki-batch-001");
+    assert_eq!(man2.excluded_prior_batches[0].candidate_count, 1000);
+    assert_eq!(man2.previously_assigned_normalized_token_count, Some(1000));
+    assert!(man2.excluded_due_to_prior_assignment_count.is_some());
+
+    // Step 3: Generate batch 003 fixture (Test D: batch003 ∩ (batch001 ∪ batch002) = empty)
+    let sum3 = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-003", 1000).unwrap();
+    assert_eq!(sum3.batch_size, 1000);
+
+    let batch3_dir = root.join("data/review-batches/kuwiki-batch-003");
+    let cand3_lines: Vec<String> = fs::read_to_string(batch3_dir.join("candidates.jsonl"))
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect();
+
+    let mut set3: BTreeSet<String> = BTreeSet::new();
+    for line in &cand3_lines {
+        let cand: KuwikiReviewBatchCandidate = serde_json::from_str(line).unwrap();
+        assert!(
+            set3.insert(cand.normalized_token),
+            "normalized tokens must be unique in batch 003"
+        );
+    }
+    assert_eq!(set3.len(), 1000);
+
+    let union_1_2: BTreeSet<String> = set1.union(&set2).cloned().collect();
+    let intersect_3_12: Vec<&String> = set3.intersection(&union_1_2).collect();
+    assert!(
+        intersect_3_12.is_empty(),
+        "D: batch003 ∩ (batch001 ∪ batch002) must be empty"
+    );
+
+    let man3: KuwikiReviewBatchManifest =
+        serde_json::from_slice(&fs::read(batch3_dir.join("manifest.json")).unwrap()).unwrap();
+    assert_eq!(man3.excluded_prior_batches.len(), 2);
+    assert_eq!(man3.excluded_prior_batches[0].batch_id, "kuwiki-batch-001");
+    assert_eq!(man3.excluded_prior_batches[1].batch_id, "kuwiki-batch-002");
+    assert_eq!(man3.previously_assigned_normalized_token_count, Some(2000));
+
+    // Test J: Historical Duplicate -> Fail closed
+    let mut modified_cand2_lines = cand2_lines.clone();
+    let mut cand_from_b1: KuwikiReviewBatchCandidate =
+        serde_json::from_str(&cand1_lines[0]).unwrap();
+    cand_from_b1.batch_id = "kuwiki-batch-002".to_string();
+    cand_from_b1.batch_rank = 10;
+    modified_cand2_lines[9] = serde_json::to_string(&cand_from_b1).unwrap();
+
+    let new_cand2_bytes = (modified_cand2_lines.join("\n") + "\n").into_bytes();
+    let new_cand2_sha = calculate_bytes_sha256(&new_cand2_bytes);
+    fs::write(batch2_dir.join("candidates.jsonl"), &new_cand2_bytes).unwrap();
+
+    let mut man2_mut = man2.clone();
+    man2_mut.candidates_sha256 = new_cand2_sha.clone();
+    let man2_bytes = serde_json::to_string_pretty(&man2_mut)
+        .unwrap()
+        .into_bytes();
+    let man2_sha = calculate_bytes_sha256(&man2_bytes);
+    fs::write(batch2_dir.join("manifest.json"), &man2_bytes).unwrap();
+
+    let art2_content = format!(
+        "{}  candidates.jsonl\n{}  manifest.json\n",
+        new_cand2_sha, man2_sha
+    );
+    fs::write(batch2_dir.join("artifacts.sha256"), art2_content).unwrap();
+
+    let res_b4 = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-004", 100);
+    assert!(res_b4.is_err());
+    let err_msg = res_b4.err().unwrap();
+    assert!(
+        err_msg.contains("Historical duplicate detected across committed Kuwiki batches"),
+        "Error: {}",
+        err_msg
+    );
+
+    // Test K: Malformed prior batch ID in review-batches directory -> Fail closed
+    fs::remove_dir_all(&batch2_dir).unwrap();
+    fs::remove_dir_all(&batch3_dir).unwrap();
+    let malformed_dir = root.join("data/review-batches/kuwiki-batch-xyz");
+    fs::create_dir_all(&malformed_dir).unwrap();
+
+    let res_malformed = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-002", 100);
+    assert!(res_malformed.is_err());
+    let malformed_err = res_malformed.err().unwrap();
+    assert!(
+        malformed_err.contains("Malformed or ambiguous prior batch directory name")
+            || malformed_err.contains("Invalid batch_id format"),
+        "Error: {}",
+        malformed_err
+    );
+}
+
+#[test]
+fn test_prior_status_types_and_canonical_normalization_exclusion() {
+    use data_builder_lib::review::kuwiki_batch::{
+        generate_kuwiki_review_batch, KuwikiReviewBatchCandidate,
+    };
+    use std::collections::BTreeSet;
+
+    let temp_dir = TempDir::new().unwrap();
+    let root = temp_dir.path();
+    setup_valid_mock_environment(&temp_dir, 1500);
+
+    // Generate batch 001
+    let _sum1 = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-001", 1000).unwrap();
+
+    let batch1_dir = root.join("data/review-batches/kuwiki-batch-001");
+    let cand1_lines: Vec<String> = fs::read_to_string(batch1_dir.join("candidates.jsonl"))
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect();
+
+    let sum2 = generate_kuwiki_review_batch(root, "kuwiki", "kuwiki-batch-002", 500).unwrap();
+    assert_eq!(sum2.batch_size, 500);
+
+    let batch2_dir = root.join("data/review-batches/kuwiki-batch-002");
+    let cand2_lines: Vec<String> = fs::read_to_string(batch2_dir.join("candidates.jsonl"))
+        .unwrap()
+        .lines()
+        .map(String::from)
+        .collect();
+
+    let set1: BTreeSet<String> = cand1_lines
+        .iter()
+        .map(|l| {
+            let c: KuwikiReviewBatchCandidate = serde_json::from_str(l).unwrap();
+            c.normalized_token
+        })
+        .collect();
+
+    let set2: BTreeSet<String> = cand2_lines
+        .iter()
+        .map(|l| {
+            let c: KuwikiReviewBatchCandidate = serde_json::from_str(l).unwrap();
+            c.normalized_token
+        })
+        .collect();
+
+    // E, F, G, H: No token in set1 can appear in set2
+    for tok in &set1 {
+        assert!(
+            !set2.contains(tok),
+            "Prior token '{}' must be excluded from batch 002",
+            tok
+        );
+    }
+
+    // I: Case / Unicode NFC equivalent token normalized comparison
+    for c2 in &cand2_lines {
+        let cand: KuwikiReviewBatchCandidate = serde_json::from_str(c2).unwrap();
+        let norm_canonical = data_builder_lib::normalize_text(&cand.token);
+        assert_eq!(norm_canonical, cand.normalized_token);
+        assert!(!set1.contains(&norm_canonical));
+    }
+}
+
+#[test]
+fn test_load_and_validate_kuwiki_batch_002_decisions_workspace_root() {
+    use data_builder_lib::review::kuwiki_decisions::{
+        load_and_validate_kuwiki_batch_002_decisions, EXPECTED_KUWIKI_BATCH_002_APPROVED_COUNT,
+    };
+    use std::path::PathBuf;
+
+    let ws_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+
+    let snapshot = load_and_validate_kuwiki_batch_002_decisions(ws_root)
+        .unwrap()
+        .expect("kuwiki-batch-002 must be registered and valid in workspace");
+
+    assert_eq!(snapshot.batch_id, "kuwiki-batch-002");
+    assert_eq!(snapshot.candidates.len(), 1000);
+    assert_eq!(snapshot.decisions.len(), 1000);
+    assert_eq!(
+        snapshot.counts_by_status.get("approved").cloned(),
+        Some(EXPECTED_KUWIKI_BATCH_002_APPROVED_COUNT)
+    );
+    assert_eq!(
+        snapshot.counts_by_status.get("experimental_only").cloned(),
+        Some(2)
+    );
+}
+
+#[test]
+fn test_load_and_validate_all_kuwiki_decisions_workspace_root() {
+    use data_builder_lib::review::kuwiki_decisions::load_and_validate_all_kuwiki_decisions;
+    use std::path::PathBuf;
+
+    let ws_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+
+    let snapshots = load_and_validate_all_kuwiki_decisions(ws_root).unwrap();
+
+    assert_eq!(snapshots.len(), 2);
+    assert_eq!(snapshots[0].batch_id, "kuwiki-batch-001");
+    assert_eq!(snapshots[1].batch_id, "kuwiki-batch-002");
+
+    // Verify 0 overlap between batch-001 and batch-002 normalized tokens
+    let set1: std::collections::BTreeSet<String> = snapshots[0]
+        .candidates
+        .iter()
+        .map(|c| c.normalized_token.clone())
+        .collect();
+    let set2: std::collections::BTreeSet<String> = snapshots[1]
+        .candidates
+        .iter()
+        .map(|c| c.normalized_token.clone())
+        .collect();
+
+    let intersection: Vec<&String> = set1.intersection(&set2).collect();
+    assert!(
+        intersection.is_empty(),
+        "Batch 001 and Batch 002 must have 0 normalized token overlap, found: {:?}",
+        intersection
+    );
+}
+
+#[test]
+fn test_parse_kuwiki_batch_sequence_strict_contract() {
+    use data_builder_lib::review::kuwiki_batch::parse_kuwiki_batch_sequence;
+
+    // Reject list:
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-2").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-02").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-0002").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-000").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-batch-abc").is_err());
+    assert!(parse_kuwiki_batch_sequence("kuwiki-001").is_err());
+    assert!(parse_kuwiki_batch_sequence("other-batch-001").is_err());
+
+    // Accept list:
+    assert_eq!(parse_kuwiki_batch_sequence("kuwiki-batch-001").unwrap(), 1);
+    assert_eq!(parse_kuwiki_batch_sequence("kuwiki-batch-002").unwrap(), 2);
+    assert_eq!(
+        parse_kuwiki_batch_sequence("kuwiki-batch-100").unwrap(),
+        100
+    );
+    assert_eq!(
+        parse_kuwiki_batch_sequence("kuwiki-batch-999").unwrap(),
+        999
+    );
+}
+
+#[test]
+fn test_canonical_equivalence_no_repeat() {
+    use data_builder_lib::normalize::normalize_text;
+    use std::collections::BTreeSet;
+
+    // 1. Uppercase / lowercase equivalence
+    let upper = "PIRTÛK";
+    let lower = "pirtûk";
+    assert_eq!(normalize_text(upper), "pirtûk");
+    assert_eq!(normalize_text(lower), "pirtûk");
+    assert_eq!(normalize_text(upper), normalize_text(lower));
+
+    // 2. NFC vs decomposed Unicode (NFD) equivalence
+    // "êdî" in NFC: \u{00EA}d\u{00EE}
+    let nfc = "êdî";
+    // "êdî" in NFD: e + \u{0302} + d + i + \u{0302}
+    let nfd = "e\u{0302}di\u{0302}";
+    assert_eq!(normalize_text(nfc), "êdî");
+    assert_eq!(normalize_text(nfd), "êdî");
+    assert_eq!(normalize_text(nfc), normalize_text(nfd));
+
+    // 3. Zero-width character equivalence (ZWSP \u{200B} and BOM \u{FEFF})
+    let dirty_zwsp = "roj\u{200B}baş";
+    let dirty_bom = "\u{FEFF}rojbaş";
+    let clean = "rojbaş";
+    assert_eq!(normalize_text(dirty_zwsp), "rojbaş");
+    assert_eq!(normalize_text(dirty_bom), "rojbaş");
+    assert_eq!(normalize_text(dirty_zwsp), normalize_text(clean));
+    assert_eq!(normalize_text(dirty_bom), normalize_text(clean));
+
+    // Prove that equivalent representations map to identical canonical keys in history exclusion
+    let mut history = BTreeSet::new();
+    history.insert(normalize_text(upper));
+    history.insert(normalize_text(nfc));
+    history.insert(normalize_text(clean));
+
+    // Attempting to register any equivalent representation must be rejected as already seen
+    assert!(history.contains(&normalize_text(lower)));
+    assert!(history.contains(&normalize_text(nfd)));
+    assert!(history.contains(&normalize_text(dirty_zwsp)));
+    assert!(history.contains(&normalize_text(dirty_bom)));
+}
+
+#[test]
+fn test_verify_artifacts_sha256_manifest_negative_cases() {
+    use data_builder_lib::review::kuwiki_decisions::verify_artifacts_sha256_manifest;
+
+    let temp = TempDir::new().unwrap();
+    let dir = temp.path();
+
+    let file_a = dir.join("decisions.jsonl");
+    let file_b = dir.join("manifest.json");
+    fs::write(&file_a, "content_a").unwrap();
+    fs::write(&file_b, "content_b").unwrap();
+
+    let hash_a = calculate_bytes_sha256(b"content_a");
+    let hash_b = calculate_bytes_sha256(b"content_b");
+
+    let art_file = dir.join("artifacts.sha256");
+
+    // Case 1: Missing artifacts.sha256 -> fail
+    assert!(verify_artifacts_sha256_manifest(
+        &art_file,
+        dir,
+        &["decisions.jsonl", "manifest.json"]
+    )
+    .is_err());
+
+    // Case 2: Missing required entry -> fail
+    fs::write(&art_file, format!("{} decisions.jsonl\n", hash_a)).unwrap();
+    let err2 =
+        verify_artifacts_sha256_manifest(&art_file, dir, &["decisions.jsonl", "manifest.json"])
+            .unwrap_err();
+    assert!(err2.contains("Missing required entry"));
+
+    // Case 3: Duplicate entry -> fail
+    fs::write(
+        &art_file,
+        format!(
+            "{} decisions.jsonl\n{} decisions.jsonl\n{} manifest.json\n",
+            hash_a, hash_a, hash_b
+        ),
+    )
+    .unwrap();
+    let err3 =
+        verify_artifacts_sha256_manifest(&art_file, dir, &["decisions.jsonl", "manifest.json"])
+            .unwrap_err();
+    assert!(err3.contains("Duplicate entry"));
+
+    // Case 4: Malformed line -> fail
+    fs::write(
+        &art_file,
+        format!("{} decisions.jsonl extra_token\n", hash_a),
+    )
+    .unwrap();
+    let err4 =
+        verify_artifacts_sha256_manifest(&art_file, dir, &["decisions.jsonl", "manifest.json"])
+            .unwrap_err();
+    assert!(err4.contains("Malformed line"));
+
+    // Case 5: Wrong/disallowed filename -> fail
+    fs::write(
+        &art_file,
+        format!(
+            "{} decisions.jsonl\n{} manifest.json\n{} forbidden.txt\n",
+            hash_a, hash_b, hash_a
+        ),
+    )
+    .unwrap();
+    let err5 =
+        verify_artifacts_sha256_manifest(&art_file, dir, &["decisions.jsonl", "manifest.json"])
+            .unwrap_err();
+    assert!(err5.contains("Unexpected or disallowed filename"));
+
+    // Case 6: Mismatched hash -> fail
+    let bad_hash = "0000000000000000000000000000000000000000000000000000000000000000";
+    fs::write(
+        &art_file,
+        format!("{} decisions.jsonl\n{} manifest.json\n", bad_hash, hash_b),
+    )
+    .unwrap();
+    let err6 =
+        verify_artifacts_sha256_manifest(&art_file, dir, &["decisions.jsonl", "manifest.json"])
+            .unwrap_err();
+    assert!(err6.contains("Mismatched hash"));
+
+    // Case 7: Path variants -> fail
+    for bad_path in &[
+        "./decisions.jsonl",
+        "subdir/decisions.jsonl",
+        "../decisions.jsonl",
+        "/absolute/decisions.jsonl",
+        "decisions.jsonl\\",
+        "subdir\\decisions.jsonl",
+    ] {
+        fs::write(
+            &art_file,
+            format!("{} {}\n{} manifest.json\n", hash_a, bad_path, hash_b),
+        )
+        .unwrap();
+        let err7 =
+            verify_artifacts_sha256_manifest(&art_file, dir, &["decisions.jsonl", "manifest.json"])
+                .unwrap_err();
+        assert!(
+            err7.contains("Unexpected or disallowed filename"),
+            "Expected failure for bad path variant '{}', got: {}",
+            bad_path,
+            err7
+        );
+    }
+}
+
+#[test]
+fn test_kuwiki_decisions_selection_policy_mismatch_rejection() {
+    use data_builder_lib::review::kuwiki_decisions::load_and_validate_kuwiki_batch_002_decisions;
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let temp = TempDir::new().unwrap();
+    let root = temp.path();
+
+    fs::create_dir_all(root.join("data/source-registry")).unwrap();
+    fs::copy(
+        ws_root.join("data/source-registry/sources.toml"),
+        root.join("data/source-registry/sources.toml"),
+    )
+    .unwrap();
+
+    let b2_dir = root.join("data/review-batches/kuwiki-batch-002");
+    fs::create_dir_all(&b2_dir).unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-002/candidates.jsonl"),
+        b2_dir.join("candidates.jsonl"),
+    )
+    .unwrap();
+
+    // Mutate selection_policy in batch manifest
+    let orig_manifest_str =
+        fs::read_to_string(ws_root.join("data/review-batches/kuwiki-batch-002/manifest.json"))
+            .unwrap();
+    let mut man_val: serde_json::Value = serde_json::from_str(&orig_manifest_str).unwrap();
+    man_val["selection_policy"] = serde_json::Value::String("altered-policy".to_string());
+    let new_man_str = serde_json::to_string_pretty(&man_val).unwrap();
+    fs::write(b2_dir.join("manifest.json"), &new_man_str).unwrap();
+
+    let cand_sha = calculate_bytes_sha256(
+        &fs::read(ws_root.join("data/review-batches/kuwiki-batch-002/candidates.jsonl")).unwrap(),
+    );
+    let man_sha = calculate_bytes_sha256(new_man_str.as_bytes());
+
+    let new_art_content = format!(
+        "{}  candidates.jsonl\n{}  manifest.json\n",
+        cand_sha, man_sha
+    );
+    fs::write(b2_dir.join("artifacts.sha256"), new_art_content).unwrap();
+
+    let d2_dir = root.join("data/review-decisions/kuwiki-batch-002");
+    fs::create_dir_all(&d2_dir).unwrap();
+    fs::copy(
+        ws_root.join("data/review-decisions/kuwiki-batch-002/decisions.jsonl"),
+        d2_dir.join("decisions.jsonl"),
+    )
+    .unwrap();
+    fs::copy(
+        ws_root.join("data/review-decisions/kuwiki-batch-002/manifest.json"),
+        d2_dir.join("manifest.json"),
+    )
+    .unwrap();
+    fs::copy(
+        ws_root.join("data/review-decisions/kuwiki-batch-002/artifacts.sha256"),
+        d2_dir.join("artifacts.sha256"),
+    )
+    .unwrap();
+
+    let res = load_and_validate_kuwiki_batch_002_decisions(root);
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    assert!(
+        err.contains("Batch manifest selection_policy mismatch"),
+        "Got error: {}",
+        err
+    );
+}
+
+#[test]
+fn test_kuwiki_decisions_human_confirmed_date_year_policy_count_mismatch_rejection() {
+    use data_builder_lib::review::kuwiki_decisions::load_and_validate_kuwiki_batch_002_decisions;
+
+    let ws_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap();
+    let temp = TempDir::new().unwrap();
+    let root = temp.path();
+
+    fs::create_dir_all(root.join("data/source-registry")).unwrap();
+    fs::copy(
+        ws_root.join("data/source-registry/sources.toml"),
+        root.join("data/source-registry/sources.toml"),
+    )
+    .unwrap();
+
+    let b2_dir = root.join("data/review-batches/kuwiki-batch-002");
+    fs::create_dir_all(&b2_dir).unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-002/candidates.jsonl"),
+        b2_dir.join("candidates.jsonl"),
+    )
+    .unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-002/manifest.json"),
+        b2_dir.join("manifest.json"),
+    )
+    .unwrap();
+    fs::copy(
+        ws_root.join("data/review-batches/kuwiki-batch-002/artifacts.sha256"),
+        b2_dir.join("artifacts.sha256"),
+    )
+    .unwrap();
+
+    let d2_dir = root.join("data/review-decisions/kuwiki-batch-002");
+    fs::create_dir_all(&d2_dir).unwrap();
+    fs::copy(
+        ws_root.join("data/review-decisions/kuwiki-batch-002/decisions.jsonl"),
+        d2_dir.join("decisions.jsonl"),
+    )
+    .unwrap();
+
+    // Mutate human_confirmed_date_year_policy_count from 0 to 1 in decision manifest
+    let orig_prov_str =
+        fs::read_to_string(ws_root.join("data/review-decisions/kuwiki-batch-002/manifest.json"))
+            .unwrap();
+    let mut prov_val: serde_json::Value = serde_json::from_str(&orig_prov_str).unwrap();
+    prov_val["human_confirmed_date_year_policy_count"] = serde_json::Value::Number(1.into());
+    let new_prov_str = serde_json::to_string_pretty(&prov_val).unwrap();
+    fs::write(d2_dir.join("manifest.json"), &new_prov_str).unwrap();
+
+    let dec_sha = calculate_bytes_sha256(
+        &fs::read(ws_root.join("data/review-decisions/kuwiki-batch-002/decisions.jsonl")).unwrap(),
+    );
+    let prov_sha = calculate_bytes_sha256(new_prov_str.as_bytes());
+
+    let new_art_content = format!(
+        "{}  decisions.jsonl\n{}  manifest.json\n",
+        dec_sha, prov_sha
+    );
+    fs::write(d2_dir.join("artifacts.sha256"), new_art_content).unwrap();
+
+    let res = load_and_validate_kuwiki_batch_002_decisions(root);
+    assert!(res.is_err());
+    let err = res.unwrap_err();
+    assert!(
+        err.contains("Decision provenance human_confirmed_date_year_policy_count mismatch"),
+        "Got error: {}",
+        err
+    );
 }

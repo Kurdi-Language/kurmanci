@@ -37,7 +37,7 @@ fn remove_dir_or_file<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
 
 use crate::pack::manifest::SourceReviewProvenance;
 use crate::review::kuwiki_decisions::{
-    load_and_validate_kuwiki_decisions, select_kuwiki_candidates_for_pack,
+    load_and_validate_all_kuwiki_decisions, select_kuwiki_candidates_for_pack,
 };
 
 /// Payload returned by pure authoritative pack selection and collision resolution.
@@ -235,14 +235,14 @@ pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
             controlled_review_report_manifest_sha256: Some(r_manifest_sha),
         });
 
-        // 2. Process Kuwiki source (kuwiki-batch-001)
-        if let Some(kuwiki_snapshot) = load_and_validate_kuwiki_decisions(root)? {
+        // 2. Process Kuwiki sources (kuwiki-batch-001, kuwiki-batch-002, etc.)
+        for kuwiki_snapshot in load_and_validate_all_kuwiki_decisions(root)? {
             let kuwiki_cands =
                 select_kuwiki_candidates_for_pack(pack_id, &kuwiki_snapshot, &mut counts)?;
             raw_candidates.extend(kuwiki_cands);
 
             source_provenance.push(SourceReviewProvenance {
-                source_id: "kuwiki-batch-001".to_string(),
+                source_id: kuwiki_snapshot.batch_id.clone(),
                 decisions_sha256: Some(kuwiki_snapshot.decision_file_sha256.clone()),
                 candidates_artifact_sha256: Some(kuwiki_snapshot.candidate_artifact_sha256.clone()),
                 batch_manifest_sha256: Some(kuwiki_snapshot.batch_manifest_sha256.clone()),
