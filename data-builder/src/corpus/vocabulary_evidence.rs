@@ -21,12 +21,11 @@ use std::path::Path;
 pub const MAX_REPRESENTATIVE_CONTEXTS: usize = 3;
 pub const MAX_OOV_CANDIDATE_CONTEXTS_TARGETS: usize = 1000;
 
-/// Provenance-aware representative context snippet.
+/// Compact non-prose context reference.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct RepresentativeContext {
     pub corpus_id: String,
     pub document_id: String,
-    pub snippet: String,
 }
 
 /// OOV Candidate Record emitted to the deterministic OOV evidence JSONL and review queue.
@@ -542,7 +541,7 @@ pub fn build_vocabulary_evidence<P: AsRef<Path>>(
                 continue;
             }
 
-            for (idx, tok) in tokens.iter().enumerate() {
+            for tok in &tokens {
                 let norm = normalize_text(tok);
                 if !target_context_tokens.contains(&norm) {
                     continue;
@@ -554,14 +553,9 @@ pub fn build_vocabulary_evidence<P: AsRef<Path>>(
                         .iter()
                         .any(|c| c.document_id == doc.document_id)
                 {
-                    let start = idx.saturating_sub(4);
-                    let end = (idx + 5).min(tokens.len());
-                    let snippet = tokens[start..end].join(" ");
-
                     contexts_list.push(RepresentativeContext {
                         corpus_id: corpus_id.to_string(),
                         document_id: doc.document_id.clone(),
-                        snippet,
                     });
                 }
             }

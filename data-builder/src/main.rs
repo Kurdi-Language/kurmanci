@@ -159,9 +159,9 @@ enum Commands {
     BuildKuwikiReviewBatch {
         #[arg(short, long, default_value = "kuwiki")]
         corpus_id: String,
-        #[arg(short, long, default_value = "kuwiki-batch-001")]
+        #[arg(short = 'b', long, default_value = "kuwiki-batch-001")]
         batch_id: String,
-        #[arg(short, long, default_value_t = 1000)]
+        #[arg(short = 's', long, default_value_t = 1000)]
         batch_size: usize,
     },
 }
@@ -969,7 +969,6 @@ fn main() {
                         summary.non_ascii_candidate_count
                     );
                     println!("  Committed Output Dir:    {}", summary.output_dir);
-                    println!("  Local Review Guide:      {}", summary.local_guide_path);
                 }
                 Err(e) => {
                     eprintln!("Error generating kuwiki vocabulary review batch: {}", e);

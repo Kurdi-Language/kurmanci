@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
@@ -51,6 +51,46 @@ pub struct KuwikiReviewBatchCandidate {
     pub decision_status: String,
 }
 
+/// Parses numeric sequence `NNN` from batch ID string matching `kuwiki-batch-NNN`.
+/// Returns Err if `batch_id` does not strictly follow this format.
+pub fn parse_kuwiki_batch_sequence(batch_id: &str) -> Result<u32, String> {
+    let prefix = "kuwiki-batch-";
+    if !batch_id.starts_with(prefix) {
+        return Err(format!(
+            "Invalid batch_id format '{}': must start with '{}'",
+            batch_id, prefix
+        ));
+    }
+    let num_str = &batch_id[prefix.len()..];
+    if num_str.len() != 3 || !num_str.chars().all(|c| c.is_ascii_digit()) {
+        return Err(format!(
+            "Invalid batch_id format '{}': suffix '{}' must be exactly three ASCII digits",
+            batch_id, num_str
+        ));
+    }
+    let seq = num_str.parse::<u32>().map_err(|e| {
+        format!(
+            "Failed to parse numeric batch sequence from '{}': {}",
+            batch_id, e
+        )
+    })?;
+    if seq < 1 {
+        return Err(format!(
+            "Invalid batch_id sequence in '{}': sequence number must be >= 1",
+            batch_id
+        ));
+    }
+    Ok(seq)
+}
+
+/// Exclusion source entry for an earlier committed review batch.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExcludedPriorBatch {
+    pub batch_id: String,
+    pub candidates_sha256: String,
+    pub candidate_count: usize,
+}
+
 /// Provenance & integrity manifest in `manifest.json`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KuwikiReviewBatchManifest {
@@ -67,6 +107,12 @@ pub struct KuwikiReviewBatchManifest {
     pub frequency_artifact_sha256: String,
     pub frequency_build_manifest_sha256: String,
     pub experimental_lexicon_fingerprint: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub excluded_prior_batches: Vec<ExcludedPriorBatch>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previously_assigned_normalized_token_count: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub excluded_due_to_prior_assignment_count: Option<usize>,
     pub selection_policy: String,
     pub batch_size: usize,
     pub candidates_file: String,
@@ -110,7 +156,6 @@ pub struct KuwikiReviewBatchSummary {
     pub non_ascii_candidate_count: usize,
     pub special_targets: Vec<SpecialTargetBatchPresence>,
     pub output_dir: String,
-    pub local_guide_path: String,
 }
 
 /// Calculates SHA-256 of file contents.
@@ -434,11 +479,19 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
             ));
         }
 
-        // 4. Strict deduplication check
-        if !seen_normalized.insert(rec.normalized_token.clone()) {
+        let canonical_token = crate::normalize::normalize_text(&rec.token);
+        if rec.normalized_token != canonical_token {
             return Err(format!(
-                "Queue invariant failure at {:?}:line {}: duplicate normalized_token '{}'",
-                queue_path, line_num, rec.normalized_token
+                "Queue invariant failure at {:?}:line {}: record token '{}' has normalized_token '{}' inconsistent with normalize_text '{}'",
+                queue_path, line_num, rec.token, rec.normalized_token, canonical_token
+            ));
+        }
+
+        // 4. Strict deduplication check
+        if !seen_normalized.insert(canonical_token) {
+            return Err(format!(
+                "Queue invariant failure at {:?}:line {}: duplicate canonical token for '{}'",
+                queue_path, line_num, rec.token
             ));
         }
 
@@ -462,24 +515,282 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
         eligible_records.push(rec);
     }
 
-    // 6. Strict Batch Size Contract
-    if eligible_records.len() < batch_size {
+    // Target batch sequence check (Requirement 2)
+    let target_seq = parse_kuwiki_batch_sequence(batch_id)?;
+
+    // 6. Generic Prior-Batch Exclusion Engine
+    let review_batches_dir = root.join("data/review-batches");
+    let mut token_to_first_assignment: BTreeMap<String, (String, usize)> = BTreeMap::new();
+    let mut excluded_prior_batches: Vec<ExcludedPriorBatch> = Vec::new();
+
+    if review_batches_dir.exists() {
+        let entries = fs::read_dir(&review_batches_dir).map_err(|e| {
+            format!(
+                "Failed to read review-batches dir {:?}: {}",
+                review_batches_dir, e
+            )
+        })?;
+
+        let mut prior_batch_dirs: Vec<(u32, String, std::path::PathBuf)> = Vec::new();
+        for entry_res in entries {
+            let entry =
+                entry_res.map_err(|e| format!("Failed reading entry in review-batches: {}", e))?;
+            let path = entry.path();
+            if path.is_dir() {
+                let dir_name = entry.file_name().to_string_lossy().to_string();
+                if dir_name.ends_with(".tmp") {
+                    continue;
+                }
+
+                // Requirement 2: Strict batch ID format & sequence parsing
+                if dir_name.starts_with("kuwiki-") || dir_name.starts_with("kuwiki-batch-") {
+                    let seq = parse_kuwiki_batch_sequence(&dir_name).map_err(|e| {
+                        format!(
+                            "Malformed or ambiguous prior batch directory name '{:?}': {}",
+                            path, e
+                        )
+                    })?;
+
+                    if seq < target_seq {
+                        prior_batch_dirs.push((seq, dir_name, path));
+                    }
+                }
+            }
+        }
+
+        // Sort strictly by batch sequence NNN ascending
+        prior_batch_dirs.sort_by_key(|(seq, _, _)| *seq);
+
+        for (seq, dir_name, path) in prior_batch_dirs {
+            let candidates_file = path.join("candidates.jsonl");
+            let manifest_file = path.join("manifest.json");
+            let artifacts_file = path.join("artifacts.sha256");
+
+            // Requirement 4: Verify prior batch complete existence
+            if !manifest_file.exists() {
+                return Err(format!(
+                    "Missing manifest.json in prior review batch directory {:?}",
+                    path
+                ));
+            }
+            if !candidates_file.exists() {
+                return Err(format!(
+                    "Missing candidates.jsonl in prior review batch directory {:?}",
+                    path
+                ));
+            }
+            if !artifacts_file.exists() {
+                return Err(format!(
+                    "Missing artifacts.sha256 in prior review batch directory {:?}",
+                    path
+                ));
+            }
+
+            let actual_cand_sha = calculate_file_sha256(&candidates_file)?;
+            let actual_man_sha = calculate_file_sha256(&manifest_file)?;
+
+            let manifest_bytes = fs::read(&manifest_file)
+                .map_err(|e| format!("Failed to read manifest {:?}: {}", manifest_file, e))?;
+            let prev_manifest: KuwikiReviewBatchManifest = serde_json::from_slice(&manifest_bytes)
+                .map_err(|e| format!("Failed to parse manifest {:?}: {}", manifest_file, e))?;
+
+            // Requirement 2 & 4: Check manifest fields
+            if prev_manifest.batch_id != dir_name {
+                return Err(format!(
+                    "Prior batch manifest batch_id mismatch for '{:?}': manifest has '{}', expected '{}'",
+                    path, prev_manifest.batch_id, dir_name
+                ));
+            }
+            let manifest_seq = parse_kuwiki_batch_sequence(&prev_manifest.batch_id)?;
+            if manifest_seq != seq {
+                return Err(format!(
+                    "Prior batch sequence mismatch in manifest for '{}': manifest sequence {}, dir sequence {}",
+                    dir_name, manifest_seq, seq
+                ));
+            }
+            if prev_manifest.source_corpus_id != "kuwiki" {
+                return Err(format!(
+                    "Prior batch source_corpus_id mismatch for '{}': manifest has '{}', expected 'kuwiki'",
+                    dir_name, prev_manifest.source_corpus_id
+                ));
+            }
+
+            if prev_manifest.candidates_sha256 != actual_cand_sha {
+                return Err(format!(
+                    "Stale prior batch candidate SHA-256 for '{}': manifest recorded '{}', actual '{}'",
+                    dir_name, prev_manifest.candidates_sha256, actual_cand_sha
+                ));
+            }
+
+            // Verify artifacts.sha256
+            verify_artifact_in_manifest(
+                &artifacts_file,
+                "candidates.jsonl",
+                &actual_cand_sha,
+                "prior candidate",
+            )?;
+            verify_artifact_in_manifest(
+                &artifacts_file,
+                "manifest.json",
+                &actual_man_sha,
+                "prior manifest",
+            )?;
+
+            let cand_file = File::open(&candidates_file).map_err(|e| {
+                format!(
+                    "Failed to open candidates file {:?}: {}",
+                    candidates_file, e
+                )
+            })?;
+            let cand_reader = BufReader::new(cand_file);
+
+            let mut batch_candidate_count = 0;
+            let mut seen_in_this_batch = BTreeSet::new();
+
+            for (line_idx, line_res) in cand_reader.lines().enumerate() {
+                let line_num = line_idx + 1;
+                let line = line_res.map_err(|e| {
+                    format!(
+                        "Error reading line {} in {:?}: {}",
+                        line_num, candidates_file, e
+                    )
+                })?;
+                if line.trim().is_empty() {
+                    continue;
+                }
+                let cand: KuwikiReviewBatchCandidate =
+                    serde_json::from_str(&line).map_err(|e| {
+                        format!(
+                            "JSON parse error at {:?}:line {}: {}",
+                            candidates_file, line_num, e
+                        )
+                    })?;
+
+                if cand.batch_rank != line_num {
+                    return Err(format!(
+                        "Prior batch candidate rank discontinuity in '{}': rank is {}, expected {}",
+                        dir_name, cand.batch_rank, line_num
+                    ));
+                }
+                if cand.batch_id != dir_name {
+                    return Err(format!(
+                        "Prior batch candidate batch_id mismatch in '{}' at rank {}: candidate has '{}'",
+                        dir_name, line_num, cand.batch_id
+                    ));
+                }
+                if cand.corpus_id != "kuwiki" {
+                    return Err(format!(
+                        "Prior batch candidate corpus_id mismatch in '{}' at rank {}: candidate has '{}'",
+                        dir_name, line_num, cand.corpus_id
+                    ));
+                }
+                let canonical = crate::normalize::normalize_text(&cand.token);
+                if cand.normalized_token != canonical {
+                    return Err(format!(
+                        "Prior batch '{}' candidate rank {} normalized_token '{}' is inconsistent with normalize_text(&cand.token) '{}'",
+                        dir_name, line_num, cand.normalized_token, canonical
+                    ));
+                }
+
+                // Check uniqueness within this prior batch
+                if !seen_in_this_batch.insert(canonical.clone()) {
+                    return Err(format!(
+                        "Prior batch '{}' contains duplicate canonical token '{}' at rank {}",
+                        dir_name, canonical, line_num
+                    ));
+                }
+
+                // Requirement 3: Check duplicate across ALL historical committed Kuwiki batches -> FAIL CLOSED
+                if let Some((first_batch, first_rank)) = token_to_first_assignment.get(&canonical) {
+                    return Err(format!(
+                        "Historical duplicate detected across committed Kuwiki batches: canonical token '{}' appears in both prior batch '{}' (rank {}) and prior batch '{}' (rank {})",
+                        canonical, first_batch, first_rank, dir_name, cand.batch_rank
+                    ));
+                }
+
+                token_to_first_assignment.insert(canonical, (dir_name.clone(), cand.batch_rank));
+                batch_candidate_count += 1;
+            }
+
+            excluded_prior_batches.push(ExcludedPriorBatch {
+                batch_id: dir_name,
+                candidates_sha256: actual_cand_sha,
+                candidate_count: batch_candidate_count,
+            });
+        }
+    }
+
+    let previously_assigned_normalized_token_count = token_to_first_assignment.len();
+
+    let mut excluded_due_to_prior_assignment_count = 0;
+    let mut diagnostic_skipped_sample: Vec<(String, String, usize)> = Vec::new();
+
+    const DIAGNOSTIC_SAMPLE_CAP: usize = 10;
+
+    let filtered_queue_records: Vec<&OovCandidateRecord> = eligible_records
+        .iter()
+        .filter(|rec| {
+            let canonical = crate::normalize::normalize_text(&rec.token);
+            if let Some((prior_batch, prior_rank)) = token_to_first_assignment.get(&canonical) {
+                excluded_due_to_prior_assignment_count += 1;
+                if diagnostic_skipped_sample.len() < DIAGNOSTIC_SAMPLE_CAP {
+                    diagnostic_skipped_sample.push((canonical, prior_batch.clone(), *prior_rank));
+                }
+                false
+            } else {
+                true
+            }
+        })
+        .collect();
+
+    // Print diagnostic report summary (Requirement 14)
+    println!("=== Prior Batch Exclusion Diagnostic Summary ===");
+    println!(
+        "Total prior Kuwiki batches discovered: {}",
+        excluded_prior_batches.len()
+    );
+    println!(
+        "Total normalized tokens assigned in prior batches: {}",
+        previously_assigned_normalized_token_count
+    );
+    println!(
+        "Fresh OOV queue records skipped due to prior assignment: {}",
+        excluded_due_to_prior_assignment_count
+    );
+    println!(
+        "First {} skipped prior assignments (diagnostic sample):",
+        DIAGNOSTIC_SAMPLE_CAP
+    );
+    for (idx, (norm_tok, p_batch, p_rank)) in diagnostic_skipped_sample.iter().enumerate() {
+        println!(
+            "  {:2}. '{}' (previously assigned in {} rank {})",
+            idx + 1,
+            norm_tok,
+            p_batch,
+            p_rank
+        );
+    }
+
+    // 7. Strict Batch Size Contract
+    if filtered_queue_records.len() < batch_size {
         return Err(format!(
-            "Requested batch size {} exceeds total eligible queue records {}",
+            "Requested batch size {} exceeds remaining eligible queue records {}",
             batch_size,
-            eligible_records.len()
+            filtered_queue_records.len()
         ));
     }
 
     let mut candidates: Vec<KuwikiReviewBatchCandidate> = Vec::with_capacity(batch_size);
+    let mut current_batch_normalized: BTreeSet<String> = BTreeSet::new();
 
-    for (b_idx, queue_rec) in eligible_records.iter().take(batch_size).enumerate() {
+    for (b_idx, queue_rec) in filtered_queue_records.iter().take(batch_size).enumerate() {
         let batch_rank = b_idx + 1;
 
-        if batch_rank != queue_rec.rank {
+        // Requirement 6: Enforce current-batch normalized token uniqueness
+        if !current_batch_normalized.insert(queue_rec.normalized_token.clone()) {
             return Err(format!(
-                "Batch rank mapping mismatch: batch_rank is {}, original_queue_rank is {}",
-                batch_rank, queue_rec.rank
+                "Batch selection invariant broken: candidate '{}' selected more than once in batch selection",
+                queue_rec.normalized_token
             ));
         }
 
@@ -513,7 +824,23 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
             decision_status: "pending".to_string(),
         };
 
+        if let Some(prev) = candidates.last() {
+            if candidate.original_queue_rank <= prev.original_queue_rank {
+                return Err(format!(
+                    "original_queue_rank must be strictly increasing: candidate '{}' has rank {}, previous has {}",
+                    candidate.normalized_token, candidate.original_queue_rank, prev.original_queue_rank
+                ));
+            }
+        }
+
         candidates.push(candidate);
+    }
+
+    if candidates.len() != batch_size || current_batch_normalized.len() != batch_size {
+        return Err(format!(
+            "Batch candidate count invariant failure: expected {} candidates with {} unique normalized tokens, got {} and {}",
+            batch_size, batch_size, candidates.len(), current_batch_normalized.len()
+        ));
     }
 
     // Descriptive statistics
@@ -676,6 +1003,11 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
             .provenance
             .frequency_build_manifest_sha256,
         experimental_lexicon_fingerprint: exp_fingerprint.clone(),
+        excluded_prior_batches,
+        previously_assigned_normalized_token_count: Some(
+            previously_assigned_normalized_token_count,
+        ),
+        excluded_due_to_prior_assignment_count: Some(excluded_due_to_prior_assignment_count),
         selection_policy: format!("top-{}-eligible", batch_size),
         batch_size,
         candidates_file: "candidates.jsonl".to_string(),
@@ -714,189 +1046,6 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
         )
     })?;
 
-    // 4. Generate LOCAL/REPORT Human Review Guide (`data/reports/vocabulary-review/kuwiki-batch-001/review-guide.md`)
-    let local_reports_dir = root.join("data/reports/vocabulary-review").join(batch_id);
-    fs::create_dir_all(&local_reports_dir).map_err(|e| {
-        format!(
-            "Failed to create local reports dir {:?}: {}",
-            local_reports_dir, e
-        )
-    })?;
-
-    let local_guide_path = local_reports_dir.join("review-guide.md");
-    let mut guide_file = File::create(&local_guide_path).map_err(|e| {
-        format!(
-            "Failed to create local review guide {:?}: {}",
-            local_guide_path, e
-        )
-    })?;
-
-    writeln!(
-        guide_file,
-        "# Kurmancî Human Vocabulary Review Guide — {}",
-        batch_id
-    )
-    .unwrap();
-    writeln!(guide_file).unwrap();
-    writeln!(
-        guide_file,
-        "This is a reviewable first batch of top {batch_size} highest-attestation **{corpus_id}** OOV candidates generated for human lexical review."
-    )
-    .unwrap();
-    writeln!(guide_file).unwrap();
-    writeln!(guide_file, "## Batch Provenance & Integrity").unwrap();
-    writeln!(guide_file, "- **Batch ID**: `{}`", batch_id).unwrap();
-    writeln!(
-        guide_file,
-        "- **Source Corpus**: `{}` (version `{}`)",
-        corpus_id, source_version
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Input Queue SHA-256**: `{}`",
-        input_queue_sha256
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Experimental Lexicon Fingerprint**: `{}`",
-        exp_fingerprint
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Selection Policy**: `top-{}-eligible`",
-        batch_size
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Committed Candidates File**: `data/review-batches/{}/candidates.jsonl` (`{}`)",
-        batch_id, candidates_sha256
-    )
-    .unwrap();
-    writeln!(guide_file).unwrap();
-
-    writeln!(guide_file, "## Batch Descriptive Statistics").unwrap();
-    writeln!(guide_file, "- **Total Candidates**: `{}`", batch_size).unwrap();
-    writeln!(
-        guide_file,
-        "- **Document Attestation Count**: min=`{}`, median=`{}`, max=`{}`",
-        doc_count_min, doc_count_median, doc_count_max
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Token Occurrence Count**: min=`{}`, median=`{}`, max=`{}`",
-        token_count_min, token_count_median, token_count_max
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Attestation Thresholds**: `>=100 docs`: `{}`, `>=500 docs`: `{}`, `>=1,000 docs`: `{}`",
-        gte_100_docs_count, gte_500_docs_count, gte_1000_docs_count
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Context Coverage**: 3+ contexts: `{}`, 2 contexts: `{}`, 1 context: `{}`, Lacking: `{}`",
-        contexts_3_count, contexts_2_count, contexts_1_count, contexts_lacking_count
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "- **Candidates containing non-ASCII characters**: `{}`",
-        non_ascii_candidate_count
-    )
-    .unwrap();
-    writeln!(guide_file).unwrap();
-
-    writeln!(guide_file, "## Special Diagnostic Targets Status").unwrap();
-    writeln!(
-        guide_file,
-        "| Target | Normalized | Present in Batch | Batch Rank | Docs | Tokens |"
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "| :--- | :--- | :---: | :---: | :---: | :---: |"
-    )
-    .unwrap();
-    for st in &special_targets_presence {
-        let pres_str = if st.present_in_batch { "Yes" } else { "No" };
-        let rank_str = st
-            .batch_rank
-            .map(|r| r.to_string())
-            .unwrap_or_else(|| "-".to_string());
-        writeln!(
-            guide_file,
-            "| `{}` | `{}` | {} | {} | {} | {} |",
-            st.target, st.normalized_target, pres_str, rank_str, st.document_count, st.token_count
-        )
-        .unwrap();
-    }
-    writeln!(guide_file).unwrap();
-
-    writeln!(
-        guide_file,
-        "## Candidate Review Table (Ranks 1..{})",
-        batch_size
-    )
-    .unwrap();
-    writeln!(
-        guide_file,
-        "All candidates begin in `pending` state awaiting human Kurmancî review."
-    )
-    .unwrap();
-    writeln!(guide_file).unwrap();
-
-    for (b_idx, cand) in candidates.iter().enumerate() {
-        let orig_rec = &eligible_records[b_idx];
-
-        writeln!(
-            guide_file,
-            "### Rank {}: `{}` (Normalized: `{}`)",
-            cand.batch_rank, cand.token, cand.normalized_token
-        )
-        .unwrap();
-        writeln!(
-            guide_file,
-            "- **Attestation**: `{}` documents | `{}` token occurrences | Zipf: `{:.2}`",
-            cand.document_count,
-            cand.token_count,
-            cand.zipf_milli as f64 / 1000.0
-        )
-        .unwrap();
-        writeln!(
-            guide_file,
-            "- **Pack Membership**: Seed: `{}` | Reviewed: `{}` | Experimental-Full: `{}`",
-            cand.in_seed, cand.in_reviewed, cand.in_experimental_full
-        )
-        .unwrap();
-        writeln!(guide_file, "- **Decision Box**: `[ ] Pending Human Review`").unwrap();
-
-        if !orig_rec.representative_contexts.is_empty() {
-            writeln!(
-                guide_file,
-                "- **Representative Contexts (Local Generated View)**:"
-            )
-            .unwrap();
-            for (c_idx, ctx) in orig_rec.representative_contexts.iter().enumerate() {
-                writeln!(
-                    guide_file,
-                    "  {}. `[{}]` *\"{}\"*",
-                    c_idx + 1,
-                    ctx.document_id,
-                    ctx.snippet
-                )
-                .unwrap();
-            }
-        }
-        writeln!(guide_file).unwrap();
-    }
-    drop(guide_file);
-
     let summary = KuwikiReviewBatchSummary {
         schema_version: "kuwiki-review-batch-summary-v1".to_string(),
         batch_id: batch_id.to_string(),
@@ -920,7 +1069,6 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
         non_ascii_candidate_count,
         special_targets: special_targets_presence,
         output_dir: batch_dir.to_string_lossy().to_string(),
-        local_guide_path: local_guide_path.to_string_lossy().to_string(),
     };
 
     Ok(summary)

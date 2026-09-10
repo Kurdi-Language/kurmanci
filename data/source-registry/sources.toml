@@ -78,3 +78,24 @@ notes = "Reviewed lexical evidence batch of top 1,000 OOV candidates extracted f
 path = "data/review-batches/kuwiki-batch-001/candidates.jsonl"
 sha256 = "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d"
 
+[[sources]]
+source_id = "kuwiki-batch-002"
+source_name = "Kurmancî Wikipedia OOV Candidate Review Batch 002"
+source_type = "wikipedia_oov_review_batch"
+language = "kmr"
+script = "Latn"
+author = "Kurmancî Platform / Wikimedia Contributors"
+license = "CC-BY-SA-4.0"
+license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
+url = "https://github.com/Kurdi-Language/kurmanci"
+version = "a0b685a544985e127aafa0c77957d9b7fc7d31c5"
+redistribution = "allowed"
+attribution_required = true
+share_alike_required = true
+disclosed_upstream_sources = ["Kurmancî Wikipedia (version 20260801)"]
+retrieval_date = "2026-09-10"
+notes = "Reviewed lexical evidence batch 002 of top 1,000 OOV candidates extracted from Kurmancî Wikipedia corpus (version 20260801)."
+
+[[sources.files]]
+path = "data/review-batches/kuwiki-batch-002/candidates.jsonl"
+sha256 = "f1d0dd010f9093399807e8d78c8cd1e13c5147a3b5ca5058f0c5bc6990b83308"

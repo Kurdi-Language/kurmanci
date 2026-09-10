@@ -171,41 +171,62 @@ def derive_selection(candidate_root: Path) -> Dict[str, Any]:
 
     ku_cands = []
     ku_decs = []
-    ku_cand_path = candidate_root / "data/review-batches/kuwiki-batch-001/candidates.jsonl"
-    ku_dec_path = candidate_root / "data/review-decisions/kuwiki-batch-001/decisions.jsonl"
     expected_ku_additions = set()
     ku_non_approved_norms = set()
 
-    if ku_cand_path.exists() and ku_dec_path.exists():
-        ku_cands = [json.loads(line) for line in ku_cand_path.read_text(encoding="utf-8").splitlines() if line.strip()]
-        ku_decs = [json.loads(line) for line in ku_dec_path.read_text(encoding="utf-8").splitlines() if line.strip()]
-        assert len(ku_cands) == 1000, f"Expected 1000 Kuwiki candidates, found {len(ku_cands)}"
-        assert len(ku_decs) == 1000, f"Expected 1000 Kuwiki decisions, found {len(ku_decs)}"
+    batch_dir_base = candidate_root / "data/review-batches"
+    if batch_dir_base.exists():
+        batch_dirs = sorted([d for d in batch_dir_base.glob("kuwiki-batch-*") if d.is_dir()])
+        for b_dir in batch_dirs:
+            b_name = b_dir.name
+            d_dir = candidate_root / "data/review-decisions" / b_name
+            b_cand_path = b_dir / "candidates.jsonl"
+            b_dec_path = d_dir / "decisions.jsonl"
+            b_man_path = b_dir / "manifest.json"
 
-        dec_by_target_id = {d["target_id"]: d for d in ku_decs}
-        assert len(dec_by_target_id) == 1000, "Duplicate target_id in Kuwiki decisions"
+            if b_cand_path.exists() and b_dec_path.exists():
+                cands = [json.loads(line) for line in b_cand_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+                decs = [json.loads(line) for line in b_dec_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+                assert len(cands) == 1000, f"Expected 1000 {b_name} candidates, found {len(cands)}"
+                assert len(decs) == 1000, f"Expected 1000 {b_name} decisions, found {len(decs)}"
 
-        cand_target_ids = set()
-        for cand in ku_cands:
-            tid = compute_kuwiki_entry_id(
-                "kuwiki-batch-001",
-                "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d",
-                cand["token"],
-                cand["normalized_token"]
-            )
-            cand_target_ids.add(tid)
-            dec = dec_by_target_id.get(tid)
-            assert dec is not None, f"Missing decision for candidate target_id {tid}"
+                ku_cands.extend(cands)
+                ku_decs.extend(decs)
 
-            norm = cand["normalized_token"]
-            if dec["review_status"] == "approved":
-                if norm not in seed_entries:
-                    expected_ku_additions.add(norm)
-            else:
-                ku_non_approved_norms.add((norm, dec["target_id"], dec["review_status"]))
+                b_man = json.loads(b_man_path.read_text(encoding="utf-8"))
+                cand_sha = b_man.get("candidates_sha256") or b_man.get("candidate_sha256")
 
-        assert len(cand_target_ids) == 1000, "Duplicate target_id computed for candidates"
-        assert cand_target_ids == set(dec_by_target_id.keys()), "Mismatch between candidate and decision target_ids"
+                dec_by_target_id = {d["target_id"]: d for d in decs}
+                assert len(dec_by_target_id) == 1000, f"Duplicate target_id in {b_name} decisions"
+
+                cand_target_ids = set()
+                for cand in cands:
+                    tid = compute_kuwiki_entry_id(
+                        b_name,
+                        cand_sha,
+                        cand["token"],
+                        cand["normalized_token"]
+                    )
+                    cand_target_ids.add(tid)
+                    dec = dec_by_target_id.get(tid)
+                    assert dec is not None, f"Missing decision in {b_name} for candidate target_id {tid}"
+
+                    norm = cand["normalized_token"]
+                    if dec["review_status"] == "approved":
+                        if norm not in seed_entries:
+                            expected_ku_additions.add(norm)
+                    elif dec["review_status"] == "approved_with_metadata_change":
+                        repl = dec.get("replacement_metadata")
+                        if not repl or "normalized" not in repl:
+                            raise ValueError(f"approved_with_metadata_change decision for target {dec['target_id']} in {b_name} missing replacement_metadata.normalized")
+                        repl_norm = repl["normalized"]
+                        if repl_norm not in seed_entries:
+                            expected_ku_additions.add(repl_norm)
+                    else:
+                        ku_non_approved_norms.add((norm, dec["target_id"], dec["review_status"], b_name))
+
+                assert len(cand_target_ids) == 1000, f"Duplicate target_id computed for {b_name} candidates"
+                assert cand_target_ids == set(dec_by_target_id.keys()), f"Mismatch between candidate and decision target_ids in {b_name}"
 
     expected_external_additions = expected_hun_additions | expected_ku_additions
 
@@ -280,12 +301,12 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
             if "kurdish-hunspell-kmr" in sources:
                 raise AssertionError(f"Non-approved Hunspell entry '{t_norm}' (id {t_id}) must be absent from external reviewed additions from Hunspell")
 
-    # Verify all non-approved Kuwiki decision targets are absent from Kuwiki additions in reviewed
-    for ku_norm, ku_tid, ku_status in ku_non_approved_norms:
+    # Verify all non-approved Kuwiki decision targets are absent from additions from that exact source_id
+    for ku_norm, ku_tid, ku_status, ku_source_id in ku_non_approved_norms:
         if ku_norm in ext_additions_map:
             sources = ext_additions_map[ku_norm]
-            if "kuwiki-batch-001" in sources:
-                raise AssertionError(f"Non-approved Kuwiki entry '{ku_norm}' (id {ku_tid}, status {ku_status}) must be absent from external reviewed additions from kuwiki-batch-001")
+            if ku_source_id in sources:
+                raise AssertionError(f"Non-approved Kuwiki entry '{ku_norm}' (id {ku_tid}, status {ku_status}) must be absent from external reviewed additions from {ku_source_id}")
 
     print("⚡ Content membership & policy invariants PASSED!")
 
@@ -405,6 +426,46 @@ def run_self_tests(candidate_root: Path):
         except AssertionError as e:
             assert "sê" in str(e) or "Non-approved" in str(e) or "Approved sê entry" in str(e), f"Unexpected error in Self-test 5: {e}"
             print(f"✅ Self-test 5 passed (caught sê in external additions): {e}")
+
+        # Self-Test 6A: Cross-source rejection allowed when entry is selected from approved source
+        f6 = create_fixture_root(tmp_parent, 6)
+        d6 = derive_selection(f6)
+        d6["external_additions"].add("test_cross_word")
+        d6["external_additions_map"]["test_cross_word"] = {"kuwiki-batch-001"}
+        d6["rev_manifest"]["external_approved_selected_count"] = len(d6["external_additions"]) + d6["rev_manifest"].get("external_discarded_by_collision_count", 0)
+        d6["ku_non_approved_norms"].add(("test_cross_word", "dummy_tid", "rejected_from_default_pack", "kuwiki-batch-002"))
+        validate_policy_invariants(d6, f6)
+        print("✅ Self-test 6A passed (cross-source rejection allowed when selected from approved source)")
+
+        # Self-Test 6B: Cross-source rejection fails when selection is incorrectly attributed to rejected source
+        d6_bad = dict(d6)
+        d6_bad["external_additions_map"] = dict(d6["external_additions_map"])
+        d6_bad["external_additions_map"]["test_cross_word"] = {"kuwiki-batch-002"}
+        try:
+            validate_policy_invariants(d6_bad, f6)
+            raise RuntimeError("Self-test 6B failed: expected rejected source selection error!")
+        except AssertionError as e:
+            assert "must be absent from external reviewed additions from kuwiki-batch-002" in str(e), f"Unexpected error in Self-test 6B: {e}"
+            print(f"✅ Self-test 6B passed (caught rejected source selection): {e}")
+
+        # Self-Test 6C: approved_with_metadata_change derives expected selection semantics
+        f7 = create_fixture_root(tmp_parent, 7)
+        dec_file7 = f7 / "data/review-decisions/kuwiki-batch-001/decisions.jsonl"
+        dec_lines7 = dec_file7.read_text(encoding="utf-8").splitlines()
+        first_dec7 = json.loads(dec_lines7[0])
+        first_dec7["review_status"] = "approved_with_metadata_change"
+        first_dec7["replacement_metadata"] = {
+            "display": "nû_meta_display",
+            "normalized": "nû_meta_norm",
+            "part_of_speech": "noun",
+            "morphology": [],
+            "flags": ""
+        }
+        dec_lines7[0] = json.dumps(first_dec7)
+        dec_file7.write_text("\n".join(dec_lines7) + "\n", encoding="utf-8")
+        d7 = derive_selection(f7)
+        assert "nû_meta_norm" in d7["expected_external_additions"], "approved_with_metadata_change replacement normalized form must be included in expected external additions"
+        print("✅ Self-test 6C passed (approved_with_metadata_change derives replacement normalized form)")
 
     print("⚡ Extended verifier self-test suite PASSED successfully!")
 
