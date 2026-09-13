@@ -43,6 +43,11 @@ enum Commands {
         #[arg(short, long, default_value = "data/source-registry/sources.toml")]
         registry: PathBuf,
     },
+    /// Downloads, verifies, and deterministically re-extracts an external corpus registered in corpora.toml
+    AcquireCorpus {
+        #[arg(index = 1)]
+        corpus_id: String,
+    },
     /// Deterministically parses and imports a registered Hunspell .dic source
     ImportHunspell {
         #[arg(index = 1)]
@@ -307,6 +312,36 @@ fn main() {
                 "⚡ Source Acquisition SUCCESSFUL! Source '{}' acquired and verified.",
                 source_id
             );
+        }
+        Commands::AcquireCorpus { corpus_id } => {
+            println!("=== Kurmancî External Corpus Acquisition ===");
+            match data_builder_lib::corpus::acquire::acquire_corpus(&corpus_id, ".") {
+                Ok(report) => {
+                    println!("⚡ CORPUS ACQUISITION SUCCESSFUL!");
+                    println!("  Corpus ID:                {}", report.corpus_id);
+                    println!("  Version:                  {}", report.version);
+                    println!("  Artifact:                 {}", report.artifact_path);
+                    println!("  Artifact SHA-256:         {}", report.artifact_sha256);
+                    println!(
+                        "  Artifact downloaded:      {}",
+                        if report.artifact_downloaded {
+                            "yes"
+                        } else {
+                            "no (already present and verified)"
+                        }
+                    );
+                    println!("  Derived file:             {}", report.derived_file_path);
+                    println!("  Derived file SHA-256:     {}", report.derived_file_sha256);
+                    println!(
+                        "  Derived documents:        {}",
+                        report.derived_document_count
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error acquiring corpus '{}': {}", corpus_id, e);
+                    std::process::exit(1);
+                }
+            }
         }
         Commands::ImportHunspell { source_id } => {
             println!("=== Kurmancî Deterministic Hunspell Importer ===");

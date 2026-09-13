@@ -43,6 +43,10 @@ pub struct CanonicalImportManifest {
     pub schema_version: String,
     pub registry_sha256: String,
     pub corpora: Vec<CanonicalCorpusManifestEntry>,
+    /// Registered `external` corpora whose derived files were absent on this machine
+    /// at import time (not acquired). Sorted; empty when everything was imported.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub skipped_external_corpora: Vec<String>,
 }
 
 /// Summary report emitted when a corpus is successfully imported.
@@ -189,7 +193,7 @@ pub fn verify_canonical_manifest<P: AsRef<Path>>(
         return Err("Duplicate corpus_id found in canonical manifest".to_string());
     }
 
-    let reg_corpus_ids: std::collections::BTreeSet<String> = registry
+    let mut reg_corpus_ids: std::collections::BTreeSet<String> = registry
         .corpora
         .iter()
         .map(|c| c.corpus_id.clone())
@@ -198,9 +202,35 @@ pub fn verify_canonical_manifest<P: AsRef<Path>>(
         return Err("Duplicate corpus_id found in corpora.toml registry".to_string());
     }
 
+    // Skipped external corpora must be registered as external and must not also be imported.
+    for skipped in &manifest.skipped_external_corpora {
+        match registry.find_corpus(skipped) {
+            Some(entry) if entry.is_external() => {}
+            Some(_) => {
+                return Err(format!(
+                    "Canonical manifest skips corpus '{}' but it is not registered as external",
+                    skipped
+                ));
+            }
+            None => {
+                return Err(format!(
+                    "Canonical manifest skips unregistered corpus '{}'",
+                    skipped
+                ));
+            }
+        }
+        if manifest_corpus_ids.contains(skipped) {
+            return Err(format!(
+                "Canonical manifest lists corpus '{}' as both imported and skipped",
+                skipped
+            ));
+        }
+        reg_corpus_ids.remove(skipped);
+    }
+
     if manifest_corpus_ids != reg_corpus_ids {
         return Err(format!(
-            "Manifest/Registry corpus set mismatch: manifest={:?}, registry={:?}",
+            "Manifest/Registry corpus set mismatch: manifest={:?}, registry (minus skipped external)={:?}",
             manifest_corpus_ids, reg_corpus_ids
         ));
     }
@@ -510,9 +540,29 @@ pub fn import_all_corpora<P: AsRef<Path>>(
     registered_corpora.sort_by(|a, b| a.corpus_id.cmp(&b.corpus_id));
 
     println!("=== Kurmancî Atomic Canonical Corpus Importer ===");
+    let mut skipped_external_corpora: Vec<String> = Vec::new();
     for entry in &registered_corpora {
+        if entry.is_skippable_absent(root) {
+            println!(
+                "  Skipping external corpus '{}': derived files not acquired on this machine (run `acquire-corpus {}`)",
+                entry.corpus_id, entry.corpus_id
+            );
+            skipped_external_corpora.push(entry.corpus_id.clone());
+            continue;
+        }
         println!("  Verifying source integrity for '{}'...", entry.corpus_id);
         registry.verify_corpus_files(entry, root)?;
+    }
+    skipped_external_corpora.sort();
+    let registered_corpora: Vec<CorpusRegistryEntry> = registered_corpora
+        .into_iter()
+        .filter(|e| !skipped_external_corpora.contains(&e.corpus_id))
+        .collect();
+    if registered_corpora.is_empty() {
+        return Err(
+            "No importable corpora: every registered corpus is an external corpus that has not been acquired"
+                .to_string(),
+        );
     }
 
     let stage_dir = root.join("data/imported-canonical.tmp_stage");
@@ -564,6 +614,7 @@ pub fn import_all_corpora<P: AsRef<Path>>(
         schema_version: CANONICAL_SCHEMA_VERSION.to_string(),
         registry_sha256,
         corpora: manifest_entries,
+        skipped_external_corpora,
     };
 
     let manifest_path = stage_dir.join("manifest.json");

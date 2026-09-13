@@ -159,6 +159,7 @@ Language data is managed under strict provenance and licensing rules in [`data/s
 
 - **Seed Lexicon**: Handcrafted entries (`manual-seed`, Apache-2.0).
 - **Imported Lexicons**: Upstream dictionaries (e.g. `kurdish-hunspell-kmr`, CC BY-SA 4.0) acquired reproducibly with SHA-256 verification.
+- **Text Corpora**: Registered in [`data/source-registry/corpora.toml`](data/source-registry/corpora.toml). Small corpora are tracked in git; large ones such as the Kurmancî Wikipedia (`kuwiki`, CC BY-SA 4.0) are registered as *external* corpora with the upstream dump URL and checksums pinned, and are re-created locally with `cargo run -p kurmanci-data-builder -- acquire-corpus kuwiki` (download, verify, deterministic re-extraction). Pipeline steps skip an external corpus that has not been acquired, so CI stays self-contained.
 - **Controlled Review Policy**: Imported candidates are **not** automatically promoted to default packs. Every candidate undergoes automated queue generation (`review-queue-v1`) and human review (`review-decision-v1`) before entry into `reviewed` language packs.
 
 For review procedures, see [`docs/lexicon-review.md`](docs/lexicon-review.md).
