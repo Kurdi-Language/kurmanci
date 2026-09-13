@@ -79,6 +79,41 @@ fn is_hex_of_len(value: &str, len: usize) -> bool {
     value.len() == len && value.chars().all(|c| c.is_ascii_hexdigit())
 }
 
+/// Path components of a registry path with `\` treated as `/` (no normalisation beyond that;
+/// callers validate traversal and absolute paths separately).
+fn normalized_components(path: &str) -> Vec<String> {
+    path.replace('\\', "/")
+        .split('/')
+        .map(|s| s.to_string())
+        .collect()
+}
+
+/// Requires `path` to be `data/<area>/<corpus_id>/<at least one more component>`, compared
+/// component by component, so that external-corpus acquisition can only ever write inside
+/// the generated-data directory of the corpus that registers it.
+fn require_path_under_corpus_root(
+    path: &str,
+    area: &str,
+    corpus_id: &str,
+    what: &str,
+) -> Result<(), String> {
+    let parts = normalized_components(path);
+    let ok = parts.len() >= 4
+        && parts[0] == "data"
+        && parts[1] == area
+        && parts[2] == corpus_id
+        && parts[3..]
+            .iter()
+            .all(|p| !p.is_empty() && p != "." && p != "..");
+    if !ok {
+        return Err(format!(
+            "Corpus '{}': {} '{}' must be inside data/{}/{}/",
+            corpus_id, what, path, area, corpus_id
+        ));
+    }
+    Ok(())
+}
+
 /// Validates that a registry file path is a safe, relative path within the repository root.
 /// Rejects empty paths, absolute paths (Unix/Windows), path prefixes, root components,
 /// "." and ".." components, and double slashes.
@@ -174,7 +209,30 @@ impl CorpusRegistryEntry {
                         self.corpus_id
                     )
                 })?;
+                // `acquire-corpus` writes to these two paths, so they are confined to the
+                // corpus-specific generated-data roots (checked by path component, never by
+                // string prefix) and must be distinct from each other.
                 validate_registry_relative_path(&artifact.path)?;
+                require_path_under_corpus_root(
+                    &artifact.path,
+                    "original",
+                    &self.corpus_id,
+                    "source_artifact.path",
+                )?;
+                for file in &self.files {
+                    require_path_under_corpus_root(
+                        &file.path,
+                        "imported",
+                        &self.corpus_id,
+                        "derived file path",
+                    )?;
+                    if normalized_components(&file.path) == normalized_components(&artifact.path) {
+                        return Err(format!(
+                            "Corpus '{}': source_artifact.path and derived file path must differ ('{}')",
+                            self.corpus_id, file.path
+                        ));
+                    }
+                }
                 if !(artifact.url.starts_with("https://") || artifact.url.starts_with("http://")) {
                     return Err(format!(
                         "Corpus '{}': source_artifact.url must be an http(s) URL",
@@ -292,6 +350,19 @@ impl CorpusRegistry {
 
         for entry in &registry.corpora {
             entry.validate_schema()?;
+        }
+
+        // The registry is the trust boundary: corpus ids must be unique so that lookups
+        // (and therefore acquisition and import) never depend on entry order.
+        let mut seen_ids = std::collections::BTreeSet::new();
+        for entry in &registry.corpora {
+            if !seen_ids.insert(entry.corpus_id.as_str()) {
+                return Err(format!(
+                    "Duplicate corpus_id '{}' in corpus registry {:?}",
+                    entry.corpus_id,
+                    path.as_ref()
+                ));
+            }
         }
 
         Ok(registry)

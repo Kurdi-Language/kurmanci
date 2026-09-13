@@ -120,6 +120,85 @@ fn test_external_registry_schema_rules() {
 }
 
 #[test]
+fn test_external_write_paths_are_confined_to_corpus_roots() {
+    const GOOD_ARTIFACT: &str = "path = \"data/original/external-wiki/pages-articles.xml.bz2\"";
+    const GOOD_DERIVED: &str = "path = \"data/imported/external-wiki/documents.jsonl\"";
+    let base = registry_toml(&"a".repeat(64), "");
+    let ok: CorpusRegistry = toml::from_str(&base).unwrap();
+    ok.corpora[1].validate_schema().unwrap();
+
+    // Artifact path outside data/original/<corpus_id>/ is rejected.
+    for bad_artifact in [
+        "path = \"README.md\"",
+        "path = \"data/original/other-corpus/file.xml\"",
+        "path = \"data/original/external-wiki\"",
+        "path = \"data/imported/external-wiki/pages-articles.xml.bz2\"",
+    ] {
+        let toml_text = base.replace(GOOD_ARTIFACT, bad_artifact);
+        let reg: CorpusRegistry = toml::from_str(&toml_text).unwrap();
+        assert!(
+            reg.corpora[1].validate_schema().is_err(),
+            "artifact {} must be rejected",
+            bad_artifact
+        );
+    }
+
+    // Derived path outside data/imported/<corpus_id>/ is rejected.
+    for bad_derived in [
+        "path = \"Cargo.toml\"",
+        "path = \"data/imported/other-corpus/documents.jsonl\"",
+        "path = \"data/review-batches/foo\"",
+        "path = \"data/original/external-wiki/documents.jsonl\"",
+    ] {
+        let toml_text = base.replace(GOOD_DERIVED, bad_derived);
+        let reg: CorpusRegistry = toml::from_str(&toml_text).unwrap();
+        assert!(
+            reg.corpora[1].validate_schema().is_err(),
+            "derived {} must be rejected",
+            bad_derived
+        );
+    }
+
+    // Artifact path equal to the derived path is rejected even when both are in-root
+    // (here the derived path is moved into data/original, which is already rejected, so
+    // check equality through the artifact side pointing at the derived location instead).
+    let same = base.replace(
+        GOOD_ARTIFACT,
+        "path = \"data/imported/external-wiki/documents.jsonl\"",
+    );
+    let reg: CorpusRegistry = toml::from_str(&same).unwrap();
+    assert!(reg.corpora[1].validate_schema().is_err());
+
+    // Traversal and absolute paths stay rejected.
+    for bad in [
+        "path = \"data/original/external-wiki/../x.bz2\"",
+        "path = \"/data/original/external-wiki/x.bz2\"",
+    ] {
+        let toml_text = base.replace(GOOD_ARTIFACT, bad);
+        let reg: CorpusRegistry = toml::from_str(&toml_text).unwrap();
+        assert!(reg.corpora[1].validate_schema().is_err(), "{}", bad);
+    }
+}
+
+#[test]
+fn test_duplicate_corpus_ids_rejected_at_registry_load() {
+    let root = temp_root("dup");
+    let dup = registry_toml(&"a".repeat(64), "").replace(
+        "corpus_id = \"tracked-small\"",
+        "corpus_id = \"external-wiki\"",
+    );
+    fs::write(root.join("data/source-registry/corpora.toml"), dup).unwrap();
+    let err =
+        CorpusRegistry::load_from_file(root.join("data/source-registry/corpora.toml")).unwrap_err();
+    assert!(
+        err.contains("Duplicate corpus_id 'external-wiki'"),
+        "{}",
+        err
+    );
+    fs::remove_dir_all(&root).unwrap();
+}
+
+#[test]
 fn test_import_skips_absent_external_corpus_and_manifest_verifies() {
     let root = temp_root("skip");
     fs::write(root.join("data/original/tracked/corpus.txt"), TRACKED_TEXT).unwrap();
