@@ -2,9 +2,9 @@
   "schema_version": "kuwiki-decision-provenance-v1",
   "source_id": "kuwiki-batch-001",
   "batch_id": "kuwiki-batch-001",
-  "candidate_sha256": "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d",
+  "candidate_sha256": "84a1439f28d95f978e9a7b84bc9ee946de2825489aee084bade85e255e156166",
   "worksheet_sha256": "7c1341d75a2a1e8530495d9c69c45e10e7ba991f745ccf8a69a8c75db81af4b2",
-  "decisions_sha256": "4ff95ee54de2170137dc8965b16e1ebd1e3724159e6964b1bf8c47465137103f",
+  "decisions_sha256": "b6931b4b14aaab9cb96d10db12ae3497d97398a274e6f25b7281e313d3e57bec",
   "reviewer_id": "ferhatguneri",
   "audit_confirmation_date": "2026-09-02",
   "counts": {

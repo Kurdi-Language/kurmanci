@@ -21,7 +21,8 @@ pub const KUWIKI_REVIEW_BATCH_MANIFEST_SCHEMA_VERSION: &str = "kuwiki-review-bat
 pub const DEFAULT_KUWIKI_BATCH_ID: &str = "kuwiki-batch-001";
 pub const DEFAULT_KUWIKI_BATCH_SIZE: usize = 1000;
 
-/// Context reference (without copyright text) for committed `candidates.jsonl`.
+/// Context reference used internally during batch generation for statistics.
+/// Stripped from committed `candidates.jsonl` artifacts.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ContextReference {
     pub corpus_id: String,
@@ -47,6 +48,7 @@ pub struct KuwikiReviewBatchCandidate {
     pub in_experimental_full: bool,
     pub technical_filter_status: String,
     pub technical_filter_reason: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub context_references: Vec<ContextReference>,
     pub decision_status: String,
 }
@@ -967,7 +969,7 @@ pub fn generate_kuwiki_review_batch<P: AsRef<Path>>(
     fs::create_dir_all(&stage_dir)
         .map_err(|e| format!("Failed to create stage dir {:?}: {}", stage_dir, e))?;
 
-    // 1. candidates.jsonl (COMMITTED — contains context_references, NO copyright snippet text)
+    // 1. candidates.jsonl (COMMITTED — context_references stripped from committed output)
     let candidates_path = stage_dir.join("candidates.jsonl");
     let mut cand_file = File::create(&candidates_path).map_err(|e| {
         format!(

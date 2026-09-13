@@ -690,8 +690,8 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
     let exp_entries = resolve_authoritative_pack_lexicon("experimental-full", ws_root).unwrap();
 
     assert_eq!(seed_entries.len(), 33);
-    assert_eq!(reviewed_entries.len(), 1465); // 33 seed + 107 Hunspell + 733 Kuwiki batch 001 + 592 Kuwiki batch 002
-    assert_eq!(exp_entries.len(), 42436); // 41106 + 733 Kuwiki b1 app + 3 b1 exp + 592 b2 app + 2 b2 exp
+    assert_eq!(reviewed_entries.len(), 1464); // 33 seed + 107 Hunspell + 733 Kuwiki batch 001 + 591 Kuwiki batch 002
+    assert_eq!(exp_entries.len(), 42435); // 41106 + 733 Kuwiki b1 app + 3 b1 exp + 591 b2 app + 2 b2 exp
 
     let seed_set: BTreeSet<String> = seed_entries.iter().map(|e| e.normalized.clone()).collect();
     let reviewed_set: BTreeSet<String> = reviewed_entries
@@ -738,7 +738,7 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
     for cand in &snapshot.candidates {
         let tid = compute_entry_id(
             "kuwiki-batch-001",
-            "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d",
+            "84a1439f28d95f978e9a7b84bc9ee946de2825489aee084bade85e255e156166",
             &cand.token,
             &cand.normalized_token,
             "",
@@ -1096,7 +1096,7 @@ fn test_kuwiki_decisions_date_policy_wrong_target_id_rejection() {
     fs::write(d1_dir.join("decisions.jsonl"), &dec_file_content).unwrap();
 
     let dec_sha = calculate_bytes_sha256(dec_file_content.as_bytes());
-    let prov = r#"{"schema_version":"kuwiki-decision-provenance-v1","source_id":"kuwiki-batch-001","batch_id":"kuwiki-batch-001","candidate_sha256":"23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d","worksheet_sha256":"7c1341d75a2a1e8530495d9c69c45e10e7ba991f745ccf8a69a8c75db81af4b2","decisions_sha256":"DEC_SHA","reviewer_id":"ferhatguneri","audit_confirmation_date":"2026-09-02","counts":{"approved":733,"approved_with_metadata_change":0,"rejected_from_default_pack":214,"experimental_only":3,"needs_linguist":50,"needs_source_investigation":0,"pending":0,"total":1000},"human_confirmed_date_year_policy_count":26,"unresolved_auto_decisions":0}"#.replace("DEC_SHA", &dec_sha);
+    let prov = r#"{"schema_version":"kuwiki-decision-provenance-v1","source_id":"kuwiki-batch-001","batch_id":"kuwiki-batch-001","candidate_sha256":"84a1439f28d95f978e9a7b84bc9ee946de2825489aee084bade85e255e156166","worksheet_sha256":"7c1341d75a2a1e8530495d9c69c45e10e7ba991f745ccf8a69a8c75db81af4b2","decisions_sha256":"DEC_SHA","reviewer_id":"ferhatguneri","audit_confirmation_date":"2026-09-02","counts":{"approved":733,"approved_with_metadata_change":0,"rejected_from_default_pack":214,"experimental_only":3,"needs_linguist":50,"needs_source_investigation":0,"pending":0,"total":1000},"human_confirmed_date_year_policy_count":26,"unresolved_auto_decisions":0}"#.replace("DEC_SHA", &dec_sha);
     fs::write(d1_dir.join("manifest.json"), &prov).unwrap();
 
     let prov_sha = calculate_bytes_sha256(prov.as_bytes());

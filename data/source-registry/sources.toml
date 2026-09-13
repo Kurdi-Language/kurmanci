@@ -76,7 +76,7 @@ notes = "Reviewed lexical evidence batch of top 1,000 OOV candidates extracted f
 
 [[sources.files]]
 path = "data/review-batches/kuwiki-batch-001/candidates.jsonl"
-sha256 = "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d"
+sha256 = "84a1439f28d95f978e9a7b84bc9ee946de2825489aee084bade85e255e156166"
 
 [[sources]]
 source_id = "kuwiki-batch-002"
@@ -98,4 +98,4 @@ notes = "Reviewed lexical evidence batch 002 of top 1,000 OOV candidates extract
 
 [[sources.files]]
 path = "data/review-batches/kuwiki-batch-002/candidates.jsonl"
-sha256 = "f1d0dd010f9093399807e8d78c8cd1e13c5147a3b5ca5058f0c5bc6990b83308"
+sha256 = "169f200a6f157cc565f7da283e9c07a5a168f8c902f9f66ed713a629472e9178"

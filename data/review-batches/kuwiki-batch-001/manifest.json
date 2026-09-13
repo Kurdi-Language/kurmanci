@@ -15,5 +15,5 @@
   "selection_policy": "top-1000-eligible",
   "batch_size": 1000,
   "candidates_file": "candidates.jsonl",
-  "candidates_sha256": "23d3871a8f6ef285ba9b6f231fe5d65f201934eaee2965d18cdec7770aeb3c1d"
+  "candidates_sha256": "84a1439f28d95f978e9a7b84bc9ee946de2825489aee084bade85e255e156166"
 }
