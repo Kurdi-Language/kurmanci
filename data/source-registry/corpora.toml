@@ -17,3 +17,35 @@ document_format = "one-document-per-line"
 [[corpora.files]]
 path = "data/original/opensubtitles-kmr/corpus.txt"
 sha256 = "a6cc3eed32feac79fb90c75e8daa42a15d46cd6460830d13b3112803af79b814"
+
+# Kurmancî Wikipedia (kuwiki). External corpus: neither the 43 MB dump nor the 63 MB
+# extracted documents file is tracked in git. `acquire-corpus kuwiki` downloads the dump,
+# verifies the upstream SHA-1 and the pinned SHA-256, and re-extracts documents.jsonl
+# byte-identically (its SHA-256 is pinned below). Whole-registry pipeline steps skip this
+# corpus on machines where it has not been acquired (for example CI).
+[[corpora]]
+corpus_id = "kuwiki"
+corpus_name = "Kurmancî Wikipedia (kuwiki) main-namespace article prose"
+language = "ku-Latn"
+license = "CC BY-SA 4.0"
+license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
+url = "https://dumps.wikimedia.org/kuwiki/20260801/"
+version = "20260801"
+description = "Main-namespace article prose of the Kurmancî Wikipedia, extracted deterministically from the 2026-08-01 XML dump with the repository's Wikimedia extractor (redirects and non-main namespaces excluded, markup stripped)."
+attribution = "Wikipedia contributors, Wîkîpediya (Kurmancî edition), CC BY-SA 4.0"
+notes = "Corpus-occurrence evidence only: presence of a token in this corpus is not lexical approval. Documents are keyed by MediaWiki page_id."
+document_format = "jsonl"
+document_id_field = "page_id"
+text_field = "text"
+acquisition = "external"
+
+[corpora.source_artifact]
+url = "https://dumps.wikimedia.org/kuwiki/20260801/kuwiki-20260801-pages-articles.xml.bz2"
+path = "data/original/kuwiki/kuwiki-20260801-pages-articles.xml.bz2"
+sha1 = "bf2d7b130c0a927e83d5ea30629151d4099d6ac0"
+sha256 = "158b726695cb55fb46eadf06ac2c966b0e146cad1b714be43e72716926f186cf"
+extractor = "wikimedia-xml"
+
+[[corpora.files]]
+path = "data/imported/kuwiki/documents.jsonl"
+sha256 = "083607fb631536bdb00d8ac0e0e8cfc44fb0d2dcfd77e9bb60c0cb8104c7e1f1"

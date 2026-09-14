@@ -1,5 +1,6 @@
 //! Corpus module for Kurmancî text corpora management, tokenization, frequency building, and statistical reporting.
 
+pub mod acquire;
 pub mod audit;
 pub mod extractors;
 pub mod frequency;

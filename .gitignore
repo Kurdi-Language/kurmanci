@@ -7,6 +7,9 @@
 /data/imported/
 /data/imported-canonical/
 
+# External corpus artifacts (downloaded by `acquire-corpus`, never tracked)
+/data/original/kuwiki/
+
 # Generated reports
 /data/reports/*
 !/data/reports/vocabulary-review/

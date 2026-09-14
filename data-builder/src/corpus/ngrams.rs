@@ -214,6 +214,13 @@ pub fn build_corpus_bigrams<P: AsRef<Path>>(root_dir: P) -> Result<BigramBuildSt
 
     let mut corpus_texts = Vec::new();
     for corpus_entry in &registered_corpora {
+        if corpus_entry.is_skippable_absent(root) {
+            println!(
+                "  Skipping external corpus '{}' (not acquired) for n-gram statistics",
+                corpus_entry.corpus_id
+            );
+            continue;
+        }
         let imported_corpus_dir = root.join("data/imported").join(&corpus_entry.corpus_id);
         if !imported_corpus_dir.exists() {
             return Err(format!(
@@ -394,6 +401,13 @@ pub fn build_corpus_trigrams<P: AsRef<Path>>(root_dir: P) -> Result<TrigramBuild
 
     let mut corpus_texts = Vec::new();
     for corpus_entry in &registered_corpora {
+        if corpus_entry.is_skippable_absent(root) {
+            println!(
+                "  Skipping external corpus '{}' (not acquired) for n-gram statistics",
+                corpus_entry.corpus_id
+            );
+            continue;
+        }
         let imported_corpus_dir = root.join("data/imported").join(&corpus_entry.corpus_id);
         if !imported_corpus_dir.exists() {
             return Err(format!(
