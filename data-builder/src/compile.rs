@@ -37,6 +37,17 @@ impl CompilerModelConfig {
     }
 }
 
+/// Counts of model data actually encoded into a compiled pack.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct CompileStats {
+    /// Lexicon entries carrying non-zero frequency metadata in the pack.
+    pub frequency_entry_count: usize,
+    /// Bigram predictions encoded (records whose context and next word are both in the lexicon).
+    pub bigram_count: usize,
+    /// Trigram predictions encoded (records whose two context words and next word are all in the lexicon).
+    pub trigram_count: usize,
+}
+
 /// Compiles a set of validated lexicon entries and optional n-grams into a deterministic binary pack byte buffer.
 pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
     root_dir: P,
@@ -46,14 +57,79 @@ pub fn compile_binary_pack_with_root<P: AsRef<Path>>(
 }
 
 /// Compiles a set of validated lexicon entries and n-grams using an explicit CompilerModelConfig.
+/// N-gram records are read from `data/build/bigrams.jsonl` and `data/build/trigrams.jsonl`
+/// under `root_dir` when the config enables them and the files exist.
 pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
     root_dir: P,
     entries: &[SourceLexiconEntry],
     config: CompilerModelConfig,
 ) -> Result<Vec<u8>, String> {
     let root = root_dir.as_ref();
+    let bigrams = if config.include_bigrams {
+        load_bigram_records_if_present(&root.join("data/build/bigrams.jsonl"))?
+    } else {
+        Vec::new()
+    };
+    let trigrams = if config.include_trigrams {
+        load_trigram_records_if_present(&root.join("data/build/trigrams.jsonl"))?
+    } else {
+        Vec::new()
+    };
+    let (bytes, _stats) =
+        compile_binary_pack_from_records(entries, config.include_frequencies, &bigrams, &trigrams)?;
+    Ok(bytes)
+}
+
+/// Reads bigram records from a JSONL file; an absent file yields an empty list.
+pub fn load_bigram_records_if_present(path: &Path) -> Result<Vec<BigramRecord>, String> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let file = File::open(path).map_err(|e| format!("Failed to open {:?}: {}", path, e))?;
+    let mut out = Vec::new();
+    for (line_idx, line_res) in BufReader::new(file).lines().enumerate() {
+        let line = line_res.map_err(|e| format!("Read error in {:?}: {}", path, e))?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        let rec: BigramRecord = serde_json::from_str(&line)
+            .map_err(|e| format!("Line {}: invalid bigram record: {}", line_idx + 1, e))?;
+        out.push(rec);
+    }
+    Ok(out)
+}
+
+/// Reads trigram records from a JSONL file; an absent file yields an empty list.
+pub fn load_trigram_records_if_present(path: &Path) -> Result<Vec<TrigramRecord>, String> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let file = File::open(path).map_err(|e| format!("Failed to open {:?}: {}", path, e))?;
+    let mut out = Vec::new();
+    for (line_idx, line_res) in BufReader::new(file).lines().enumerate() {
+        let line = line_res.map_err(|e| format!("Read error in {:?}: {}", path, e))?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        let rec: TrigramRecord = serde_json::from_str(&line)
+            .map_err(|e| format!("Line {}: invalid trigram record: {}", line_idx + 1, e))?;
+        out.push(rec);
+    }
+    Ok(out)
+}
+
+/// Compiles lexicon entries plus explicit, already-loaded n-gram records into a deterministic
+/// binary pack, returning the bytes and the counts of model data actually encoded.
+/// Frequency metadata is encoded only when `include_frequencies` is true.
+pub fn compile_binary_pack_from_records(
+    entries: &[SourceLexiconEntry],
+    include_frequencies: bool,
+    bigrams: &[BigramRecord],
+    trigrams: &[TrigramRecord],
+) -> Result<(Vec<u8>, CompileStats), String> {
     let mut payload = Vec::new();
     let mut lexicon_index_map: BTreeMap<String, u32> = BTreeMap::new();
+    let mut stats = CompileStats::default();
 
     // 1. Build Lexicon Section (Section 1)
     for (i, entry) in entries.iter().enumerate() {
@@ -69,7 +145,7 @@ pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
         write_string(&mut payload, &entry.part_of_speech)
             .map_err(|e| format!("Entry {}: 'part_of_speech' field error: {}", i + 1, e))?;
         // Encode FrequencyMetadata
-        let freq_meta = if config.include_frequencies {
+        let freq_meta = if include_frequencies {
             entry
                 .frequency_metadata
                 .as_ref()
@@ -78,11 +154,16 @@ pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
         } else {
             Default::default()
         };
-        let freq_val = if config.include_frequencies {
+        let freq_val = if include_frequencies {
             entry.frequency
         } else {
             0
         };
+        if include_frequencies
+            && (freq_meta.zipf_milli > 0 || freq_meta.token_count > 0 || freq_val > 0)
+        {
+            stats.frequency_entry_count += 1;
+        }
         payload.extend_from_slice(&freq_val.to_le_bytes());
         write_string(&mut payload, &entry.status)
             .map_err(|e| format!("Entry {}: 'status' field error: {}", i + 1, e))?;
@@ -127,82 +208,67 @@ pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
     }
 
     // 2. Build Bigram Section (Section 2 - Version 4 Layout using Lexicon Indices)
-    let bigrams_path = root.join("data/build/bigrams.jsonl");
     let mut bigram_groups: BTreeMap<u32, Vec<(u32, u64, u32, String)>> = BTreeMap::new();
     let mut seen_bigram_triples: BTreeSet<(String, String)> = BTreeSet::new();
 
-    if config.include_bigrams && bigrams_path.exists() {
-        let file = File::open(&bigrams_path)
-            .map_err(|e| format!("Failed to open {:?}: {}", bigrams_path, e))?;
-        let reader = BufReader::new(file);
+    for (line_idx, rec) in bigrams.iter().enumerate() {
+        if rec.context_count == 0 {
+            return Err(format!(
+                "Line {}: bigram ({}, {}) has zero context_count",
+                line_idx + 1,
+                rec.previous,
+                rec.next
+            ));
+        }
+        if rec.count == 0 {
+            return Err(format!(
+                "Line {}: bigram ({}, {}) has zero count",
+                line_idx + 1,
+                rec.previous,
+                rec.next
+            ));
+        }
+        if rec.count > rec.context_count {
+            return Err(format!(
+                "Line {}: bigram ({}, {}) count {} exceeds context_count {}",
+                line_idx + 1,
+                rec.previous,
+                rec.next,
+                rec.count,
+                rec.context_count
+            ));
+        }
+        if rec.probability_millionths > PROBABILITY_SCALE {
+            return Err(format!(
+                "Line {}: bigram ({}, {}) probability {} exceeds {}",
+                line_idx + 1,
+                rec.previous,
+                rec.next,
+                rec.probability_millionths,
+                PROBABILITY_SCALE
+            ));
+        }
 
-        for (line_idx, line_res) in reader.lines().enumerate() {
-            let line = line_res.map_err(|e| format!("Read error in {:?}: {}", bigrams_path, e))?;
-            if line.trim().is_empty() {
-                continue;
-            }
+        let key = (rec.previous.clone(), rec.next.clone());
+        if !seen_bigram_triples.insert(key) {
+            return Err(format!(
+                "Line {}: duplicate bigram record ({}, {})",
+                line_idx + 1,
+                rec.previous,
+                rec.next
+            ));
+        }
 
-            let rec: BigramRecord = serde_json::from_str(&line)
-                .map_err(|e| format!("Line {}: invalid bigram record: {}", line_idx + 1, e))?;
-
-            if rec.context_count == 0 {
-                return Err(format!(
-                    "Line {}: bigram ({}, {}) has zero context_count",
-                    line_idx + 1,
-                    rec.previous,
-                    rec.next
-                ));
-            }
-            if rec.count == 0 {
-                return Err(format!(
-                    "Line {}: bigram ({}, {}) has zero count",
-                    line_idx + 1,
-                    rec.previous,
-                    rec.next
-                ));
-            }
-            if rec.count > rec.context_count {
-                return Err(format!(
-                    "Line {}: bigram ({}, {}) count {} exceeds context_count {}",
-                    line_idx + 1,
-                    rec.previous,
-                    rec.next,
-                    rec.count,
-                    rec.context_count
-                ));
-            }
-            if rec.probability_millionths > PROBABILITY_SCALE {
-                return Err(format!(
-                    "Line {}: bigram ({}, {}) probability {} exceeds {}",
-                    line_idx + 1,
-                    rec.previous,
-                    rec.next,
-                    rec.probability_millionths,
-                    PROBABILITY_SCALE
-                ));
-            }
-
-            let key = (rec.previous.clone(), rec.next.clone());
-            if !seen_bigram_triples.insert(key) {
-                return Err(format!(
-                    "Line {}: duplicate bigram record ({}, {})",
-                    line_idx + 1,
-                    rec.previous,
-                    rec.next
-                ));
-            }
-
-            if let (Some(&ctx_idx), Some(&next_idx)) = (
-                lexicon_index_map.get(&rec.previous),
-                lexicon_index_map.get(&rec.next),
-            ) {
-                bigram_groups.entry(ctx_idx).or_default().push((
-                    next_idx,
-                    rec.count,
-                    rec.probability_millionths,
-                    rec.next,
-                ));
-            }
+        if let (Some(&ctx_idx), Some(&next_idx)) = (
+            lexicon_index_map.get(&rec.previous),
+            lexicon_index_map.get(&rec.next),
+        ) {
+            bigram_groups.entry(ctx_idx).or_default().push((
+                next_idx,
+                rec.count,
+                rec.probability_millionths,
+                rec.next.clone(),
+            ));
         }
     }
 
@@ -234,95 +300,86 @@ pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
             payload.extend_from_slice(&next_idx.to_le_bytes());
             payload.extend_from_slice(&count.to_le_bytes());
             payload.extend_from_slice(&prob.to_le_bytes());
+            stats.bigram_count += 1;
         }
     }
 
     // 3. Build Trigram Section (Section 3 - Version 4 Layout using Lexicon Indices)
-    let trigrams_path = root.join("data/build/trigrams.jsonl");
     type TrigramGroupMap = BTreeMap<(u32, u32), Vec<(u32, u64, u32, String)>>;
     let mut trigram_groups: TrigramGroupMap = BTreeMap::new();
     let mut seen_trigram_triples: BTreeSet<(String, String, String)> = BTreeSet::new();
 
-    if config.include_trigrams && trigrams_path.exists() {
-        let file = File::open(&trigrams_path)
-            .map_err(|e| format!("Failed to open {:?}: {}", trigrams_path, e))?;
-        let reader = BufReader::new(file);
+    for (line_idx, rec) in trigrams.iter().enumerate() {
+        if rec.context_count == 0 {
+            return Err(format!(
+                "Line {}: trigram ({}, {}, {}) has zero context_count",
+                line_idx + 1,
+                rec.previous_2,
+                rec.previous_1,
+                rec.next
+            ));
+        }
+        if rec.count == 0 {
+            return Err(format!(
+                "Line {}: trigram ({}, {}, {}) has zero count",
+                line_idx + 1,
+                rec.previous_2,
+                rec.previous_1,
+                rec.next
+            ));
+        }
+        if rec.count > rec.context_count {
+            return Err(format!(
+                "Line {}: trigram ({}, {}, {}) count {} exceeds context_count {}",
+                line_idx + 1,
+                rec.previous_2,
+                rec.previous_1,
+                rec.next,
+                rec.count,
+                rec.context_count
+            ));
+        }
+        if rec.probability_millionths > PROBABILITY_SCALE {
+            return Err(format!(
+                "Line {}: trigram ({}, {}, {}) probability {} exceeds {}",
+                line_idx + 1,
+                rec.previous_2,
+                rec.previous_1,
+                rec.next,
+                rec.probability_millionths,
+                PROBABILITY_SCALE
+            ));
+        }
 
-        for (line_idx, line_res) in reader.lines().enumerate() {
-            let line = line_res.map_err(|e| format!("Read error in {:?}: {}", trigrams_path, e))?;
-            if line.trim().is_empty() {
-                continue;
-            }
+        let key = (
+            rec.previous_2.clone(),
+            rec.previous_1.clone(),
+            rec.next.clone(),
+        );
+        if !seen_trigram_triples.insert(key) {
+            return Err(format!(
+                "Line {}: duplicate trigram record ({}, {}, {})",
+                line_idx + 1,
+                rec.previous_2,
+                rec.previous_1,
+                rec.next
+            ));
+        }
 
-            let rec: TrigramRecord = serde_json::from_str(&line)
-                .map_err(|e| format!("Line {}: invalid trigram record: {}", line_idx + 1, e))?;
-
-            if rec.context_count == 0 {
-                return Err(format!(
-                    "Line {}: trigram ({}, {}, {}) has zero context_count",
-                    line_idx + 1,
-                    rec.previous_2,
-                    rec.previous_1,
-                    rec.next
-                ));
-            }
-            if rec.count == 0 {
-                return Err(format!(
-                    "Line {}: trigram ({}, {}, {}) has zero count",
-                    line_idx + 1,
-                    rec.previous_2,
-                    rec.previous_1,
-                    rec.next
-                ));
-            }
-            if rec.count > rec.context_count {
-                return Err(format!(
-                    "Line {}: trigram ({}, {}, {}) count {} exceeds context_count {}",
-                    line_idx + 1,
-                    rec.previous_2,
-                    rec.previous_1,
-                    rec.next,
+        if let (Some(&prev2_idx), Some(&prev1_idx), Some(&next_idx)) = (
+            lexicon_index_map.get(&rec.previous_2),
+            lexicon_index_map.get(&rec.previous_1),
+            lexicon_index_map.get(&rec.next),
+        ) {
+            trigram_groups
+                .entry((prev2_idx, prev1_idx))
+                .or_default()
+                .push((
+                    next_idx,
                     rec.count,
-                    rec.context_count
-                ));
-            }
-            if rec.probability_millionths > PROBABILITY_SCALE {
-                return Err(format!(
-                    "Line {}: trigram ({}, {}, {}) probability {} exceeds {}",
-                    line_idx + 1,
-                    rec.previous_2,
-                    rec.previous_1,
-                    rec.next,
                     rec.probability_millionths,
-                    PROBABILITY_SCALE
+                    rec.next.clone(),
                 ));
-            }
-
-            let key = (
-                rec.previous_2.clone(),
-                rec.previous_1.clone(),
-                rec.next.clone(),
-            );
-            if !seen_trigram_triples.insert(key) {
-                return Err(format!(
-                    "Line {}: duplicate trigram record ({}, {}, {})",
-                    line_idx + 1,
-                    rec.previous_2,
-                    rec.previous_1,
-                    rec.next
-                ));
-            }
-
-            if let (Some(&prev2_idx), Some(&prev1_idx), Some(&next_idx)) = (
-                lexicon_index_map.get(&rec.previous_2),
-                lexicon_index_map.get(&rec.previous_1),
-                lexicon_index_map.get(&rec.next),
-            ) {
-                trigram_groups
-                    .entry((prev2_idx, prev1_idx))
-                    .or_default()
-                    .push((next_idx, rec.count, rec.probability_millionths, rec.next));
-            }
         }
     }
 
@@ -355,6 +412,7 @@ pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
             payload.extend_from_slice(&next_idx.to_le_bytes());
             payload.extend_from_slice(&count.to_le_bytes());
             payload.extend_from_slice(&prob.to_le_bytes());
+            stats.trigram_count += 1;
         }
     }
 
@@ -385,7 +443,7 @@ pub fn compile_binary_pack_with_config<P: AsRef<Path>>(
     pack.extend_from_slice(&header);
     pack.extend_from_slice(&payload);
 
-    Ok(pack)
+    Ok((pack, stats))
 }
 
 fn write_string(buf: &mut Vec<u8>, s: &str) -> Result<(), String> {

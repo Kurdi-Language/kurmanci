@@ -42,7 +42,11 @@ pub struct CorpusRegistryEntry {
     pub corpus_id: String,
     pub corpus_name: String,
     pub language: String,
+    /// Human-readable licence name (for example `CC BY-SA 4.0`).
     pub license: String,
+    /// Canonical SPDX identifier of `license` (for example `CC-BY-SA-4.0`); this is what
+    /// derived artifacts (language models, packs) record in SPDX-typed fields.
+    pub license_spdx: String,
     pub license_url: String,
     pub url: String,
     pub version: String,
@@ -183,6 +187,23 @@ impl CorpusRegistryEntry {
 
     /// Validates format-sensitive schema rules and path safety for this corpus entry.
     pub fn validate_schema(&self) -> Result<(), String> {
+        if self.license.trim().is_empty() {
+            return Err(format!(
+                "Corpus '{}': license must not be empty",
+                self.corpus_id
+            ));
+        }
+        if self.license_spdx.is_empty()
+            || self
+                .license_spdx
+                .chars()
+                .any(|c| c.is_whitespace() || c.is_control())
+        {
+            return Err(format!(
+                "Corpus '{}': license_spdx must be a single SPDX identifier (found '{}')",
+                self.corpus_id, self.license_spdx
+            ));
+        }
         for file in &self.files {
             validate_registry_relative_path(&file.path)?;
             if !is_hex_of_len(&file.sha256, 64) {

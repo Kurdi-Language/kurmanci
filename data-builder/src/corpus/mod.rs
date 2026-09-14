@@ -13,6 +13,7 @@ pub mod quality;
 pub mod registry;
 pub mod reports;
 pub mod tokenizer;
+pub mod train_ngrams;
 pub mod vocabulary_evidence;
 
 pub use audit::{audit_corpora, CorpusAuditSummary};

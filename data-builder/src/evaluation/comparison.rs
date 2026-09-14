@@ -264,16 +264,27 @@ pub fn validate_and_load_pack<P: AsRef<Path>>(
         ));
     }
 
-    if manifest.model_profile != "none" {
+    // The model profile must be exactly what the current policy declares for this pack
+    // (one strict policy interpretation, shared with `build-pack`); the pack-manifest
+    // validator enforces the corresponding model counts and provenance.
+    let policy =
+        crate::pack::policy::PackPolicyConfig::load_from_file(root.join("data/pack-policy.toml"))?;
+    let expected_profile = policy
+        .packs
+        .get(pack_id)
+        .ok_or_else(|| format!("Pack '{}' not declared in data/pack-policy.toml", pack_id))?
+        .model_profile
+        .clone();
+    if manifest.model_profile != expected_profile {
         return Err(format!(
-            "Pack model_profile '{}' mismatch: expected 'none' in pack '{}'",
-            manifest.model_profile, pack_id
+            "Pack model_profile '{}' mismatch: policy expects '{}' in pack '{}'",
+            manifest.model_profile, expected_profile, pack_id
         ));
     }
-
-    if manifest.frequency_entry_count != 0
-        || manifest.bigram_count != 0
-        || manifest.trigram_count != 0
+    if expected_profile == crate::pack::policy::MODEL_PROFILE_NONE
+        && (manifest.frequency_entry_count != 0
+            || manifest.bigram_count != 0
+            || manifest.trigram_count != 0)
     {
         return Err(format!(
             "Pack '{}' contains model counts (freq={}, bi={}, tri={}); expected all 0",

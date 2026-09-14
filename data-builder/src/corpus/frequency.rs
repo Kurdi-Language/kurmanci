@@ -201,6 +201,40 @@ pub fn build_corpus_frequencies<P: AsRef<Path>>(
     Ok(stats)
 }
 
+/// Turns token and document counts into `FrequencyRecord`s with the canonical normalized
+/// frequency and Zipf rounding, sorted by descending token count then word. Shared by every
+/// frequency builder so that all derived statistics use one formula.
+pub fn frequency_records_from_counts(
+    token_counts: BTreeMap<String, usize>,
+    doc_counts: &BTreeMap<String, usize>,
+    total_tokens: usize,
+) -> Vec<FrequencyRecord> {
+    let mut records: Vec<FrequencyRecord> = token_counts
+        .into_iter()
+        .map(|(word, count)| {
+            let d_count = *doc_counts.get(&word).unwrap_or(&0);
+            let norm_freq = count as f64 / total_tokens as f64;
+            let raw_zipf = (norm_freq * 1e9).log10();
+            let zipf = (raw_zipf * 100.0).round() / 100.0;
+
+            FrequencyRecord {
+                word,
+                token_count: count,
+                document_count: d_count,
+                normalized_frequency: norm_freq,
+                zipf,
+            }
+        })
+        .collect();
+
+    records.sort_by(|a, b| {
+        b.token_count
+            .cmp(&a.token_count)
+            .then_with(|| a.word.cmp(&b.word))
+    });
+    records
+}
+
 /// Builds word frequency statistics strictly from the TRAIN partition (`train.jsonl`),
 /// including ONLY canonical duplicate representatives (`corpus_id == canonical_corpus_id && document_id == canonical_document_id`).
 pub fn build_corpus_train_frequencies<P: AsRef<Path>>(
@@ -345,29 +379,7 @@ pub fn build_corpus_train_frequencies<P: AsRef<Path>>(
         return Err("No tokens were parsed from train partition".to_string());
     }
 
-    let mut records: Vec<FrequencyRecord> = token_counts
-        .into_iter()
-        .map(|(word, count)| {
-            let d_count = *doc_counts.get(&word).unwrap_or(&0);
-            let norm_freq = count as f64 / total_tokens as f64;
-            let raw_zipf = (norm_freq * 1e9).log10();
-            let zipf = (raw_zipf * 100.0).round() / 100.0;
-
-            FrequencyRecord {
-                word,
-                token_count: count,
-                document_count: d_count,
-                normalized_frequency: norm_freq,
-                zipf,
-            }
-        })
-        .collect();
-
-    records.sort_by(|a, b| {
-        b.token_count
-            .cmp(&a.token_count)
-            .then_with(|| a.word.cmp(&b.word))
-    });
+    let records = frequency_records_from_counts(token_counts, &doc_counts, total_tokens);
 
     let build_dir = root.join("data/build");
     fs::create_dir_all(&build_dir)

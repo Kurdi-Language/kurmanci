@@ -31,6 +31,7 @@ corpus_id = "kuwiki"
 corpus_name = "Kurmancî Wikipedia"
 language = "ku-Latn"
 license = "CC BY-SA 4.0"
+license_spdx = "CC-BY-SA-4.0"
 license_url = "https://creativecommons.org"
 url = "https://dumps.wikimedia.org/kuwiki/20260801/dump.xml.bz2"
 version = "20260801"
@@ -473,7 +474,7 @@ fn test_stale_provenance_and_registry_failures() {
         let temp_dir = TempDir::new().unwrap();
         setup_valid_mock_environment(&temp_dir, 1050);
         let path = temp_dir.path().join("data/source-registry/corpora.toml");
-        fs::write(&path, "[[corpora]]\ncorpus_id = \"opensubtitles\"\ncorpus_name = \"OpenSubtitles\"\nlanguage = \"ku-Latn\"\nlicense = \"CC BY-SA 4.0\"\nlicense_url = \"http://example.com\"\nurl = \"http://example.com\"\nversion = \"1.0\"\ndescription = \"desc\"\nattribution = \"attr\"\nnotes = \"notes\"\ndocument_format = \"jsonl\"\nfiles = []\n").unwrap();
+        fs::write(&path, "[[corpora]]\ncorpus_id = \"opensubtitles\"\ncorpus_name = \"OpenSubtitles\"\nlanguage = \"ku-Latn\"\nlicense = \"CC BY-SA 4.0\"\nlicense_spdx = \"CC-BY-SA-4.0\"\nlicense_url = \"http://example.com\"\nurl = \"http://example.com\"\nversion = \"1.0\"\ndescription = \"desc\"\nattribution = \"attr\"\nnotes = \"notes\"\ndocument_format = \"jsonl\"\nfiles = []\n").unwrap();
         let res = generate_kuwiki_review_batch(temp_dir.path(), "kuwiki", "kuwiki-batch-001", 1000);
         assert!(res.is_err());
         let err = res.err().unwrap();

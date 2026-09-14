@@ -1,0 +1,56 @@
+{
+  "schema_version": "language-model-v1",
+  "model_id": "kuwiki-20260801",
+  "corpus_id": "kuwiki",
+  "corpus_version": "20260801",
+  "contributing_corpora": [
+    "kuwiki"
+  ],
+  "corpus_source_artifact_sha256": "158b726695cb55fb46eadf06ac2c966b0e146cad1b714be43e72716926f186cf",
+  "corpus_documents_sha256": "083607fb631536bdb00d8ac0e0e8cfc44fb0d2dcfd77e9bb60c0cb8104c7e1f1",
+  "corpus_registry_sha256": "f9648ab4362088c64c2bf832a19fb492dc7af707d1a049bac9286443035e1f23",
+  "canonical_manifest_sha256": "53f6095c84265802ef0f339124f2b59f51a3f69d16639e2590f319b803ef2a6b",
+  "partition_manifest_sha256": "f859bf122979c242a59707551652929c7a5fc3ab8672be34a2af04323d04124e",
+  "train_partition_sha256": "050d47f75aaf2c98a5efe807826d832cc8ca437121dd12a6790e4416b1de6694",
+  "train_document_count": 73212,
+  "train_document_set_sha256": "19b6366127b866aa508ffd891ada8a4715ebc47e77c1718c4fd4fd15cea787ca",
+  "train_frequencies_sha256": "55585def3a905a4ca6c302d734c6e86a8f3c3f45d01d06b8007f560abea59291",
+  "train_bigrams_sha256": "dfdb20a0d78a58b36b44a0c70633e8a5d85862addb848b10dcd27ac5b2eeb571",
+  "train_trigrams_sha256": "da75c1ae275fff604958a9f69d476587351d378a38cb495c891beb166713fdd6",
+  "build_manifest_sha256": "fc48854ca8740b1f62ae5c756a00b6a4622999dd77147a8a148ef7ee6bcb9c00",
+  "ngram_config_sha256": "29f133c7fe45b39a4615634b08bcb137a6603fcd99ec8a55e0dace2f69a8ba22",
+  "licensing": {
+    "corpus_name": "Kurmancî Wikipedia (kuwiki) main-namespace article prose",
+    "license": "CC BY-SA 4.0",
+    "license_spdx": "CC-BY-SA-4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Wikipedia contributors, Wîkîpediya (Kurmancî edition), CC BY-SA 4.0",
+    "source_url": "https://dumps.wikimedia.org/kuwiki/20260801/",
+    "redistribution_determination": "pending-review"
+  },
+  "vocabulary_fingerprint": "0caa29b84910b53beb6aa67b81882207e3e28b7b153bddedb90c25fe07a2b0c7",
+  "vocabulary_size": 42433,
+  "unigram_count": 14392,
+  "bigram_count": 47700,
+  "trigram_count": 58841,
+  "bigram_min_count": 2,
+  "trigram_min_count": 3,
+  "files": [
+    {
+      "path": "bigrams.tsv",
+      "sha256": "4e39e8cb0f584701b85b3ecdca522a069a928c2958ca5cf0c879f140414191c6"
+    },
+    {
+      "path": "trigrams.tsv",
+      "sha256": "bd2bd75d9efa31a86a2b5e6c8dd592f8429b5c1f16464ae462c4a951532127d8"
+    },
+    {
+      "path": "unigrams.tsv",
+      "sha256": "09769a0e8ba21aa4c0839e601ac73856062cd67ac946e35d76c1bbb585920f0f"
+    },
+    {
+      "path": "vocabulary.txt",
+      "sha256": "0caa29b84910b53beb6aa67b81882207e3e28b7b153bddedb90c25fe07a2b0c7"
+    }
+  ]
+}
