@@ -7,14 +7,15 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
-use crate::compile::{compile_entries_to_directory, CompilerModelConfig};
+use crate::compile::{compile_binary_pack_from_records, CompileStats};
 use crate::corpus::importer::LockFileGuard;
 use crate::pack::collisions::{
     resolve_collisions, write_collision_report, CollisionResolutionResult,
 };
+use crate::pack::language_model::load_language_model;
 use crate::pack::manifest::{
-    calculate_file_sha256, generate_licensing_and_attribution, PackManifest,
-    LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
+    calculate_file_sha256, generate_licensing_and_attribution, language_model_source_id,
+    LanguageModelProvenance, PackManifest, LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
 };
 use crate::pack::policy::PackPolicyConfig;
 use crate::pack::selection::{select_candidates_for_pack, SelectionCounts};
@@ -322,7 +323,7 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     }
 
     let included_sources_vec: Vec<String> = included_sources_set.into_iter().collect();
-    let (licenses, attribution_text) =
+    let (mut licenses, mut attribution_text) =
         generate_licensing_and_attribution(root, &included_sources_vec)?;
 
     // Atomic Staging Layout
@@ -335,13 +336,92 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     }
     fs::create_dir_all(&stage_dir).map_err(|e| format!("Failed to create stage dir: {}", e))?;
 
-    let binary_path = compile_entries_to_directory(
-        root,
-        &compiler_entries,
-        &stage_dir,
-        CompilerModelConfig::none(),
-    )?;
-    let binary_bytes = fs::read(&binary_path).map_err(|e| e.to_string())?;
+    // Model data: none, or the committed language model named by the policy (fail-closed).
+    let mut language_model_provenance: Option<LanguageModelProvenance> = None;
+    let (binary_bytes, stats, language_model_id, language_model_manifest_sha256): (
+        Vec<u8>,
+        CompileStats,
+        Option<String>,
+        Option<String>,
+    ) = if pack_def.uses_model() {
+        let model_id = pack_def.language_model.as_deref().ok_or_else(|| {
+            format!(
+                "Pack '{}' model_profile '{}' requires language_model in pack-policy.toml",
+                pack_id, pack_def.model_profile
+            )
+        })?;
+        let model = load_language_model(root, model_id)?;
+        if pack_def.uses_frequencies() {
+            for entry in compiler_entries.iter_mut() {
+                entry.frequency_metadata = Some(
+                    model
+                        .unigrams
+                        .get(&entry.normalized)
+                        .cloned()
+                        .unwrap_or_default(),
+                );
+            }
+        }
+        let (bigrams, trigrams): (&[_], &[_]) = if pack_def.uses_ngrams() {
+            (&model.bigrams, &model.trigrams)
+        } else {
+            (&[], &[])
+        };
+        let (bytes, stats) = compile_binary_pack_from_records(
+            &compiler_entries,
+            pack_def.uses_frequencies(),
+            bigrams,
+            trigrams,
+        )?;
+        println!(
+            "  Language Model: {} (unigrams matched: {}, bigrams: {}, trigrams: {})",
+            model_id, stats.frequency_entry_count, stats.bigram_count, stats.trigram_count
+        );
+        // Corpus-derived statistics carry their own provenance and licensing obligations;
+        // record them alongside the lexical sources (no legal determination is made here).
+        // The provenance block and licence entry are derived by the same function the
+        // validator uses, so a pack can never disagree with its model.
+        let provenance = LanguageModelProvenance::from_model(&model);
+        licenses.push(provenance.data_license_entry());
+        let m = &model.manifest;
+        attribution_text.push_str(&format!(
+            "\n=== Source: {} ===\n\
+            Kind: language model (corpus-derived statistics)\n\
+            Derived From Corpus: {} ({}, version {})\n\
+            Contributing Corpora: {}\n\
+            License: {} (SPDX {}; {})\n\
+            Attribution: {}\n\
+            Corpus Source: {}\n\
+            Statistics: vocabulary-restricted unigram frequencies and bigram/trigram counts from the TRAIN partition of this corpus only ({} documents, document set SHA-256 {}); no corpus text is included.\n\
+            Redistribution Determination: {} (statistical derivatives of the corpus; licensing review outstanding).\n",
+            language_model_source_id(&m.model_id),
+            m.licensing.corpus_name,
+            m.corpus_id,
+            m.corpus_version,
+            m.contributing_corpora.join(", "),
+            m.licensing.license,
+            m.licensing.license_spdx,
+            m.licensing.license_url,
+            m.licensing.attribution,
+            m.licensing.source_url,
+            m.train_document_count,
+            m.train_document_set_sha256,
+            m.licensing.redistribution_determination
+        ));
+        language_model_provenance = Some(provenance);
+        (
+            bytes,
+            stats,
+            Some(model_id.to_string()),
+            Some(model.manifest_sha256.clone()),
+        )
+    } else {
+        let (bytes, stats) = compile_binary_pack_from_records(&compiler_entries, false, &[], &[])?;
+        (bytes, stats, None, None)
+    };
+    let binary_path = stage_dir.join("lexicon.bin");
+    fs::write(&binary_path, &binary_bytes)
+        .map_err(|e| format!("Failed to write binary pack to {:?}: {}", binary_path, e))?;
     let binary_sha256 = format!("{:x}", Sha256::digest(&binary_bytes));
     let binary_size_bytes = binary_bytes.len() as u64;
 
@@ -371,9 +451,12 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         is_default: policy.default_pack == pack_id,
         is_experimental: pack_def.opt_in,
         model_profile: pack_def.model_profile.clone(),
-        frequency_entry_count: 0,
-        bigram_count: 0,
-        trigram_count: 0,
+        frequency_entry_count: stats.frequency_entry_count,
+        bigram_count: stats.bigram_count,
+        trigram_count: stats.trigram_count,
+        language_model_id,
+        language_model_manifest_sha256,
+        language_model_provenance,
         manual_seed_selected_count: payload.candidate_counts.manual_seed_selected,
         external_approved_selected_count: payload.candidate_counts.external_approved_selected,
         external_metadata_replacement_selected_count: payload

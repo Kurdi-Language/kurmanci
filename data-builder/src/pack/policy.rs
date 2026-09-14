@@ -7,6 +7,22 @@ use std::path::Path;
 
 pub const PACK_POLICY_SCHEMA_VERSION: &str = "pack-policy-v1";
 
+/// No frequency or n-gram data: lexicon only.
+pub const MODEL_PROFILE_NONE: &str = "none";
+/// Unigram frequency metadata from the committed language model (frequency-aware ranking).
+pub const MODEL_PROFILE_FREQUENCY: &str = "frequency";
+/// Unigram frequencies plus bigram and trigram predictions from the committed language model.
+pub const MODEL_PROFILE_NGRAM: &str = "ngram";
+/// Bigram and trigram predictions only: next-word prediction without any change to
+/// suggestion ranking (no unigram frequency metadata is encoded).
+pub const MODEL_PROFILE_PREDICTION: &str = "prediction";
+pub const MODEL_PROFILES: [&str; 4] = [
+    MODEL_PROFILE_NONE,
+    MODEL_PROFILE_FREQUENCY,
+    MODEL_PROFILE_NGRAM,
+    MODEL_PROFILE_PREDICTION,
+];
+
 /// Pack policy definition for an individual pack.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -15,6 +31,27 @@ pub struct PackDefinition {
     pub opt_in: bool,
     pub allow_as_default: bool,
     pub model_profile: String,
+    /// Committed language model id under `data/language-model/` (required unless
+    /// `model_profile = "none"`, forbidden otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language_model: Option<String>,
+}
+
+impl PackDefinition {
+    /// True when the pack consumes a committed language model at all.
+    pub fn uses_model(&self) -> bool {
+        self.model_profile != MODEL_PROFILE_NONE
+    }
+
+    /// True when unigram frequency metadata is encoded (affects suggestion ranking).
+    pub fn uses_frequencies(&self) -> bool {
+        self.model_profile == MODEL_PROFILE_FREQUENCY || self.model_profile == MODEL_PROFILE_NGRAM
+    }
+
+    /// True when bigram/trigram predictions are encoded (next-word prediction).
+    pub fn uses_ngrams(&self) -> bool {
+        self.model_profile == MODEL_PROFILE_NGRAM || self.model_profile == MODEL_PROFILE_PREDICTION
+    }
 }
 
 /// Root configuration schema (`data/pack-policy.toml`).
@@ -94,11 +131,32 @@ impl PackPolicyConfig {
         }
 
         for (pack_id, def) in &self.packs {
-            if def.model_profile != "none" {
+            if !MODEL_PROFILES.contains(&def.model_profile.as_str()) {
                 return Err(format!(
-                    "Pack '{}' specifies model_profile '{}' (only 'none' supported currently)",
-                    pack_id, def.model_profile
+                    "Pack '{}' specifies unsupported model_profile '{}' (expected one of {:?})",
+                    pack_id, def.model_profile, MODEL_PROFILES
                 ));
+            }
+            match (&def.language_model, def.model_profile.as_str()) {
+                (Some(_), MODEL_PROFILE_NONE) => {
+                    return Err(format!(
+                        "Pack '{}' sets language_model but model_profile is 'none'",
+                        pack_id
+                    ));
+                }
+                (None, profile) if profile != MODEL_PROFILE_NONE => {
+                    return Err(format!(
+                        "Pack '{}' model_profile '{}' requires a language_model id",
+                        pack_id, profile
+                    ));
+                }
+                (Some(id), _) if id.trim().is_empty() => {
+                    return Err(format!(
+                        "Pack '{}' language_model must not be empty",
+                        pack_id
+                    ));
+                }
+                _ => {}
             }
         }
 

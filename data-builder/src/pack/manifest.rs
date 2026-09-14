@@ -6,6 +6,8 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
+use crate::pack::language_model::{load_language_model, LanguageModel};
+use crate::pack::policy::{PackPolicyConfig, MODEL_PROFILE_NONE};
 use crate::sources::SourceRegistry;
 
 pub const LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION: &str = "language-pack-manifest-v1";
@@ -35,6 +37,217 @@ pub struct SourceReviewProvenance {
     pub controlled_review_report_manifest_sha256: Option<String>,
 }
 
+/// Provenance and licensing record for the language model a pack carries. The
+/// `redistribution_determination` is recorded verbatim from the model manifest and is
+/// `pending-review` until a human licensing review sets it; the code makes no legal judgement.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct LanguageModelProvenance {
+    pub model_id: String,
+    pub model_manifest_sha256: String,
+    pub corpus_id: String,
+    pub corpus_version: String,
+    pub corpus_name: String,
+    /// Every corpus that contributed statistics (the model's own corpus only).
+    pub contributing_corpora: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub corpus_source_artifact_sha256: Option<String>,
+    pub corpus_documents_sha256: String,
+    pub train_partition_sha256: String,
+    /// SHA-256 of the corpus-scoped TRAIN document set the statistics were computed from.
+    pub train_document_set_sha256: String,
+    pub license: String,
+    pub license_spdx: String,
+    pub license_url: String,
+    pub attribution: String,
+    pub redistribution_determination: String,
+}
+
+impl LanguageModelProvenance {
+    /// The one authoritative way to derive pack provenance from a loaded model; used by the
+    /// builder to record it and by the validator to check it.
+    pub fn from_model(model: &LanguageModel) -> Self {
+        let m = &model.manifest;
+        Self {
+            model_id: m.model_id.clone(),
+            model_manifest_sha256: model.manifest_sha256.clone(),
+            corpus_id: m.corpus_id.clone(),
+            corpus_version: m.corpus_version.clone(),
+            corpus_name: m.licensing.corpus_name.clone(),
+            contributing_corpora: m.contributing_corpora.clone(),
+            corpus_source_artifact_sha256: m.corpus_source_artifact_sha256.clone(),
+            corpus_documents_sha256: m.corpus_documents_sha256.clone(),
+            train_partition_sha256: m.train_partition_sha256.clone(),
+            train_document_set_sha256: m.train_document_set_sha256.clone(),
+            license: m.licensing.license.clone(),
+            license_spdx: m.licensing.license_spdx.clone(),
+            license_url: m.licensing.license_url.clone(),
+            attribution: m.licensing.attribution.clone(),
+            redistribution_determination: m.licensing.redistribution_determination.clone(),
+        }
+    }
+
+    /// `data_licenses` entry a pack must carry for this model.
+    pub fn data_license_entry(&self) -> DataLicenseEntry {
+        DataLicenseEntry {
+            source_id: language_model_source_id(&self.model_id),
+            spdx: self.license_spdx.clone(),
+        }
+    }
+}
+
+/// `source_id` under which a language model appears in `data_licenses` and `attribution.txt`.
+pub fn language_model_source_id(model_id: &str) -> String {
+    format!("language-model:{}", model_id)
+}
+
+/// Checks the model-related fields of one pack manifest against the policy definition and
+/// the committed model (loaded fail-closed through `load_language_model`). A `none` pack must
+/// carry no model reference, provenance or `language-model:*` licence entry; a model-backed
+/// pack must pin the model's manifest hash, carry provenance identical to
+/// `LanguageModelProvenance::from_model`, and carry exactly one matching licence entry.
+pub fn validate_pack_model_provenance<P: AsRef<Path>>(
+    root: P,
+    manifest: &PackManifest,
+    policy: &PackPolicyConfig,
+) -> Result<(), String> {
+    let root = root.as_ref();
+    let pack_id = &manifest.pack_id;
+    let pack_def = policy
+        .packs
+        .get(pack_id)
+        .ok_or_else(|| format!("Pack '{}' not declared in data/pack-policy.toml", pack_id))?;
+    if manifest.model_profile != pack_def.model_profile {
+        return Err(format!(
+            "Pack '{}' model_profile '{}' mismatch (policy expects '{}')",
+            pack_id, manifest.model_profile, pack_def.model_profile
+        ));
+    }
+    let model_entries: Vec<&DataLicenseEntry> = manifest
+        .data_licenses
+        .iter()
+        .filter(|l| l.source_id.starts_with("language-model:"))
+        .collect();
+
+    if !pack_def.uses_model() {
+        if manifest.frequency_entry_count != 0
+            || manifest.bigram_count != 0
+            || manifest.trigram_count != 0
+        {
+            return Err(format!(
+                "Pack '{}' model_profile '{}' must carry no model data (freq={}, bi={}, tri={})",
+                pack_id,
+                MODEL_PROFILE_NONE,
+                manifest.frequency_entry_count,
+                manifest.bigram_count,
+                manifest.trigram_count
+            ));
+        }
+        if manifest.language_model_id.is_some()
+            || manifest.language_model_manifest_sha256.is_some()
+            || manifest.language_model_provenance.is_some()
+        {
+            return Err(format!(
+                "Pack '{}' model_profile '{}' must not reference a language model (id, manifest sha or provenance present)",
+                pack_id, MODEL_PROFILE_NONE
+            ));
+        }
+        if !model_entries.is_empty() {
+            return Err(format!(
+                "Pack '{}' model_profile '{}' must not carry language-model data_licenses entries (found {:?})",
+                pack_id,
+                MODEL_PROFILE_NONE,
+                model_entries.iter().map(|l| &l.source_id).collect::<Vec<_>>()
+            ));
+        }
+        return Ok(());
+    }
+
+    let model_id = pack_def
+        .language_model
+        .as_deref()
+        .ok_or_else(|| format!("Pack '{}' policy lacks language_model", pack_id))?;
+    if manifest.language_model_id.as_deref() != Some(model_id) {
+        return Err(format!(
+            "Pack '{}' language_model_id {:?} mismatch (policy expects '{}')",
+            pack_id, manifest.language_model_id, model_id
+        ));
+    }
+    let model = load_language_model(root, model_id)?;
+    if manifest.language_model_manifest_sha256.as_deref() != Some(model.manifest_sha256.as_str()) {
+        return Err(format!(
+            "Pack '{}' language_model_manifest_sha256 {:?} does not match data/language-model/{}/manifest.json ({})",
+            pack_id, manifest.language_model_manifest_sha256, model_id, model.manifest_sha256
+        ));
+    }
+    let expected = LanguageModelProvenance::from_model(&model);
+    match &manifest.language_model_provenance {
+        Some(actual) if actual == &expected => {}
+        Some(_) => {
+            return Err(format!(
+                "Pack '{}' language_model_provenance does not match the committed model '{}' (expected {:?})",
+                pack_id, model_id, expected
+            ));
+        }
+        None => {
+            return Err(format!(
+                "Pack '{}' model_profile '{}' lacks language_model_provenance for model '{}'",
+                pack_id, manifest.model_profile, model_id
+            ));
+        }
+    }
+    let expected_entry = expected.data_license_entry();
+    match model_entries.as_slice() {
+        [single] if **single == expected_entry => {}
+        [] => {
+            return Err(format!(
+                "Pack '{}' lacks the '{}' data_licenses entry (spdx '{}')",
+                pack_id, expected_entry.source_id, expected_entry.spdx
+            ));
+        }
+        [single] => {
+            return Err(format!(
+                "Pack '{}' data_licenses entry {:?} contradicts the model licensing {:?}",
+                pack_id, single, expected_entry
+            ));
+        }
+        many => {
+            return Err(format!(
+                "Pack '{}' carries {} language-model data_licenses entries; exactly one ({:?}) is allowed",
+                pack_id,
+                many.len(),
+                expected_entry
+            ));
+        }
+    }
+    if pack_def.uses_frequencies() {
+        if manifest.frequency_entry_count == 0 {
+            return Err(format!(
+                "Pack '{}' model_profile '{}' produced no frequency entries",
+                pack_id, manifest.model_profile
+            ));
+        }
+    } else if manifest.frequency_entry_count != 0 {
+        return Err(format!(
+            "Pack '{}' model_profile '{}' must carry no frequency entries (found {})",
+            pack_id, manifest.model_profile, manifest.frequency_entry_count
+        ));
+    }
+    if pack_def.uses_ngrams() {
+        if manifest.bigram_count == 0 || manifest.trigram_count == 0 {
+            return Err(format!(
+                "Pack '{}' model_profile '{}' produced no n-gram predictions (bi={}, tri={})",
+                pack_id, manifest.model_profile, manifest.bigram_count, manifest.trigram_count
+            ));
+        }
+    } else if manifest.bigram_count != 0 || manifest.trigram_count != 0 {
+        return Err(format!(
+            "Pack '{}' model_profile '{}' must carry no n-grams (bi={}, tri={})",
+            pack_id, manifest.model_profile, manifest.bigram_count, manifest.trigram_count
+        ));
+    }
+    Ok(())
+}
+
 /// Authoritative language pack manifest schema (`language-pack-manifest-v1`).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PackManifest {
@@ -48,6 +261,14 @@ pub struct PackManifest {
     pub frequency_entry_count: usize,
     pub bigram_count: usize,
     pub trigram_count: usize,
+    /// Committed language model consumed by this pack (absent for `model_profile = "none"`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language_model_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language_model_manifest_sha256: Option<String>,
+    /// Corpus provenance and licensing snapshot of the consumed language model.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language_model_provenance: Option<LanguageModelProvenance>,
     pub manual_seed_selected_count: usize,
     pub external_approved_selected_count: usize,
     pub external_metadata_replacement_selected_count: usize,
@@ -134,6 +355,8 @@ pub fn calculate_file_sha256<P: AsRef<Path>>(path: P) -> Result<String, String> 
 pub fn validate_all_pack_manifests<P: AsRef<Path>>(root_dir: P) -> Result<(), String> {
     let root = root_dir.as_ref();
     let packs_dir = root.join("data/build/packs");
+    // One strict policy interpretation, shared with `build-pack`.
+    let policy = PackPolicyConfig::load_from_file(root.join("data/pack-policy.toml"))?;
 
     let expected_packs = vec![
         ("seed", true, false),
@@ -199,30 +422,7 @@ pub fn validate_all_pack_manifests<P: AsRef<Path>>(root_dir: P) -> Result<(), St
                 pack_id, manifest.is_experimental, expected_experimental
             ));
         }
-        if manifest.model_profile != "none" {
-            return Err(format!(
-                "Pack '{}' model_profile '{}' mismatch (expected 'none')",
-                pack_id, manifest.model_profile
-            ));
-        }
-        if manifest.frequency_entry_count != 0 {
-            return Err(format!(
-                "Pack '{}' frequency_entry_count must be 0 (found {})",
-                pack_id, manifest.frequency_entry_count
-            ));
-        }
-        if manifest.bigram_count != 0 {
-            return Err(format!(
-                "Pack '{}' bigram_count must be 0 (found {})",
-                pack_id, manifest.bigram_count
-            ));
-        }
-        if manifest.trigram_count != 0 {
-            return Err(format!(
-                "Pack '{}' trigram_count must be 0 (found {})",
-                pack_id, manifest.trigram_count
-            ));
-        }
+        validate_pack_model_provenance(root, &manifest, &policy)?;
 
         // Verify binary SHA-256 and size
         let bin_path = pack_dir.join("lexicon.bin");

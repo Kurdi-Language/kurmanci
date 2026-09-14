@@ -28,16 +28,19 @@ default_pack = "seed"
 [packs.seed]
 description = "Seed lexicon"
 opt_in = false
+allow_as_default = true
 model_profile = "none"
 
 [packs.reviewed]
 description = "Reviewed lexicon"
 opt_in = false
+allow_as_default = true
 model_profile = "none"
 
 [packs.experimental-full]
 description = "Experimental lexicon"
 opt_in = true
+allow_as_default = false
 model_profile = "none"
 "#;
     fs::write(&policy_path, policy_content).unwrap();
@@ -115,6 +118,9 @@ model_profile = "none"
             frequency_entry_count: 0,
             bigram_count: 0,
             trigram_count: 0,
+            language_model_id: None,
+            language_model_manifest_sha256: None,
+            language_model_provenance: None,
             manual_seed_selected_count: 4,
             external_approved_selected_count: 0,
             external_metadata_replacement_selected_count: 0,

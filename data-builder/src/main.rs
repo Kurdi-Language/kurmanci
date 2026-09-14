@@ -148,6 +148,15 @@ enum Commands {
         )]
         output: PathBuf,
     },
+    /// Builds the committed language model (vocabulary ids, unigrams, TRAIN-only bigrams/trigrams) for a registered corpus under data/language-model/
+    BuildLanguageModel {
+        #[arg(short, long, default_value = "kuwiki")]
+        corpus_id: String,
+        #[arg(long, default_value_t = 2)]
+        bigram_min_count: u64,
+        #[arg(long, default_value_t = 3)]
+        trigram_min_count: u64,
+    },
     /// Analyzes document-level anomalies, script distribution, technical noise, and lexicon matching for a corpus
     AnalyzeCorpusQuality {
         #[arg(short, long, default_value = "kuwiki")]
@@ -833,6 +842,69 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error evaluating experiment candidate pack: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildLanguageModel {
+            corpus_id,
+            bigram_min_count,
+            trigram_min_count,
+        } => {
+            println!("=== Kurmancî Language Model Builder ===");
+            match data_builder_lib::pack::build_language_model(
+                ".",
+                &corpus_id,
+                bigram_min_count,
+                trigram_min_count,
+            ) {
+                Ok(m) => {
+                    println!(
+                        "⚡ LANGUAGE MODEL BUILT under data/language-model/{}/",
+                        m.model_id
+                    );
+                    println!(
+                        "  Corpus:                 {} ({})",
+                        m.corpus_id, m.corpus_version
+                    );
+                    println!("  Vocabulary Size:        {}", m.vocabulary_size);
+                    println!("  Vocabulary Fingerprint: {}", m.vocabulary_fingerprint);
+                    println!("  Unigrams:               {}", m.unigram_count);
+                    println!(
+                        "  Bigrams (count >= {}):   {}",
+                        m.bigram_min_count, m.bigram_count
+                    );
+                    println!(
+                        "  Trigrams (count >= {}):  {}",
+                        m.trigram_min_count, m.trigram_count
+                    );
+                    println!(
+                        "  Contributing Corpora:   {}",
+                        m.contributing_corpora.join(", ")
+                    );
+                    println!(
+                        "  TRAIN Documents (corpus-scoped): {}",
+                        m.train_document_count
+                    );
+                    println!(
+                        "  TRAIN Document Set SHA-256: {}",
+                        m.train_document_set_sha256
+                    );
+                    println!("  TRAIN Partition SHA-256: {}", m.train_partition_sha256);
+                    println!(
+                        "  TRAIN Frequencies SHA-256: {}",
+                        m.train_frequencies_sha256
+                    );
+                    println!("  TRAIN Bigrams SHA-256:   {}", m.train_bigrams_sha256);
+                    println!("  TRAIN Trigrams SHA-256:  {}", m.train_trigrams_sha256);
+                    println!("  Build Manifest SHA-256:  {}", m.build_manifest_sha256);
+                    println!(
+                        "  License:                {} ({})",
+                        m.licensing.license, m.licensing.license_spdx
+                    );
+                }
+                Err(e) => {
+                    eprintln!("Error building language model: {}", e);
                     std::process::exit(1);
                 }
             }
