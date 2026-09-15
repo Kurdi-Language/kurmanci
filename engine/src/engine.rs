@@ -77,6 +77,7 @@ impl Engine {
             self.trie.insert(&entry.normalized, entry.frequency);
             self.lexicon.push(entry);
         }
+        self.trie.build();
     }
 
     /// Loads custom typo mappings into the engine.
@@ -617,6 +618,7 @@ impl Engine {
         }
 
         // Atomically replace engine state upon 100% successful parsing
+        staged_trie.build();
         let loaded = staged_lexicon.len();
         self.lexicon = staged_lexicon;
         self.trie = staged_trie;

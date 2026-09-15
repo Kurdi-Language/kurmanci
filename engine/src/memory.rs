@@ -11,7 +11,6 @@
 //! Nothing here changes engine state, ranking, prediction, or pack semantics.
 
 use crate::engine::Engine;
-use crate::trie::TrieNode;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::mem::size_of;
@@ -52,13 +51,14 @@ pub struct MemoryAttribution {
     pub trie_nodes: usize,
     /// Number of terminal trie nodes (one per distinct normalized word).
     pub trie_terminal_nodes: usize,
-    /// Bytes of one `TrieNode` record (inline part).
+    /// Bytes of one trie node across the flat node arrays (label, first child, child count,
+    /// terminal index).
     pub trie_node_record_bytes: usize,
-    /// Child hash tables of all trie nodes (each node's children map, which stores the child
-    /// node records inline in its buckets).
-    pub trie_child_tables: StructureMemory,
-    /// The `Option<String>` copy of the normalized word held by every terminal node.
-    pub trie_word_copies: StructureMemory,
+    /// The flat node arrays of the compact trie.
+    pub trie_node_arrays: StructureMemory,
+    /// The trie's word storage: concatenated word text, spans and frequencies (plus any
+    /// words inserted but not yet built).
+    pub trie_words: StructureMemory,
     /// Number of bigram contexts and predictions.
     pub bigram_contexts: usize,
     pub bigram_predictions: usize,
@@ -128,7 +128,7 @@ pub fn attribute(engine: &Engine) -> MemoryAttribution {
     let mut report = MemoryAttribution {
         entry_count: engine.lexicon.len(),
         entry_record_bytes: size_of::<crate::engine::LexiconEntry>(),
-        trie_node_record_bytes: size_of::<TrieNode>(),
+        trie_node_record_bytes: size_of::<char>() + 3 * size_of::<u32>(),
         ..Default::default()
     };
 
@@ -158,19 +158,19 @@ pub fn attribute(engine: &Engine) -> MemoryAttribution {
         }
     }
 
-    // Trie: every node owns a child table; terminal nodes also own a copy of the word.
-    engine.trie.visit_nodes(|node| {
-        report.trie_nodes += 1;
-        let (b, a) = hashmap_heap(&node.children);
-        report.trie_child_tables.add(b, a);
-        if node.is_terminal {
-            report.trie_terminal_nodes += 1;
-        }
-        if let Some(word) = &node.word {
-            let (b, a) = string_heap(word);
-            report.trie_word_copies.add(b, a);
-        }
-    });
+    // Trie: flat node arrays plus one concatenated word store.
+    let trie = engine.trie.memory();
+    report.trie_nodes = trie.nodes;
+    report.trie_terminal_nodes = trie.terminal_nodes;
+    report
+        .trie_node_arrays
+        .add(trie.node_array_bytes, trie.node_array_allocations);
+    report
+        .trie_words
+        .add(trie.word_bytes, trie.word_allocations);
+    report
+        .trie_words
+        .add(trie.pending_bytes, trie.pending_allocations);
 
     // N-gram indexes: a context table whose values are prediction vectors.
     report.bigram_contexts = engine.bigram_index.len();
@@ -203,8 +203,8 @@ pub fn attribute(engine: &Engine) -> MemoryAttribution {
         &report.lexicon_records,
         &report.lexicon_strings,
         &report.lexicon_regions_sources,
-        &report.trie_child_tables,
-        &report.trie_word_copies,
+        &report.trie_node_arrays,
+        &report.trie_words,
         &report.bigram_table,
         &report.bigram_lists,
         &report.trigram_table,
@@ -240,7 +240,7 @@ mod tests {
     fn empty_engine_attributes_nothing() {
         let report = Engine::new().memory_attribution();
         assert_eq!(report.entry_count, 0);
-        assert_eq!(report.trie_nodes, 1); // the root
+        assert_eq!(report.trie_nodes, 0); // nothing built
         assert_eq!(report.total.bytes, 0);
         assert_eq!(report.total.allocations, 0);
     }
@@ -254,9 +254,16 @@ mod tests {
         // root + r,o,j,a + b,a,ş
         assert_eq!(report.trie_nodes, 8);
         assert_eq!(report.trie_terminal_nodes, 3);
-        assert_eq!(report.trie_word_copies.allocations, 3);
-        assert_eq!(report.trie_word_copies.bytes, 3 + 4 + 4); // "roj", "roja", "baş"
-                                                              // 5 strings per entry, all non-empty
+        // One text buffer, one span array, one frequency array: three allocations for all
+        // words together, and the text holds exactly the 11 bytes of "roj", "roja", "baş".
+        assert_eq!(report.trie_words.allocations, 3);
+        assert!(report.trie_words.bytes >= 11 + 3 * size_of::<(u32, u32)>() + 3 * size_of::<u64>());
+        assert_eq!(report.trie_node_arrays.allocations, 4);
+        assert_eq!(
+            report.trie_node_arrays.bytes,
+            8 * report.trie_node_record_bytes
+        );
+        // 5 strings per entry, all non-empty
         assert_eq!(report.lexicon_strings.allocations, 15);
         // word/normalized/lemma (3 each; "baş" is 4 bytes) + "noun" + "approved" per entry,
         // plus "general" + "manual-seed" per entry.
@@ -272,11 +279,9 @@ mod tests {
             report.lexicon_records.bytes
                 + report.lexicon_strings.bytes
                 + report.lexicon_regions_sources.bytes
-                + report.trie_child_tables.bytes
-                + report.trie_word_copies.bytes
+                + report.trie_node_arrays.bytes
+                + report.trie_words.bytes
         );
-        // Every node except leaves owns a child table with at least four buckets.
-        assert!(report.trie_child_tables.bytes >= 5 * (4 * size_of::<(char, TrieNode)>() + 4 + 16));
         assert!(report.total.allocations > 0);
     }
 

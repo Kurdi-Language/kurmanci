@@ -525,13 +525,13 @@ fn print_text(r: &Report) {
             String::new(),
         ),
         (
-            "trie child tables",
-            &a.trie_child_tables,
+            "trie node arrays",
+            &a.trie_node_arrays,
             format!("{} nodes", a.trie_nodes),
         ),
         (
-            "trie word copies",
-            &a.trie_word_copies,
+            "trie words",
+            &a.trie_words,
             format!("{} terminals", a.trie_terminal_nodes),
         ),
         (
