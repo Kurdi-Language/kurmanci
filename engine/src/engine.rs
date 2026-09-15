@@ -16,6 +16,14 @@ pub use crate::format::{
     PACK_VERSION, PROBABILITY_SCALE,
 };
 
+/// Smallest possible encoded sizes of the variable-length records of pack schema 4 (every
+/// string empty, no regions, no sources, one prediction per context). Counts declared in a
+/// pack header are untrusted; pre-allocation is bounded by what the payload can physically
+/// contain, so a corrupt count can never trigger a huge allocation.
+const MIN_ENCODED_ENTRY_BYTES: usize = 2 + 2 + 2 + 2 + 8 + 2 + 2 + 2 + 8 + 8 + 4;
+const MIN_ENCODED_BIGRAM_CONTEXT_BYTES: usize = 4 + 2 + 16;
+const MIN_ENCODED_TRIGRAM_CONTEXT_BYTES: usize = 4 + 4 + 2 + 16;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LexiconEntry {
     pub word: String,
@@ -144,7 +152,17 @@ impl Engine {
         }
 
         // 6. Decode Payload Entries into Staging Buffers
-        let mut staged_lexicon = Vec::with_capacity(count as usize);
+        let count = count as usize;
+        if count > payload_bytes.len() / MIN_ENCODED_ENTRY_BYTES {
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Entry count {} cannot fit in a {}-byte payload",
+                    count,
+                    payload_bytes.len()
+                ),
+            });
+        }
+        let mut staged_lexicon = Vec::with_capacity(count);
         let mut staged_trie = Trie::default();
         let mut staged_max_frequency = 0u64;
         let mut payload_cursor = 0;
@@ -271,6 +289,17 @@ impl Engine {
                     "Bigram context count {} exceeds lexicon count {}",
                     bigram_context_count,
                     staged_lexicon.len()
+                ),
+            });
+        }
+        if bigram_context_count
+            > (payload_bytes.len() - payload_cursor) / MIN_ENCODED_BIGRAM_CONTEXT_BYTES
+        {
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Bigram context count {} cannot fit in the remaining {} payload bytes",
+                    bigram_context_count,
+                    payload_bytes.len() - payload_cursor
                 ),
             });
         }
@@ -426,6 +455,17 @@ impl Engine {
                 message: format!(
                     "Trigram context count {} exceeds maximum possible pairs {}",
                     trigram_context_count, max_contexts
+                ),
+            });
+        }
+        if trigram_context_count
+            > (payload_bytes.len() - payload_cursor) / MIN_ENCODED_TRIGRAM_CONTEXT_BYTES
+        {
+            return Err(PackLoadError::InvalidPayload {
+                message: format!(
+                    "Trigram context count {} cannot fit in the remaining {} payload bytes",
+                    trigram_context_count,
+                    payload_bytes.len() - payload_cursor
                 ),
             });
         }

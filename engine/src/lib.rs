@@ -1,4 +1,5 @@
 pub mod api;
+pub mod compat;
 pub mod distance;
 pub mod engine;
 pub mod errors;
@@ -11,6 +12,11 @@ pub mod trie;
 pub use api::{
     CompletionOptions, CorrectionOptions, KurmanciEngine, PackInfo, Prediction, PredictionOptions,
     SuggestOptions, SuggestionResult, DEFAULT_RESULT_LIMIT, MAX_RESULT_LIMIT,
+};
+pub use compat::{
+    probe_pack_header, CompatibilityTable, LoadFailureClass, PackHeader, ENGINE_VERSION,
+    LANGUAGE_MODEL_SCHEMA_VERSION, PACK_SCHEMA_VERSION, SUPPORTED_LANGUAGE_TAG,
+    SUPPORTED_PACK_SCHEMA_VERSIONS,
 };
 pub use errors::{EngineError, PackLoadError};
 
