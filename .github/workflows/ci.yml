@@ -433,6 +433,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: apple-dist-artifacts
+          # Consumed only by the downstream Swift/iOS/macOS consumer jobs of this same
+          # run; a short retention keeps CI artifact storage within the plan allowance
+          # (3 days on main for inspecting a failed build, 1 day for branches and PRs).
+          retention-days: ${{ github.ref == 'refs/heads/main' && 3 || 1 }}
           path: |
             dist/
             data/build/packs/seed/lexicon.bin
