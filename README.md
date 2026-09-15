@@ -64,6 +64,12 @@ cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin predic
 cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin interactive
 ```
 
+Repository-side inspection (what the review data records about a word; read-only, never assigns a status):
+```bash
+cargo run -p kurmanci-data-builder -- inspect-word newroz
+cargo run -p kurmanci-data-builder -- inspect-word newroz --json
+```
+
 ---
 
 ## Language Packs & Data Model

@@ -1,5 +1,6 @@
 //! Controlled Lexicon Review Infrastructure & Vocabulary Review Batch Generator.
 
+pub mod inspect;
 pub mod kuwiki_batch;
 pub mod kuwiki_decisions;
 pub mod merger;
@@ -7,6 +8,7 @@ pub mod queues;
 pub mod schema;
 pub mod vocabulary_batch;
 
+pub use inspect::{inspect_word, WordInspection};
 pub use kuwiki_batch::{
     generate_kuwiki_review_batch, verify_vocabulary_evidence_provenance, ContextReference,
     KuwikiReviewBatchCandidate, KuwikiReviewBatchManifest, KuwikiReviewBatchSummary,

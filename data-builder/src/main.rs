@@ -105,6 +105,14 @@ enum Commands {
     },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
+    /// Read-only: shows what the repository records about one word (pack membership, sources, human review history per source). Never assigns or changes a decision.
+    InspectWord {
+        /// Word to inspect (normalized to its canonical review identity)
+        word: String,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Validates evaluation benchmark cases and generates provenance overlap analysis
     ValidateEvalCases,
     /// Validates a base-to-candidate benchmark review transition from explicit snapshots
@@ -617,6 +625,27 @@ fn main() {
         Commands::BuildPack { pack_id } => {
             let _ = data_builder_lib::build_pack(&pack_id, PathBuf::from("."))
                 .unwrap_or_else(|e| panic!("Pack build failed: {}", e));
+        }
+        Commands::InspectWord { word, json } => {
+            match data_builder_lib::review::inspect::inspect_word(".", &word) {
+                Ok(report) => {
+                    if json {
+                        println!(
+                            "{}",
+                            data_builder_lib::review::inspect::render_json(&report)
+                        );
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::review::inspect::render_text(&report)
+                        );
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error inspecting '{}': {}", word, e);
+                    std::process::exit(1);
+                }
+            }
         }
         Commands::ValidatePackManifest => {
             data_builder_lib::pack::manifest::validate_all_pack_manifests(PathBuf::from("."))
