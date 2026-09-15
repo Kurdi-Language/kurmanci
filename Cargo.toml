@@ -6,6 +6,7 @@ members = [
     "cli",
     "ffi",
     "ffi/kurmanci-jni",
+    "bench",
 ]
 
 [workspace.package]

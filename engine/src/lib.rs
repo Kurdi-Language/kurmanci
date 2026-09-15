@@ -4,6 +4,7 @@ pub mod distance;
 pub mod engine;
 pub mod errors;
 pub mod format;
+pub mod memory;
 pub mod normalization;
 pub mod ranking;
 pub mod trie;
@@ -19,6 +20,7 @@ pub use compat::{
     SUPPORTED_PACK_SCHEMA_VERSIONS,
 };
 pub use errors::{EngineError, PackLoadError};
+pub use memory::{MemoryAttribution, StructureMemory};
 
 // Existing low-level exports (maintained temporarily for backward compatibility)
 pub use engine::{Engine, LexiconEntry};
