@@ -752,6 +752,8 @@ dependencies = [
  "kurmanci-engine",
  "serde",
  "serde_json",
+ "sha2",
+ "tempfile",
 ]
 
 [[package]]
