@@ -44,13 +44,13 @@ pub type TrigramIndex = HashMap<TrigramContextKey, Vec<TrigramPredictionEntry>>;
 
 #[derive(Debug, Clone, Default)]
 pub struct Engine {
-    lexicon: Vec<LexiconEntry>,
-    trie: Trie,
+    pub(crate) lexicon: Vec<LexiconEntry>,
+    pub(crate) trie: Trie,
     max_frequency: u64,
     #[allow(dead_code)]
-    typo_map: HashMap<String, String>,
-    bigram_index: HashMap<usize, Vec<(usize, u64, u32)>>,
-    trigram_index: TrigramIndex,
+    pub(crate) typo_map: HashMap<String, String>,
+    pub(crate) bigram_index: HashMap<usize, Vec<(usize, u64, u32)>>,
+    pub(crate) trigram_index: TrigramIndex,
 }
 
 impl Engine {
@@ -630,6 +630,12 @@ impl Engine {
     pub fn contains(&self, word: &str) -> bool {
         let norm = crate::normalization::normalize(word);
         self.trie.contains(&norm)
+    }
+
+    /// Read-only estimate of the heap memory owned by each engine structure (see
+    /// `crate::memory`). Never changes engine state or behaviour.
+    pub fn memory_attribution(&self) -> crate::memory::MemoryAttribution {
+        crate::memory::attribute(self)
     }
 
     /// Predicts next word given previous word context.

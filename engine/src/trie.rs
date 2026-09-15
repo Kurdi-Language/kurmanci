@@ -65,6 +65,17 @@ impl Trie {
         results
     }
 
+    /// Visits every node (including the root) exactly once, depth first. Read-only.
+    pub fn visit_nodes(&self, mut visit: impl FnMut(&TrieNode)) {
+        fn walk(node: &TrieNode, visit: &mut impl FnMut(&TrieNode)) {
+            visit(node);
+            for child in node.children.values() {
+                walk(child, visit);
+            }
+        }
+        walk(&self.root, &mut visit);
+    }
+
     fn collect_words(node: &TrieNode, results: &mut Vec<(String, u64)>) {
         if node.is_terminal {
             if let Some(ref word) = node.word {

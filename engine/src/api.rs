@@ -132,6 +132,11 @@ impl KurmanciEngine {
         &self.info
     }
 
+    /// Read-only estimate of the heap memory owned by each engine structure.
+    pub fn memory_attribution(&self) -> crate::memory::MemoryAttribution {
+        self.inner.memory_attribution()
+    }
+
     /// Returns the total number of unique lexicon entries loaded.
     pub fn len(&self) -> usize {
         self.inner.len()
