@@ -53,6 +53,15 @@ cargo run -p kurmanci-cli -- suggest biji
 
 # Typo correction: 'spaz' -> 'spas'
 cargo run -p kurmanci-cli -- suggest spaz
+
+# QA commands against any built pack (add --json for script-stable output)
+cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin known newroz
+cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin correct peşeroj
+cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin complete kurdis
+cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin predict navê te --json
+
+# Interactive shell over the same commands (known, suggest, correct, complete, predict)
+cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin interactive
 ```
 
 ---

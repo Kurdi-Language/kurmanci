@@ -1,3 +1,5 @@
+mod commands;
+
 use clap::{Parser, Subcommand};
 use kurmanci_engine::{
     KurmanciEngine, PredictionOptions, PredictionSource, SuggestOptions, SuggestionKind,
@@ -10,9 +12,17 @@ use std::time::Instant;
     name = "kurmanci",
     author = "Kurmancî Language Platform Contributors",
     version = "0.1.0",
-    about = "Offline Kurmancî Language Engine CLI"
+    about = "Offline Kurmancî Language Engine CLI: query any compiled language pack"
 )]
 struct Cli {
+    /// Path to a compiled binary language pack (.bin)
+    #[arg(short, long, global = true, default_value = "data/build/lexicon.bin")]
+    pack: PathBuf,
+
+    /// Output results as JSON
+    #[arg(long, global = true)]
+    json: bool,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -28,14 +38,6 @@ enum Commands {
         #[arg(short, long, default_value_t = 5)]
         limit: usize,
 
-        /// Path to compiled binary language pack (.bin)
-        #[arg(short, long, default_value = "data/build/lexicon.bin")]
-        pack: PathBuf,
-
-        /// Output results as JSON
-        #[arg(long)]
-        json: bool,
-
         /// Print diagnostic ranking explanation for each candidate
         #[arg(long)]
         explain: bool,
@@ -50,42 +52,80 @@ enum Commands {
         #[arg(short, long, default_value_t = 5)]
         limit: usize,
 
-        /// Path to compiled binary language pack (.bin)
-        #[arg(short, long, default_value = "data/build/lexicon.bin")]
-        pack: PathBuf,
-
-        /// Output results as JSON
-        #[arg(long)]
-        json: bool,
-
         /// Print diagnostic ranking explanation for predictions
         #[arg(long)]
         explain: bool,
     },
+    /// Reports whether a word is in the loaded lexicon
+    Known {
+        /// Word to look up (normalized before lookup)
+        word: String,
+    },
+    /// Returns spelling corrections for a word
+    Correct {
+        /// Misspelled or unknown input
+        input: String,
+
+        /// Maximum number of corrections to return
+        #[arg(short, long, default_value_t = 5)]
+        limit: usize,
+    },
+    /// Returns prefix completions
+    Complete {
+        /// Prefix to complete
+        prefix: String,
+
+        /// Maximum number of completions to return
+        #[arg(short, long, default_value_t = 5)]
+        limit: usize,
+    },
+    /// Predicts the next word after a 1- or 2-word context
+    Predict {
+        /// Context words, e.g. 'ez' or 'navê te'
+        #[arg(required = true, num_args = 1..=2)]
+        words: Vec<String>,
+
+        /// Maximum number of predictions to return
+        #[arg(short, long, default_value_t = 5)]
+        limit: usize,
+    },
+    /// Interactive shell: one command per line (known, suggest, correct, complete, predict)
+    Interactive {
+        /// Default result limit for the session
+        #[arg(short, long, default_value_t = 5)]
+        limit: usize,
+    },
+}
+
+fn load_engine(pack: &PathBuf) -> KurmanciEngine {
+    KurmanciEngine::from_pack_file(pack).unwrap_or_else(|e| {
+        eprintln!("Error: failed to load binary pack '{:?}': {}", pack, e);
+        std::process::exit(1);
+    })
+}
+
+fn print_loaded_info(engine: &KurmanciEngine, pack: &PathBuf) {
+    let info = engine.pack_info();
+    eprintln!(
+        "[info] Loaded {} lexicon entries (pack tag: {}, format v{}) from {:?}",
+        info.entry_count, info.language_tag, info.format_version, pack
+    );
 }
 
 fn main() {
     let cli = Cli::parse();
+    let pack = cli.pack;
+    let json = cli.json;
 
     match cli.command {
         Commands::Suggest {
             query,
             limit,
-            pack,
-            json,
             explain,
         } => {
-            let engine = KurmanciEngine::from_pack_file(&pack).unwrap_or_else(|e| {
-                eprintln!("Error: failed to load binary pack '{:?}': {}", pack, e);
-                std::process::exit(1);
-            });
-
+            let engine = load_engine(&pack);
             if !json {
-                let info = engine.pack_info();
-                eprintln!(
-                    "[info] Loaded {} lexicon entries (pack tag: {}, format v{}) from {:?}",
-                    info.entry_count, info.language_tag, info.format_version, pack
-                );
+                print_loaded_info(&engine, &pack);
             }
 
             let start = Instant::now();
@@ -97,35 +137,12 @@ fn main() {
                     "{}",
                     serde_json::to_string_pretty(&suggestions).unwrap_or_default()
                 );
-            } else if explain {
-                println!(
-                    "Suggestions for '{}' (explained in {:.2?}):",
-                    query, elapsed
-                );
-                if suggestions.is_empty() {
-                    println!("  (no suggestions found)");
-                } else {
-                    for (i, sug) in suggestions.iter().enumerate() {
-                        let kind_str = match sug.kind {
-                            SuggestionKind::Exact => "exact",
-                            SuggestionKind::Completion => "completion",
-                            SuggestionKind::Correction => "correction",
-                            SuggestionKind::DiacriticCorrection => "diacritic_correction",
-                            SuggestionKind::NextWord => "next_word",
-                        };
-                        println!(
-                            "  {}. {:<15} [type: {:<20} edit_cost: {}]",
-                            i + 1,
-                            sug.text,
-                            kind_str,
-                            sug.edit_cost
-                        );
-                    }
-                }
             } else {
                 println!(
-                    "Suggestions for '{}' (processed in {:.2?}):",
-                    query, elapsed
+                    "Suggestions for '{}' ({} in {:.2?}):",
+                    query,
+                    if explain { "explained" } else { "processed" },
+                    elapsed
                 );
                 if suggestions.is_empty() {
                     println!("  (no suggestions found)");
@@ -152,8 +169,6 @@ fn main() {
         Commands::PredictNext {
             words,
             limit,
-            pack,
-            json,
             explain,
         } => {
             if words.is_empty() || words.len() > 2 {
@@ -161,17 +176,9 @@ fn main() {
                 std::process::exit(1);
             }
 
-            let engine = KurmanciEngine::from_pack_file(&pack).unwrap_or_else(|e| {
-                eprintln!("Error: failed to load binary pack '{:?}': {}", pack, e);
-                std::process::exit(1);
-            });
-
+            let engine = load_engine(&pack);
             if !json {
-                let info = engine.pack_info();
-                eprintln!(
-                    "[info] Loaded {} lexicon entries (pack tag: {}, format v{}) from {:?}",
-                    info.entry_count, info.language_tag, info.format_version, pack
-                );
+                print_loaded_info(&engine, &pack);
             }
 
             let start = Instant::now();
@@ -239,6 +246,57 @@ fn main() {
                         );
                     }
                 }
+            }
+        }
+        Commands::Known { word } => {
+            let engine = load_engine(&pack);
+            print!(
+                "{}",
+                commands::render(&commands::known(&engine, &word), json)
+            );
+            if json {
+                println!();
+            }
+        }
+        Commands::Correct { input, limit } => {
+            let engine = load_engine(&pack);
+            print!(
+                "{}",
+                commands::render(&commands::correct(&engine, &input, limit), json)
+            );
+            if json {
+                println!();
+            }
+        }
+        Commands::Complete { prefix, limit } => {
+            let engine = load_engine(&pack);
+            print!(
+                "{}",
+                commands::render(&commands::complete(&engine, &prefix, limit), json)
+            );
+            if json {
+                println!();
+            }
+        }
+        Commands::Predict { words, limit } => {
+            let engine = load_engine(&pack);
+            print!(
+                "{}",
+                commands::render(&commands::predict(&engine, &words, limit), json)
+            );
+            if json {
+                println!();
+            }
+        }
+        Commands::Interactive { limit } => {
+            let engine = load_engine(&pack);
+            let stdin = std::io::stdin();
+            let stdout = std::io::stdout();
+            if let Err(e) =
+                commands::run_interactive(&engine, limit, json, stdin.lock(), stdout.lock())
+            {
+                eprintln!("Error: {}", e);
+                std::process::exit(1);
             }
         }
     }
