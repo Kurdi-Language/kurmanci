@@ -121,6 +121,39 @@ The attribution model explains 101% of the measured steady-state heap on every p
 
 The seed pack has no n-gram data, so its prediction rows are empty by design.
 
+## Results after the compact trie
+
+The trie was rebuilt as flat arrays (label, first child, child count, terminal index per
+node, 16 bytes; word text stored once) with children in code point order. Same release
+profile and host as above.
+
+| Pack | Engine heap before | Engine heap after | Trie before | Trie after | RSS after load before | RSS after load after | Load before | Load after |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| seed | 0.04 MB | 0.01 MB | 0.030 MB | 0.003 MB | 2.2 MB | 2.2 MB | 0.03 ms | 0.04 ms |
+| reviewed | 2.84 MB | 1.45 MB | 1.52 MB | 0.11 MB | 6.1 MB | 5.1 MB | 4.2 ms | 4.7 ms |
+| experimental-full | 58.0 MB | 22.4 MB | 39.4 MB | 3.0 MB | 77.2 MB | 45.8 MB | 71 ms | 75 ms |
+
+Experimental-full attribution after: lexicon records 8.49 MB (38.0%), regions/sources 3.18 MB,
+n-gram tables and lists 5.8 MB, strings 1.87 MB, trie node arrays 1.98 MB (8.9%, 123,933
+nodes in 4 allocations), trie words 1.05 MB (3 allocations). Allocation calls at load went from
+593,984 to 601,833 while the retained count fell from 552,846 to 419,035 (the build sorts
+words through a temporary map, which is the 6.8 MB of temporary load allocation now
+visible, freed before load returns). The build and the enumeration use explicit stacks,
+so neither depends on the call stack for long words. Heap per entry: 1,367 to 527 bytes; heap to pack ratio
+8.3× to 3.2×.
+
+Query latency is unchanged within noise (known 0.4 µs; suggest, correct and complete still
+dominated by the per-entry scan; prediction under 0.1 ms).
+
+Equivalence evidence: the crate-internal `trie::equivalence_tests` module compares the compact trie with
+a verbatim copy of the previous implementation on `contains` and the `find_by_prefix`
+result set for every prefix of every word (fixtures, duplicates, Unicode, and the built seed
+and reviewed packs); 756 golden queries (`known`, `suggest`, `correct`, `complete`, `predict`
+over all seed words, their prefixes and probes on the reviewed and experimental-full packs)
+produced byte-identical JSON before and after; the 357-case `evaluate-packs` reports are
+byte-identical. The pack format is unchanged. The next dominant structure is the per-entry
+lexicon record with its nine heap allocations, to be measured and decided separately.
+
 ## What this means for the next step
 
 The dominant structure is proven: the per-node hash tables of the trie. A compact trie
