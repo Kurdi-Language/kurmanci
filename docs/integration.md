@@ -1,35 +1,99 @@
-# Integration Guide
+# Integrating the Kurmancî engine
 
-## Embedding the Core Engine
+The engine is consumed through a stable C ABI (`ffi/include/kurmanci.h`, library
+`kurmanci_ffi`), wrapped by the Swift package under `swift/` and the Android SDK under
+`android/`. This page covers what every integrator needs: versions, loading a pack, the five
+query operations, memory ownership, threading and errors. The pack compatibility rules are in
+`docs/PACK_COMPATIBILITY.md`.
 
-The Kurmancî core engine is compiled into native libraries for target platforms:
+## Versions
 
-- **iOS / macOS**: Static C library (`libkurmanci_engine.a`) wrapped by Swift package `KurmanciEngine`.
-- **Android**: Shared C library (`libkurmanci_engine.so`) loaded via JNI inside Kotlin library.
-- **Web Browsers**: Compiled to WebAssembly (`kurmanci_engine_bg.wasm`) with TypeScript bindings.
+| Value | Function | Meaning |
+|---|---|---|
+| C ABI | `kmr_abi_version_major()`, `kmr_abi_version_minor()` | require major == 1 and minor >= the header you compiled against; minors only add |
+| Engine | `kmr_engine_version()` | Rust engine crate version, static string |
+| Pack schema | `kmr_supported_pack_schema_version()` | the current (native) pack schema this build writes (4); whether an arbitrary pack's schema is accepted is answered by `kmr_probe_pack_bytes(...).schema_supported` |
+| Language-model schema | `kmr_language_model_schema_version()` | statistics schema carried by that pack schema (1) |
+| Language | `kmr_supported_language_tag()` | `ku-Latn`; packs for any other tag are rejected |
 
-## Basic Swift Integration (iOS)
+`kmr_probe_pack_bytes(data, len, &probe)` reads a pack's declared schema, language tag,
+entry count and payload length without decoding it and reports `schema_supported` and
+`language_supported`, so an app can explain an unusable pack before loading.
 
-```swift
-import KurmanciEngine
+## Load
 
-let engine = KurmanciEngine()
-let suggestions = engine.suggest("rojb", limit: 3)
-
-for suggestion in suggestions {
-    print("Suggested: \(suggestion.text) [\(suggestion.kind)]")
-}
+```c
+kmr_engine *engine = NULL;
+kmr_status st = kmr_engine_create_from_file("lexicon.bin", &engine);   /* or _from_bytes */
+if (st != KMR_OK) { log("%s: %s", kmr_status_name(st), kmr_last_error_message()); return; }
+kmr_pack_info info; kmr_engine_get_info(engine, &info);   /* language_tag, format_version, entry_count */
 ```
 
-## Basic Kotlin Integration (Android)
+A load either succeeds completely or fails with one status; there is no partial load and the
+engine handle is NULL on failure. Loading never panics and never allocates more than the pack
+can describe, whatever the bytes contain.
 
-```kotlin
-import com.kurmanci.engine.KurmanciEngine
+## Query
 
-val engine = KurmanciEngine.load()
-val suggestions = engine.suggest("rojb", limit = 3)
+| Operation | Function | Result |
+|---|---|---|
+| known word | `kmr_engine_is_known_word(engine, "newroz", &known)` | `bool` |
+| corrections | `kmr_engine_correct(engine, "peşeroj", limit, &list)` | suggestion list |
+| completions | `kmr_engine_complete(engine, "kurd", limit, &list)` | suggestion list |
+| combined | `kmr_engine_suggest(engine, "spaz", limit, &list)` | suggestion list |
+| prediction | `kmr_engine_predict_next(engine, words, count, limit, &list)` | prediction list |
 
-suggestions.forEach {
-    println("Suggested: ${it.text}")
-}
-```
+Inputs are NUL-terminated UTF-8; NFC and case normalization happen inside the engine, so
+`Baş`, `baş` and decomposed forms query the same word. Invalid UTF-8 or a NULL pointer
+returns `KMR_ERROR_INVALID_ARGUMENT`. `limit` is clamped to 50; `limit == 0` returns an empty
+list. Suggestion items carry `text`, `kind` (exact, completion, correction, diacritic
+correction) and `edit_cost`; prediction items carry `text`, `count`,
+`probability_millionths` and `source` (trigram, bigram backoff, bigram). Results are
+deterministic for a given pack and input.
+
+## Ownership and lifetime
+
+- Every handle the library returns (`kmr_engine`, `kmr_suggestion_list`,
+  `kmr_prediction_list`) is owned by the caller and freed with the matching `*_destroy`;
+  `destroy(NULL)` is a no-op; destroying twice is undefined.
+- Strings inside `kmr_pack_info` and list items are borrowed: valid until the owning handle
+  is destroyed, never freed by the caller. Copy them if they must outlive the handle.
+- `kmr_engine_version()`, `kmr_supported_language_tag()` and `kmr_status_name()` return
+  static strings valid for the process lifetime.
+- `kmr_last_error_message()` is thread-local and valid until the next failing call on the
+  same thread; it is never NULL (empty string when there is no error).
+
+## Threading
+
+A loaded `kmr_engine` is immutable. Any number of threads may call the query functions and
+`kmr_engine_get_info` on the same handle concurrently. Creation and destruction are the
+caller's responsibility to order: do not destroy a handle while another thread may still use
+it. Result lists are independent objects and may be used and destroyed on any thread.
+
+## Errors
+
+Every fallible function returns a `kmr_status`; `kmr_status_name()` gives a stable symbolic
+name and `kmr_last_error_message()` a human-readable detail. No Rust panic crosses the
+boundary: an internal failure is reported as `KMR_ERROR_INTERNAL`.
+
+| Status | When |
+|---|---|
+| `KMR_ERROR_INVALID_ARGUMENT` | NULL pointer, invalid UTF-8 input, index out of range |
+| `KMR_ERROR_IO` | pack file cannot be read |
+| `KMR_ERROR_INVALID_PACK` | not a pack, truncated, or a structural rule violated |
+| `KMR_ERROR_UNSUPPORTED_PACK` | pack schema not supported by this build (older or newer) |
+| `KMR_ERROR_INCOMPATIBLE_LANGUAGE` | pack is for another language tag |
+| `KMR_ERROR_CHECKSUM` | payload checksum mismatch |
+| `KMR_ERROR_INTERNAL` | contained panic or engine invariant failure |
+
+The Swift wrapper maps these to `KurmanciError`; the Kotlin SDK to `KurmanciException`. Both
+delegate all normalization, ranking and prediction to the engine; nothing is reimplemented in
+the wrappers.
+
+## Verifying a packaged build
+
+`ffi/include/required_symbols.txt` lists every exported `kmr_*` symbol. The Rust test
+`test_c_abi_header_symbol_list_and_exports_agree` keeps the header, that list and the
+crate's exports identical, and `scripts/apple/verify-xcframework.sh` checks a built
+XCFramework against the same list. `ffi/tests/c_smoke_test.c` is a pure C consumer that
+exercises every operation against a built pack with only the header and the library.

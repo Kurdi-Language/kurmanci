@@ -16,3 +16,9 @@ kmr_prediction_list_len
 kmr_prediction_list_get
 kmr_prediction_list_destroy
 kmr_last_error_message
+kmr_engine_version
+kmr_supported_pack_schema_version
+kmr_language_model_schema_version
+kmr_supported_language_tag
+kmr_status_name
+kmr_probe_pack_bytes
