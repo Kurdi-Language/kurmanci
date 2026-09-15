@@ -11,6 +11,35 @@ int main(int argc, char **argv) {
 
     printf("Testing Kurmancî C ABI v%u.%u...\n", kmr_abi_version_major(), kmr_abi_version_minor());
 
+    /* 0. Compatibility identity: static strings, supported schema and language */
+    if (kmr_abi_version_major() != KMR_ABI_VERSION_MAJOR || kmr_abi_version_minor() < KMR_ABI_VERSION_MINOR) {
+        fprintf(stderr, "ABI mismatch: library %u.%u, header %u.%u\n", kmr_abi_version_major(),
+                kmr_abi_version_minor(), KMR_ABI_VERSION_MAJOR, KMR_ABI_VERSION_MINOR);
+        return 1;
+    }
+    if (kmr_engine_version() == NULL || strlen(kmr_engine_version()) == 0) {
+        fprintf(stderr, "kmr_engine_version returned an empty string\n");
+        return 1;
+    }
+    if (kmr_supported_pack_schema_version() != 4U || kmr_language_model_schema_version() != 1U) {
+        fprintf(stderr, "Unexpected schema versions: pack %u, model %u\n",
+                kmr_supported_pack_schema_version(), kmr_language_model_schema_version());
+        return 1;
+    }
+    if (strcmp(kmr_supported_language_tag(), "ku-Latn") != 0) {
+        fprintf(stderr, "Unexpected language tag: %s\n", kmr_supported_language_tag());
+        return 1;
+    }
+    if (strcmp(kmr_status_name(KMR_OK), "KMR_OK") != 0 ||
+        strcmp(kmr_status_name(KMR_ERROR_UNSUPPORTED_PACK), "KMR_ERROR_UNSUPPORTED_PACK") != 0 ||
+        strcmp(kmr_status_name(12345U), "KMR_STATUS_UNKNOWN") != 0) {
+        fprintf(stderr, "kmr_status_name returned unexpected names\n");
+        return 1;
+    }
+    printf("✅ Engine %s: pack schema %u, model schema %u, language %s\n", kmr_engine_version(),
+           kmr_supported_pack_schema_version(), kmr_language_model_schema_version(),
+           kmr_supported_language_tag());
+
     /* 1. Test invalid file path error */
     kmr_engine *bad_engine = NULL;
     kmr_status status = kmr_engine_create_from_file("nonexistent_pack_path_123.bin", &bad_engine);
@@ -135,6 +164,35 @@ int main(int argc, char **argv) {
         return 1;
     }
     fclose(f);
+
+    /* 8a. Probe the pack header without loading, then probe garbage */
+    kmr_pack_probe probe;
+    status = kmr_probe_pack_bytes(bytes, (size_t)fsize, &probe);
+    if (status != KMR_OK || probe.pack_schema_version != kmr_supported_pack_schema_version() ||
+        !probe.schema_supported || !probe.language_supported ||
+        strcmp(probe.language_tag, kmr_supported_language_tag()) != 0 || probe.entry_count == 0) {
+        fprintf(stderr, "kmr_probe_pack_bytes on a valid pack failed: %u (%s)\n", status, kmr_last_error_message());
+        free(bytes);
+        return 1;
+    }
+    printf("✅ Probe: schema %u, language %s, %u entries, %llu payload bytes\n", probe.pack_schema_version,
+           probe.language_tag, probe.entry_count, (unsigned long long)probe.payload_len);
+    {
+        const uint8_t garbage[16] = {0x4B, 0x52, 0x4D, 0x39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        status = kmr_probe_pack_bytes(garbage, sizeof garbage, &probe);
+        if (status != KMR_ERROR_INVALID_PACK) {
+            fprintf(stderr, "Expected KMR_ERROR_INVALID_PACK for garbage, got %s\n", kmr_status_name(status));
+            free(bytes);
+            return 1;
+        }
+        status = kmr_probe_pack_bytes(NULL, 0, &probe);
+        if (status != KMR_ERROR_INVALID_ARGUMENT) {
+            fprintf(stderr, "Expected KMR_ERROR_INVALID_ARGUMENT for NULL data, got %s\n", kmr_status_name(status));
+            free(bytes);
+            return 1;
+        }
+    }
+    printf("✅ Probe rejects garbage and NULL input\n");
 
     kmr_engine *bytes_engine = NULL;
     status = kmr_engine_create_from_bytes(bytes, fsize, &bytes_engine);

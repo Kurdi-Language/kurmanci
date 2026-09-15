@@ -10,7 +10,7 @@ and Kotlin wrappers, and the release compatibility manifest.
 | Identity | Where it lives | Current value |
 |---|---|---|
 | Engine version | `kurmanci_engine::ENGINE_VERSION` (crate version) | 0.1.0 |
-| C ABI version | `kmr_abi_version_major()` / `kmr_abi_version_minor()` | 1.0 |
+| C ABI version | `kmr_abi_version_major()` / `kmr_abi_version_minor()` | 1.1 (1.0 plus the version getters, `kmr_status_name` and `kmr_probe_pack_bytes`) |
 | Pack schema version | bytes 4..8 of every pack; `PACK_SCHEMA_VERSION` | 4 |
 | Supported pack schemas | `SUPPORTED_PACK_SCHEMA_VERSIONS` | [4] |
 | Language-model schema | implied by the pack schema; `LANGUAGE_MODEL_SCHEMA_VERSION` | 1 (carried by pack schema 4) |
@@ -21,6 +21,10 @@ and Kotlin wrappers, and the release compatibility manifest.
 `probe_pack_header(bytes)` reads a pack's declared schema, language tag, entry count and
 payload length without decoding it, reporting `is_supported` instead of failing for an
 unsupported schema or language.
+
+From C, the same values come from `kmr_engine_version()`, `kmr_supported_pack_schema_version()`,
+`kmr_language_model_schema_version()`, `kmr_supported_language_tag()` and
+`kmr_probe_pack_bytes()`; see `docs/integration.md`.
 
 ## Rules
 

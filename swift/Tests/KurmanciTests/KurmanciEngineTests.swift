@@ -30,7 +30,9 @@ final class KurmanciEngineTests: XCTestCase {
 
     func testABICompatibilityCheck() {
         XCTAssertEqual(kmr_abi_version_major(), 1)
-        XCTAssertEqual(kmr_abi_version_minor(), 0)
+        XCTAssertGreaterThanOrEqual(kmr_abi_version_minor(), 1)
+        XCTAssertEqual(kmr_supported_pack_schema_version(), 4)
+        XCTAssertEqual(String(cString: kmr_supported_language_tag()), "ku-Latn")
     }
 
     func testInitWithPackURLAndData() throws {

@@ -2,17 +2,26 @@
 #![allow(clippy::missing_safety_doc)]
 
 use kurmanci_engine::{
-    CompletionOptions, CorrectionOptions, EngineError, KurmanciEngine, PackLoadError,
-    PredictionOptions, SuggestOptions, SuggestionKind,
+    probe_pack_header, CompletionOptions, CorrectionOptions, EngineError, KurmanciEngine,
+    PackLoadError, PredictionOptions, SuggestOptions, SuggestionKind, ENGINE_VERSION,
+    LANGUAGE_MODEL_SCHEMA_VERSION, PACK_SCHEMA_VERSION, SUPPORTED_LANGUAGE_TAG,
 };
 use std::cell::RefCell;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 pub const KMR_ABI_VERSION_MAJOR: u32 = 1;
-pub const KMR_ABI_VERSION_MINOR: u32 = 0;
+/// ABI 1.1 adds, without changing any existing symbol, struct or status code:
+/// `kmr_engine_version`, `kmr_supported_pack_schema_version`,
+/// `kmr_language_model_schema_version`, `kmr_supported_language_tag`, `kmr_status_name`,
+/// `kmr_probe_pack_bytes` and `kmr_pack_probe`.
+pub const KMR_ABI_VERSION_MINOR: u32 = 1;
+
+/// Size of the NUL-terminated language tag buffer in `kmr_pack_probe`.
+pub const KMR_LANGUAGE_TAG_CAPACITY: usize = 32;
 
 pub type kmr_status = u32;
 
@@ -156,6 +165,22 @@ pub struct kmr_pack_info {
     pub entry_count: usize,
 }
 
+/// Header fields of a pack read without decoding it (see `kmr_probe_pack_bytes`).
+#[repr(C)]
+pub struct kmr_pack_probe {
+    /// Pack schema version declared by the bytes (may be unsupported).
+    pub pack_schema_version: u32,
+    pub entry_count: u32,
+    pub payload_len: u64,
+    /// True when this engine loads `pack_schema_version`.
+    pub schema_supported: bool,
+    /// True when this engine serves `language_tag`.
+    pub language_supported: bool,
+    /// NUL-terminated UTF-8 language tag declared by the bytes, truncated to the longest
+    /// prefix that fits and ends on a character boundary (always valid UTF-8).
+    pub language_tag: [c_char; KMR_LANGUAGE_TAG_CAPACITY],
+}
+
 #[repr(C)]
 pub struct kmr_suggestion_item {
     pub text: *const c_char,
@@ -201,6 +226,116 @@ pub extern "C" fn kmr_abi_version_major() -> u32 {
 #[no_mangle]
 pub extern "C" fn kmr_abi_version_minor() -> u32 {
     KMR_ABI_VERSION_MINOR
+}
+
+fn static_c_string(cell: &'static OnceLock<CString>, value: &str) -> *const c_char {
+    cell.get_or_init(|| CString::new(value).unwrap_or_else(|_| CString::new("invalid").unwrap()))
+        .as_ptr()
+}
+
+/// Engine crate version as a static NUL-terminated string (never NULL, never freed).
+#[no_mangle]
+pub extern "C" fn kmr_engine_version() -> *const c_char {
+    static CELL: OnceLock<CString> = OnceLock::new();
+    static_c_string(&CELL, ENGINE_VERSION)
+}
+
+/// The current (native) pack schema version of this library, i.e. the schema its packs are
+/// written in. A future library may load more than one schema; whether an arbitrary pack's
+/// schema is accepted is answered authoritatively at runtime by
+/// `kmr_probe_pack_bytes(...).schema_supported`, not by comparing against this value.
+#[no_mangle]
+pub extern "C" fn kmr_supported_pack_schema_version() -> u32 {
+    PACK_SCHEMA_VERSION
+}
+
+/// Language-model statistics schema carried by the supported pack schema.
+#[no_mangle]
+pub extern "C" fn kmr_language_model_schema_version() -> u32 {
+    LANGUAGE_MODEL_SCHEMA_VERSION
+}
+
+/// The language tag this library serves, as a static NUL-terminated string.
+#[no_mangle]
+pub extern "C" fn kmr_supported_language_tag() -> *const c_char {
+    static CELL: OnceLock<CString> = OnceLock::new();
+    static_c_string(&CELL, SUPPORTED_LANGUAGE_TAG)
+}
+
+/// Stable symbolic name of a status code (for logs and diagnostics), static string.
+#[no_mangle]
+pub extern "C" fn kmr_status_name(status: kmr_status) -> *const c_char {
+    let name: &'static [u8] = match status {
+        KMR_OK => b"KMR_OK\0",
+        KMR_ERROR_INVALID_ARGUMENT => b"KMR_ERROR_INVALID_ARGUMENT\0",
+        KMR_ERROR_IO => b"KMR_ERROR_IO\0",
+        KMR_ERROR_INVALID_PACK => b"KMR_ERROR_INVALID_PACK\0",
+        KMR_ERROR_UNSUPPORTED_PACK => b"KMR_ERROR_UNSUPPORTED_PACK\0",
+        KMR_ERROR_INCOMPATIBLE_LANGUAGE => b"KMR_ERROR_INCOMPATIBLE_LANGUAGE\0",
+        KMR_ERROR_CHECKSUM => b"KMR_ERROR_CHECKSUM\0",
+        KMR_ERROR_INTERNAL => b"KMR_ERROR_INTERNAL\0",
+        _ => b"KMR_STATUS_UNKNOWN\0",
+    };
+    name.as_ptr() as *const c_char
+}
+
+/// Reads the pack header of `data` without decoding it. On success fills `*out_probe`
+/// with the declared schema version, language tag, entry count and payload length and
+/// whether this library supports the schema and the language; an unsupported schema or
+/// language is reported through those flags, not as an error. Fails (with the same status
+/// a load would give) only when the bytes are not a pack at all or are shorter than the
+/// header.
+#[no_mangle]
+pub unsafe extern "C" fn kmr_probe_pack_bytes(
+    data: *const u8,
+    length: usize,
+    out_probe: *mut kmr_pack_probe,
+) -> kmr_status {
+    if !out_probe.is_null() {
+        std::ptr::write_bytes(out_probe, 0, 1);
+    }
+    ffi_guard(|| {
+        if out_probe.is_null() {
+            return Err(FfiError::InvalidArgument(
+                "Null pointer passed for out_probe".to_string(),
+            ));
+        }
+        if data.is_null() {
+            return Err(FfiError::InvalidArgument(
+                "Null data pointer passed".to_string(),
+            ));
+        }
+        let bytes = std::slice::from_raw_parts(data, length);
+        let header =
+            probe_pack_header(bytes).map_err(|e| FfiError::Engine(EngineError::PackLoad(e)))?;
+        // Longest prefix that fits with its NUL terminator and ends on a char boundary, so
+        // the buffer is always valid UTF-8 (a multibyte character is dropped whole, never
+        // split, and nothing is substituted).
+        let mut tag = [0 as c_char; KMR_LANGUAGE_TAG_CAPACITY];
+        let mut end = header.language_tag.len().min(KMR_LANGUAGE_TAG_CAPACITY - 1);
+        while !header.language_tag.is_char_boundary(end) {
+            end -= 1;
+        }
+        for (dst, src) in tag
+            .iter_mut()
+            .zip(header.language_tag.as_bytes()[..end].iter())
+        {
+            *dst = *src as c_char;
+        }
+        *out_probe = kmr_pack_probe {
+            pack_schema_version: header.pack_schema_version,
+            entry_count: header.entry_count,
+            payload_len: header.payload_len,
+            schema_supported: kurmanci_engine::compat::is_pack_schema_supported(
+                header.pack_schema_version,
+            ),
+            language_supported: kurmanci_engine::compat::is_language_tag_supported(
+                &header.language_tag,
+            ),
+            language_tag: tag,
+        };
+        Ok(())
+    })
 }
 
 #[no_mangle]

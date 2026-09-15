@@ -13,7 +13,16 @@ extern "C" {
  * Kurmancî Language Engine C ABI Version
  */
 #define KMR_ABI_VERSION_MAJOR 1U
-#define KMR_ABI_VERSION_MINOR 0U
+#define KMR_ABI_VERSION_MINOR 1U
+/*
+ * Compatibility rule for consumers: require kmr_abi_version_major() == KMR_ABI_VERSION_MAJOR
+ * and kmr_abi_version_minor() >= the minor version this header was compiled against. A minor
+ * version only adds symbols, struct types and status codes; it never changes existing ones.
+ *
+ * ABI 1.1 added: kmr_engine_version, kmr_supported_pack_schema_version,
+ * kmr_language_model_schema_version, kmr_supported_language_tag, kmr_status_name,
+ * kmr_probe_pack_bytes and kmr_pack_probe.
+ */
 
 /*
  * Status codes returned by all fallible kmr_* API functions.
@@ -21,13 +30,18 @@ extern "C" {
 typedef uint32_t kmr_status;
 
 #define KMR_OK                          0U
-#define KMR_ERROR_INVALID_ARGUMENT      1U
-#define KMR_ERROR_IO                    2U
-#define KMR_ERROR_INVALID_PACK          3U
-#define KMR_ERROR_UNSUPPORTED_PACK      4U
-#define KMR_ERROR_INCOMPATIBLE_LANGUAGE 5U
-#define KMR_ERROR_CHECKSUM              6U
-#define KMR_ERROR_INTERNAL              7U
+#define KMR_ERROR_INVALID_ARGUMENT      1U  /* NULL pointer, invalid UTF-8, out-of-range index */
+#define KMR_ERROR_IO                    2U  /* pack file cannot be read */
+#define KMR_ERROR_INVALID_PACK          3U  /* not a pack, truncated, or a structural rule violated */
+#define KMR_ERROR_UNSUPPORTED_PACK      4U  /* pack schema version not supported (older or newer) */
+#define KMR_ERROR_INCOMPATIBLE_LANGUAGE 5U  /* pack is for another language tag */
+#define KMR_ERROR_CHECKSUM              6U  /* payload checksum mismatch */
+#define KMR_ERROR_INTERNAL              7U  /* contained panic or engine invariant failure */
+/*
+ * Every fallible function returns exactly one of these codes and never lets a Rust panic
+ * cross the boundary (a panic is reported as KMR_ERROR_INTERNAL). The mapping from load
+ * conditions to codes is documented in docs/PACK_COMPATIBILITY.md.
+ */
 
 /*
  * Suggestion candidate classification kinds.
@@ -83,6 +97,24 @@ typedef struct {
     size_t entry_count;
 } kmr_pack_info;
 
+/*
+ * Size of the NUL-terminated language tag buffer in kmr_pack_probe.
+ */
+#define KMR_LANGUAGE_TAG_CAPACITY 32U
+
+/*
+ * Header fields of a pack read without decoding it (see kmr_probe_pack_bytes).
+ */
+typedef struct {
+    uint32_t pack_schema_version;     /* declared by the bytes; may be unsupported */
+    uint32_t entry_count;
+    uint64_t payload_len;
+    bool schema_supported;            /* this library loads pack_schema_version */
+    bool language_supported;          /* this library serves language_tag */
+    char language_tag[KMR_LANGUAGE_TAG_CAPACITY]; /* NUL-terminated UTF-8; if truncated, cut on a
+                                                     character boundary, so always valid UTF-8 */
+} kmr_pack_probe;
+
 typedef struct {
     const char *text;         /* Borrowed pointer; valid until kmr_suggestion_list is destroyed */
     kmr_suggestion_kind kind;
@@ -98,6 +130,40 @@ typedef struct {
 
 uint32_t kmr_abi_version_major(void);
 uint32_t kmr_abi_version_minor(void);
+
+/*
+ * Build identity and compatibility of this library. The returned strings are static,
+ * NUL-terminated, never NULL, valid for the lifetime of the process and must not be freed.
+ * See docs/PACK_COMPATIBILITY.md for the rules these values feed.
+ *
+ * kmr_supported_pack_schema_version() is the current (native) pack schema version, the one
+ * this library's packs are written in. A future library may load more than one schema, so
+ * whether an arbitrary pack's schema is accepted must be checked at runtime with
+ * kmr_probe_pack_bytes(...).schema_supported, not by comparing against this value.
+ */
+const char *kmr_engine_version(void);
+uint32_t kmr_supported_pack_schema_version(void);
+uint32_t kmr_language_model_schema_version(void);
+const char *kmr_supported_language_tag(void);
+
+/*
+ * Stable symbolic name of a status code (e.g. "KMR_ERROR_UNSUPPORTED_PACK") for logs.
+ * Static string, never NULL; unknown codes yield "KMR_STATUS_UNKNOWN".
+ */
+const char *kmr_status_name(kmr_status status);
+
+/*
+ * Reads the header of a pack in memory without decoding it, so that a consumer can report
+ * why a pack is unusable before attempting a load. On success fills *out_probe; an
+ * unsupported schema version or language is reported through the schema_supported /
+ * language_supported flags, not as an error. Returns KMR_ERROR_INVALID_PACK when the bytes
+ * are not a pack at all or are shorter than the header. Rejects data == NULL.
+ */
+kmr_status kmr_probe_pack_bytes(
+    const uint8_t *data,
+    size_t length,
+    kmr_pack_probe *out_probe
+);
 
 /*
  * Creates an engine by loading a binary pack file from path_utf8.
