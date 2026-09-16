@@ -643,7 +643,20 @@ jobs:
 
           rm -rf "$TMP_GPG_HOME"
 
+  release-bundle-determinism:
+    name: Release Bundle Clean-Checkout Determinism
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.85.0'
 
-
+      - name: Prove Two Clean Checkouts Produce a Byte-Identical Release Bundle
+        run: scripts/release/verify-clean-checkout-determinism.sh HEAD
