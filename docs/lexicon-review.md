@@ -77,3 +77,90 @@ Input fields:
   - `approved`: Prohibits replacement fields.
   - `approved_with_metadata_change`: Requires `replacement_metadata` with normalized form derived consistently from replacement display; at least one field must differ; passes lexicon validation.
   - `rejected_from_default_pack`: Requires `review_notes` or non-empty `evidence`.
+
+---
+
+## Default-Pack Alphabet Policy
+
+Explicit human project policy (project owner, 2026-09-17), encoded mechanically in
+`data-builder/src/alphabet.rs`:
+
+> A lexical entry of the default (`reviewed`) pack must consist only of the 31 letters of the
+> Kurmancî alphabet: `a b c ç d e ê f g h i î j k l m n o p q r s ş t u û v w x y z`.
+
+Character classes, as the policy applies them to the *normalized* form (`normalize_text`:
+control characters removed, NFC, lower case, so `ÇAV` and a decomposed `c` + U+0327 both
+resolve to `çav`):
+
+| Class | Rule |
+|---|---|
+| Alphabetic characters | must be one of the 31 letters; `ç ê î ş û` are distinct letters, their bases are not substitutes |
+| Digits | not eligible for a default lexical entry (`2012an`, `16ê`) |
+| Other symbols | not eligible unless a separate lexical policy whitelists them (`km²`) |
+| Hyphen `-`, apostrophes `'` `’` | **not decided by this policy**: word-internal punctuation is a separate, human-reviewed tokenization question and is left open (not treated as a violation) |
+
+Where the policy applies, in order:
+
+1. **Before ordinary human review.** The Hunspell queue generator
+   (`generate-review-queues`) keeps every import entry whose normalized form violates the
+   policy out of the ordinary review pool (`hunspell-only.jsonl`, the candidate pool of the
+   vocabulary review batches) and writes it to `alphabet-policy-excluded.jsonl` instead, with
+   `rule_id = ALPHABET_POLICY_V1`, reason codes `OUT_OF_ALPHABET` plus the offending code
+   points, and `suggested_action = excluded_by_alphabet_policy`; every other queue record of
+   such an entry carries the same reason and action. The raw import is never modified and the
+   entry keeps its review identity, so an existing decision on it stays valid. The corpus
+   technical filter (`classify_technical_noise` → `out_of_alphabet`, applied after the more
+   specific reasons) does the same for Kuwiki and any other corpus: such tokens never become
+   `eligible_for_review` and never enter a review batch. Hyphen and apostrophe forms stay
+   reviewable.
+2. **At authoritative resolution, fail closed.** `pack::selection::apply_default_pack_alphabet_policy`
+   runs in the pack resolver once after every source (Hunspell queue decisions, manual seed,
+   every Kuwiki batch, any future source) has been merged, so it is source-independent. A
+   candidate that would enter the default vocabulary (any candidate of the `seed` or
+   `reviewed` pack; an approved, metadata-change or seed population in any pack) whose
+   normalized form violates the policy is a contradiction between an authoritative decision
+   and the production policy. Resolution fails naming the form, its source and its decision
+   (`production lexical eligibility violation`); the candidate is never silently removed,
+   reinterpreted or converted, and `build-pack`, `verify-production-state`, `rebuild-production`
+   and the release bundle all refuse until the decision artifact is corrected explicitly.
+3. **Seed lexicon.** A seed entry outside the alphabet fails `validate_entry` and resolution.
+
+Where it does not apply, deliberately:
+
+- **Source records** (Hunspell import, Kuwiki candidate batches) are not modified; the
+  evidence for excluded and rejected forms remains available as source data.
+- **The experimental-full pack** is an evidence reservoir for undecided source records and
+  experimental-only decisions and is not gated by this policy; a source form outside the
+  alphabet is not an error. Existing source-decision rules still apply (a Kuwiki
+  `rejected_from_default_pack` record is excluded there too).
+- Nothing this policy or its audit lists is a keyboard requirement. The keyboard contract is the
+  31-letter alphabet and its casing only.
+
+How the existing data was corrected (2026-09-17): the 13 Kuwiki candidates that had been
+approved although their normalized form violates the policy (`20an`, `2012an`, `2015an`,
+`comté`, `côte`, `hérault`, `héraultê`, `isère`, `km²`, `più`, `saône`, `sèvres`,
+`württemberg`) were set to `rejected_from_default_pack` in the decision artifacts,
+transparently and mechanically: each record's note states the policy basis, the offending
+characters and the previous decision (status, reviewer, date); target ids and evidence are
+unchanged; the per-batch `manifest.json`, `artifacts.sha256`, README counts and the pinned
+constants in `kuwiki_decisions.rs` were updated to the new state; git history records the
+previous state. No other decision was touched and no linguistic metadata was invented.
+Because a Kuwiki `rejected_from_default_pack` record is also excluded from
+experimental-full, the language model was regenerated by `rebuild-production`. The Hunspell
+review queues were regenerated with the pre-review exclusion (95 import entries moved from
+the ordinary pool to `alphabet-policy-excluded.jsonl`; no Hunspell decision targets one).
+
+Tests (`tests/alphabet_policy_test.rs`, `tests/alphabet_policy_review_test.rs`,
+`tests/vocabulary_evidence_test.rs`) prove the rule, the two filters, the fail-closed
+resolution for a Kuwiki-, Hunspell- or future-source approval, the legitimacy of rejected and
+reservoir evidence, and that the repository resolves with zero contradictions.
+
+### Character audit (diagnostic, generated)
+
+`data-builder audit-alphabet [--json]` writes `data/reports/alphabet-audit/report.json` and
+`report.md` (an ignored, generated path). It lists every authoritative decision that admits
+an out-of-alphabet form as default vocabulary (must be empty; the resolver refuses while it is
+not), the Hunspell review pool and policy-excluded queue counts, every Kuwiki batch's
+out-of-alphabet candidates with the decision each carries, and the built packs. It decides
+nothing, promotes nothing and writes nothing else; `tests/alphabet_policy_test.rs` proves the
+data and build trees are byte-identical before and after a run.

@@ -462,6 +462,29 @@ pub fn verify_production_state<P: AsRef<Path>>(root: P) -> Result<ProductionStat
                             ));
                         }
                     }
+                    // The n-gram pruning configuration is a committed build input: a model
+                    // built with another configuration is stale even when the corpus is not.
+                    // Fail closed: a missing or unreadable configuration cannot be verified.
+                    let ngram_config = root.join("data-builder/config/ngrams.toml");
+                    if result.is_ok() {
+                        match sha256_file(&ngram_config) {
+                            Ok(config_sha) if model.manifest.ngram_config_sha256 == config_sha => {}
+                            Ok(config_sha) => {
+                                result = Err(format!(
+                                    "model was built with data-builder/config/ngrams.toml {} but the current configuration is {}; regenerate with `rebuild-production`",
+                                    abbrev(&model.manifest.ngram_config_sha256),
+                                    abbrev(&config_sha)
+                                ));
+                            }
+                            Err(e) => {
+                                result = Err(format!(
+                                    "cannot verify the model's n-gram configuration: data-builder/config/ngrams.toml is missing or unreadable ({}); the model records {}",
+                                    e,
+                                    abbrev(&model.manifest.ngram_config_sha256)
+                                ));
+                            }
+                        }
+                    }
                     // The local corpus pipeline is an untracked cache. It is compared with the
                     // model's recorded input only when it actually contains the model's corpus;
                     // an import that skipped the corpus (CI, or a checkout without the dump) is

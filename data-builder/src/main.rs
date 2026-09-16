@@ -105,6 +105,12 @@ enum Commands {
     },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
+    /// Generated, diagnostic-only alphabet audit: lists every lexical form outside the 31-letter Kurmancî alphabet with its provenance (reviewed-pack policy exclusions with their human decision, Hunspell import, Kuwiki batches, experimental-full). Writes data/reports/alphabet-audit/ only; decides and modifies nothing
+    AuditAlphabet {
+        /// Print the JSON report to stdout as well
+        #[arg(long)]
+        json: bool,
+    },
     /// Read-only, fail-closed verification of the whole production state: registries, policy, review artifacts and identities, trust subsets, committed language model, in-memory pack reproducibility, built manifests. Changes nothing.
     VerifyProductionState {
         /// Output as JSON
@@ -687,6 +693,36 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error inspecting '{}': {}", word, e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::AuditAlphabet { json } => {
+            match data_builder_lib::review::alphabet_audit::write_alphabet_audit(".") {
+                Ok(report) => {
+                    if json {
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    } else {
+                        eprintln!(
+                            "Alphabet audit written to {}/ (invalid approvals: {}, hunspell review-pool outside: {}, hunspell policy-excluded: {}, pack resolution errors: {})",
+                            data_builder_lib::review::alphabet_audit::ALPHABET_AUDIT_DIR,
+                            report.invalid_approvals.len(),
+                            report
+                                .hunspell_queues
+                                .as_ref()
+                                .map(|h| h.review_pool_outside_forms)
+                                .unwrap_or(0),
+                            report
+                                .hunspell_queues
+                                .as_ref()
+                                .map(|h| h.policy_excluded_records)
+                                .unwrap_or(0),
+                            report.pack_resolution_errors.len()
+                        );
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error running alphabet audit: {}", e);
                     std::process::exit(1);
                 }
             }

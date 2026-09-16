@@ -323,11 +323,14 @@ fn test_tokenizer_url_flow_excludes_protocol_markers() {
     fs::create_dir_all(&orig_dir).unwrap();
 
     let corpus_txt = orig_dir.join("corpus.txt");
+    // Synthetic OOV tokens use alphabet letters only: a digit-bearing token is not a
+    // review candidate under the default-pack alphabet policy (`out_of_alphabet`).
     let sample_docs = (1..=20)
         .map(|i| {
+            let suffix: String = std::iter::repeat_n('a', i).collect();
             format!(
-                "https://example.com www.ku.org wêne şablon dosye testtoken{} text.",
-                i
+                "https://example.com www.ku.org wêne şablon dosye testtoken{} héraultê{} km² 2012an text.",
+                suffix, suffix
             )
         })
         .collect::<Vec<_>>()
@@ -385,6 +388,17 @@ sha256 = "{}"
 
     // Synthetic OOV tokens MUST be in eligible review queue
     assert!(queue.iter().any(|c| c.token.starts_with("testtoken")));
+
+    // Default-pack alphabet policy: forms outside the 31 letters never reach the eligible
+    // review queue (foreign letter, superscript, digits). Hyphen/apostrophe handling is a
+    // separate policy and is not decided by the corpus filter (the tokenizer splits on
+    // hyphens before the filter sees a token).
+    assert!(!queue.iter().any(|c| c.token.starts_with("héraultê")));
+    assert!(!queue.iter().any(|c| c.token == "km²"));
+    assert!(!queue.iter().any(|c| c.token == "2012an"));
+    assert_eq!(classify_technical_noise("ser-hev"), "none");
+    assert_eq!(classify_technical_noise("héraultê"), "out_of_alphabet");
+    assert_eq!(classify_technical_noise("km²"), "out_of_alphabet");
 
     // Ordinary lexical words (wêne, şablon, dosye, kategorî, binêre, category, file, references) are NOT classified as technical noise
     assert_eq!(classify_technical_noise("wêne"), "none");

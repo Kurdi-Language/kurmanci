@@ -1,5 +1,6 @@
 //! Controlled Lexicon Review Infrastructure & Vocabulary Review Batch Generator.
 
+pub mod alphabet_audit;
 pub mod inspect;
 pub mod kuwiki_batch;
 pub mod kuwiki_decisions;

@@ -175,6 +175,7 @@ pub fn validate_review_decisions<P: AsRef<Path>>(
     }
 
     let expected_filenames: BTreeSet<&str> = [
+        "alphabet-policy-excluded.jsonl",
         "artifacts.sha256",
         "capitalization-anomalies.jsonl",
         "digit-only.jsonl",

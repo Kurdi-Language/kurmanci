@@ -18,7 +18,9 @@ use crate::pack::manifest::{
     DataLicenseEntry, LanguageModelProvenance, PackManifest, LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
 };
 use crate::pack::policy::PackPolicyConfig;
-use crate::pack::selection::{select_candidates_for_pack, SelectionCounts};
+use crate::pack::selection::{
+    apply_default_pack_alphabet_policy, select_candidates_for_pack, SelectionCounts,
+};
 use crate::review::merger::load_validated_review_snapshot;
 use crate::review::queues::{EntryQueueRecord, MetadataConflictGroupQueueRecord};
 use crate::review::schema::ReviewDecisionRecord;
@@ -259,6 +261,9 @@ pub fn resolve_authoritative_pack_payload<P: AsRef<Path>>(
 
         (raw_candidates, counts)
     };
+
+    // Fail-closed policy check over the merged candidates of every source.
+    apply_default_pack_alphabet_policy(pack_id, &raw_candidates)?;
 
     let collision_result = resolve_collisions(pack_id, raw_candidates)?;
 

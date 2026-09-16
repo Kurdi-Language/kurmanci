@@ -13,5 +13,6 @@
   "short_and_long_forms_count": 73,
   "capitalization_anomalies_count": 5,
   "multiword_entries_count": 0,
-  "hunspell_only_entries_count": 41498
+  "hunspell_only_entries_count": 41403,
+  "alphabet_policy_excluded_count": 95
 }
