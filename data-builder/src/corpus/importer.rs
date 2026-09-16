@@ -539,18 +539,18 @@ pub fn import_all_corpora<P: AsRef<Path>>(
     let mut registered_corpora = registry.corpora.clone();
     registered_corpora.sort_by(|a, b| a.corpus_id.cmp(&b.corpus_id));
 
-    println!("=== Kurmancî Atomic Canonical Corpus Importer ===");
+    eprintln!("=== Kurmancî Atomic Canonical Corpus Importer ===");
     let mut skipped_external_corpora: Vec<String> = Vec::new();
     for entry in &registered_corpora {
         if entry.is_skippable_absent(root) {
-            println!(
+            eprintln!(
                 "  Skipping external corpus '{}': derived files not acquired on this machine (run `acquire-corpus {}`)",
                 entry.corpus_id, entry.corpus_id
             );
             skipped_external_corpora.push(entry.corpus_id.clone());
             continue;
         }
-        println!("  Verifying source integrity for '{}'...", entry.corpus_id);
+        eprintln!("  Verifying source integrity for '{}'...", entry.corpus_id);
         registry.verify_corpus_files(entry, root)?;
     }
     skipped_external_corpora.sort();
@@ -580,7 +580,7 @@ pub fn import_all_corpora<P: AsRef<Path>>(
     let mut reports = Vec::new();
 
     for entry in &registered_corpora {
-        println!(
+        eprintln!(
             "  Ingesting canonical documents for '{}'...",
             entry.corpus_id
         );
@@ -669,7 +669,7 @@ pub fn import_all_corpora<P: AsRef<Path>>(
         }
     }
 
-    println!(
+    eprintln!(
         "⚡ CANONICAL IMPORT SUCCESSFUL across {} corpora!",
         reports.len()
     );

@@ -64,6 +64,12 @@ cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin predic
 cargo run -p kurmanci-cli -- --pack data/build/packs/reviewed/lexicon.bin interactive
 ```
 
+Production state in one command (read-only; every check reported, exit status 1 if anything fails; the built packs are compared file by file with a fresh in-memory assembly) and the deliberate rebuild after new review decisions land (verifies the authoritative inputs first and refuses without changes if they fail; never touches decisions):
+```bash
+cargo run -p kurmanci-data-builder -- verify-production-state
+cargo run -p kurmanci-data-builder -- rebuild-production   # needs the Kuwiki corpus locally; add --acquire to download it
+```
+
 Repository-side inspection (what the review data records about a word; read-only, never assigns a status):
 ```bash
 cargo run -p kurmanci-data-builder -- inspect-word newroz
