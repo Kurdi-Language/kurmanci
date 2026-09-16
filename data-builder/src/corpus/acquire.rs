@@ -116,7 +116,7 @@ pub fn acquire_corpus<P: AsRef<Path>>(
     let mut artifact_downloaded = false;
     let present_ok = artifact_path.exists() && sha256_of_file(&artifact_path)? == artifact.sha256;
     if !present_ok {
-        println!(
+        eprintln!(
             "  Downloading artifact {} -> {}",
             artifact.url, artifact.path
         );
@@ -131,7 +131,7 @@ pub fn acquire_corpus<P: AsRef<Path>>(
             ));
         }
     } else {
-        println!("  Artifact already present and verified: {}", artifact.path);
+        eprintln!("  Artifact already present and verified: {}", artifact.path);
     }
 
     // 2. Derived file: reuse when present and verified, otherwise extract deterministically.
@@ -144,7 +144,7 @@ pub fn acquire_corpus<P: AsRef<Path>>(
         }
         match artifact.extractor.as_str() {
             EXTRACTOR_WIKIMEDIA_XML => {
-                println!("  Extracting {} -> {}", artifact.path, derived.path);
+                eprintln!("  Extracting {} -> {}", artifact.path, derived.path);
                 let report = extract_wikimedia_file(
                     &artifact_path,
                     &derived_path,
@@ -161,7 +161,7 @@ pub fn acquire_corpus<P: AsRef<Path>>(
             other => return Err(format!("Unsupported extractor '{}'", other)),
         }
     } else {
-        println!(
+        eprintln!(
             "  Derived file already present and verified: {}",
             derived.path
         );

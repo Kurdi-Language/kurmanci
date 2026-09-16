@@ -65,6 +65,21 @@ pub const BIGRAMS_FILE: &str = "bigrams.tsv";
 pub const TRIGRAMS_FILE: &str = "trigrams.tsv";
 pub const MANIFEST_FILE: &str = "manifest.json";
 pub const ARTIFACTS_FILE: &str = "artifacts.sha256";
+
+/// Minimum n-gram counts a language model is built with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LanguageModelBuildConfig {
+    pub bigram_min_count: u64,
+    pub trigram_min_count: u64,
+}
+
+/// The one production configuration: the `build-language-model` defaults and
+/// `rebuild-production` both use it, so the committed model is reproducible from a single
+/// definition.
+pub const PRODUCTION_LANGUAGE_MODEL_BUILD: LanguageModelBuildConfig = LanguageModelBuildConfig {
+    bigram_min_count: 2,
+    trigram_min_count: 3,
+};
 pub const BUILD_MANIFEST_FILE: &str = "build-manifest.json";
 pub const TRAIN_FREQUENCIES_FILE: &str = "train-frequencies.jsonl";
 pub const TRAIN_BIGRAMS_FILE: &str = "train-bigrams.jsonl";

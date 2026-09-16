@@ -10,12 +10,12 @@ use std::path::Path;
 use crate::compile::{compile_binary_pack_from_records, CompileStats};
 use crate::corpus::importer::LockFileGuard;
 use crate::pack::collisions::{
-    resolve_collisions, write_collision_report, CollisionResolutionResult,
+    collision_report_bytes, resolve_collisions, CollisionResolutionResult,
 };
 use crate::pack::language_model::load_language_model;
 use crate::pack::manifest::{
     calculate_file_sha256, generate_licensing_and_attribution, language_model_source_id,
-    LanguageModelProvenance, PackManifest, LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
+    DataLicenseEntry, LanguageModelProvenance, PackManifest, LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
 };
 use crate::pack::policy::PackPolicyConfig;
 use crate::pack::selection::{select_candidates_for_pack, SelectionCounts};
@@ -289,29 +289,31 @@ pub fn resolve_authoritative_pack_lexicon<P: AsRef<Path>>(
     resolve_authoritative_pack_payload(pack_id, root_dir).map(|res| res.resolved_entries)
 }
 
-/// Builds a controlled language pack for `pack_id` under `data/build/packs/<pack_id>/`.
-pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackManifest, String> {
+/// Everything a pack consists of, assembled deterministically in memory from the current
+/// repository state: the resolved payload, licensing and attribution, the joined language
+/// model and the compiled, engine-verified binary. `build_pack` writes exactly this;
+/// `verify-production-state` reproduces it without writing anything.
+pub struct AssembledPack {
+    pub payload: AuthoritativePackResolution,
+    pub licenses: Vec<DataLicenseEntry>,
+    pub attribution_text: String,
+    pub binary_bytes: Vec<u8>,
+    pub stats: CompileStats,
+    pub language_model_id: Option<String>,
+    pub language_model_manifest_sha256: Option<String>,
+    pub language_model_provenance: Option<LanguageModelProvenance>,
+}
+
+/// Assembles `pack_id` in memory (read-only; no files are written).
+pub fn assemble_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<AssembledPack, String> {
     let root = root_dir.as_ref();
-
-    let lock_path = root.join("data/pack-builds.lock");
-    let lock = LockFileGuard::acquire(&lock_path)?;
-
-    let policy_path = root.join("data/pack-policy.toml");
-    let policy = PackPolicyConfig::load_from_file(&policy_path)?;
+    let policy = PackPolicyConfig::load_from_file(root.join("data/pack-policy.toml"))?;
     let pack_def = policy.packs.get(pack_id).ok_or_else(|| {
         format!(
             "Pack ID '{}' not declared in data/pack-policy.toml",
             pack_id
         )
     })?;
-
-    println!("=== Kurmancî Controlled Pack Builder ===");
-    println!("  Pack ID:        {}", pack_id);
-    println!("  Description:    {}", pack_def.description);
-    println!("  Model Profile:  {}", pack_def.model_profile);
-    println!("  Is Default:     {}", policy.default_pack == pack_id);
-    println!("  Opt In:         {}", pack_def.opt_in);
-
     // Resolve authoritative pack payload via common pure resolver
     let payload = resolve_authoritative_pack_payload(pack_id, root)?;
 
@@ -325,16 +327,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
     let included_sources_vec: Vec<String> = included_sources_set.into_iter().collect();
     let (mut licenses, mut attribution_text) =
         generate_licensing_and_attribution(root, &included_sources_vec)?;
-
-    // Atomic Staging Layout
-    let stage_dir = root.join(format!("data/build/packs/.{}.tmp-stage", pack_id));
-    let backup_dir = root.join(format!("data/build/packs/.{}.tmp-backup", pack_id));
-    let pack_dir = root.join(format!("data/build/packs/{}", pack_id));
-
-    if stage_dir.exists() {
-        remove_dir_or_file(&stage_dir).map_err(|e| format!("Failed to clean stage dir: {}", e))?;
-    }
-    fs::create_dir_all(&stage_dir).map_err(|e| format!("Failed to create stage dir: {}", e))?;
 
     // Model data: none, or the committed language model named by the policy (fail-closed).
     let mut language_model_provenance: Option<LanguageModelProvenance> = None;
@@ -373,7 +365,7 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
             bigrams,
             trigrams,
         )?;
-        println!(
+        eprintln!(
             "  Language Model: {} (unigrams matched: {}, bigrams: {}, trigrams: {})",
             model_id, stats.frequency_entry_count, stats.bigram_count, stats.trigram_count
         );
@@ -419,12 +411,6 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         let (bytes, stats) = compile_binary_pack_from_records(&compiler_entries, false, &[], &[])?;
         (bytes, stats, None, None)
     };
-    let binary_path = stage_dir.join("lexicon.bin");
-    fs::write(&binary_path, &binary_bytes)
-        .map_err(|e| format!("Failed to write binary pack to {:?}: {}", binary_path, e))?;
-    let binary_sha256 = format!("{:x}", Sha256::digest(&binary_bytes));
-    let binary_size_bytes = binary_bytes.len() as u64;
-
     let mut engine = kurmanci_engine::Engine::new();
     engine.load_binary_pack(&binary_bytes).map_err(|e| {
         format!(
@@ -433,15 +419,65 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         )
     })?;
 
-    let collision_report_path = stage_dir.join("collision-report.jsonl");
-    write_collision_report(
-        &collision_report_path,
-        &payload.collision_result.collision_report_records,
-    )?;
+    Ok(AssembledPack {
+        payload,
+        licenses,
+        attribution_text,
+        binary_bytes,
+        stats,
+        language_model_id,
+        language_model_manifest_sha256,
+        language_model_provenance,
+    })
+}
 
-    let attribution_path = stage_dir.join("attribution.txt");
-    fs::write(&attribution_path, attribution_text)
-        .map_err(|e| format!("Failed to write attribution.txt: {}", e))?;
+/// Every file a built pack consists of, in the order they are listed in the manifest hashes.
+pub const PACK_ARTIFACT_FILES: [&str; 5] = [
+    "lexicon.bin",
+    "manifest.json",
+    "collision-report.jsonl",
+    "attribution.txt",
+    "artifacts.sha256",
+];
+
+/// The complete artifact set of a pack, assembled in memory: exactly the bytes `build_pack`
+/// writes under `data/build/packs/<pack_id>/`.
+pub struct PackArtifacts {
+    pub manifest: PackManifest,
+    /// File name → exact bytes, one entry per `PACK_ARTIFACT_FILES` name.
+    pub files: BTreeMap<&'static str, Vec<u8>>,
+}
+
+/// Assembles the complete artifact set of `pack_id` in memory (read-only; no files are
+/// written). `build_pack` stages these bytes verbatim, so verifying against this function is
+/// verifying against the build itself.
+pub fn assemble_pack_artifacts<P: AsRef<Path>>(
+    pack_id: &str,
+    root_dir: P,
+) -> Result<PackArtifacts, String> {
+    let root = root_dir.as_ref();
+    let policy = PackPolicyConfig::load_from_file(root.join("data/pack-policy.toml"))?;
+    let pack_def = policy.packs.get(pack_id).ok_or_else(|| {
+        format!(
+            "Pack ID '{}' not declared in data/pack-policy.toml",
+            pack_id
+        )
+    })?;
+    let AssembledPack {
+        payload,
+        licenses,
+        attribution_text,
+        binary_bytes,
+        stats,
+        language_model_id,
+        language_model_manifest_sha256,
+        language_model_provenance,
+    } = assemble_pack(pack_id, root)?;
+
+    let binary_sha256 = format!("{:x}", Sha256::digest(&binary_bytes));
+    let binary_size_bytes = binary_bytes.len() as u64;
+    let collision_report =
+        collision_report_bytes(&payload.collision_result.collision_report_records)?;
 
     let manifest = PackManifest {
         schema_version: LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION.to_string(),
@@ -478,39 +514,83 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         review_queue_manifest_sha256: payload.queue_manifest_sha256,
         controlled_review_report_manifest_sha256: payload.review_report_manifest_sha256,
         source_provenance: payload.source_provenance,
-        binary_sha256: binary_sha256.clone(),
+        binary_sha256,
         binary_size_bytes,
         data_licenses: licenses,
         attribution_files: vec!["attribution.txt".to_string()],
     };
+    let manifest_bytes = serde_json::to_string_pretty(&manifest)
+        .map_err(|e| e.to_string())?
+        .into_bytes();
 
-    let manifest_path = stage_dir.join("manifest.json");
-    fs::write(
-        &manifest_path,
-        serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| format!("Failed to write manifest.json: {}", e))?;
+    let mut files: BTreeMap<&'static str, Vec<u8>> = BTreeMap::new();
+    files.insert("lexicon.bin", binary_bytes);
+    files.insert("manifest.json", manifest_bytes);
+    files.insert("collision-report.jsonl", collision_report);
+    files.insert("attribution.txt", attribution_text.into_bytes());
+    let mut hash_lines: Vec<String> = files
+        .iter()
+        .map(|(name, bytes)| {
+            format!(
+                "{:x} data/build/packs/{}/{}",
+                Sha256::digest(bytes),
+                pack_id,
+                name
+            )
+        })
+        .collect();
+    hash_lines.sort();
+    files.insert(
+        "artifacts.sha256",
+        (hash_lines.join("\n") + "\n").into_bytes(),
+    );
+    debug_assert!(PACK_ARTIFACT_FILES.iter().all(|n| files.contains_key(n)));
 
-    let artifact_files = [
-        "lexicon.bin",
-        "manifest.json",
-        "collision-report.jsonl",
-        "attribution.txt",
-    ];
+    Ok(PackArtifacts { manifest, files })
+}
 
-    let mut manifest_entries = Vec::new();
-    for name in &artifact_files {
-        let fpath = stage_dir.join(name);
-        let content =
-            fs::read(&fpath).map_err(|e| format!("Read artifact {:?} failed: {}", fpath, e))?;
-        let hash = format!("{:x}", Sha256::digest(&content));
-        let rel_path = format!("data/build/packs/{}/{}", pack_id, name);
-        manifest_entries.push(format!("{} {}", hash, rel_path));
+/// Builds a controlled language pack for `pack_id` under `data/build/packs/<pack_id>/`.
+pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackManifest, String> {
+    let root = root_dir.as_ref();
+
+    let lock_path = root.join("data/pack-builds.lock");
+    let lock = LockFileGuard::acquire(&lock_path)?;
+
+    let policy_path = root.join("data/pack-policy.toml");
+    let policy = PackPolicyConfig::load_from_file(&policy_path)?;
+    let pack_def = policy.packs.get(pack_id).ok_or_else(|| {
+        format!(
+            "Pack ID '{}' not declared in data/pack-policy.toml",
+            pack_id
+        )
+    })?;
+
+    eprintln!("=== Kurmancî Controlled Pack Builder ===");
+    eprintln!("  Pack ID:        {}", pack_id);
+    eprintln!("  Description:    {}", pack_def.description);
+    eprintln!("  Model Profile:  {}", pack_def.model_profile);
+    eprintln!("  Is Default:     {}", policy.default_pack == pack_id);
+    eprintln!("  Opt In:         {}", pack_def.opt_in);
+
+    // The complete artifact set is assembled in memory first; the build only stages and
+    // installs those exact bytes (the same path `verify-production-state` checks against).
+    let PackArtifacts { manifest, files } = assemble_pack_artifacts(pack_id, root)?;
+
+    // Atomic Staging Layout
+    let stage_dir = root.join(format!("data/build/packs/.{}.tmp-stage", pack_id));
+    let backup_dir = root.join(format!("data/build/packs/.{}.tmp-backup", pack_id));
+    let pack_dir = root.join(format!("data/build/packs/{}", pack_id));
+
+    if stage_dir.exists() {
+        remove_dir_or_file(&stage_dir).map_err(|e| format!("Failed to clean stage dir: {}", e))?;
     }
-    manifest_entries.sort();
-    let manifest_bytes = manifest_entries.join("\n") + "\n";
-    fs::write(stage_dir.join("artifacts.sha256"), manifest_bytes)
-        .map_err(|e| format!("Write artifacts.sha256 failed: {}", e))?;
+    fs::create_dir_all(&stage_dir).map_err(|e| format!("Failed to create stage dir: {}", e))?;
+
+    for (name, bytes) in &files {
+        let path = stage_dir.join(name);
+        fs::write(&path, bytes)
+            .map_err(|e| format!("Failed to write pack artifact {:?}: {}", path, e))?;
+    }
 
     if backup_dir.exists() {
         remove_dir_or_file(&backup_dir)
@@ -548,12 +628,12 @@ pub fn build_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<PackMani
         }
     }
 
-    println!(
+    eprintln!(
         "⚡ PACK BUILT SUCCESSFULLY under data/build/packs/{}/",
         pack_id
     );
-    println!("  Total Entries:  {}", manifest.final_unique_entry_count);
-    println!("  Binary SHA-256: {}", manifest.binary_sha256);
+    eprintln!("  Total Entries:  {}", manifest.final_unique_entry_count);
+    eprintln!("  Binary SHA-256: {}", manifest.binary_sha256);
 
     lock.release()?;
     Ok(manifest)

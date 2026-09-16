@@ -183,17 +183,26 @@ pub fn resolve_collisions(
 }
 
 /// Writes `collision-report.jsonl` to destination path.
+/// Serializes the collision report exactly as `collision-report.jsonl` is written
+/// (one JSON record per line, in order).
+pub fn collision_report_bytes(records: &[CollisionReportRecord]) -> Result<Vec<u8>, String> {
+    let mut out = Vec::new();
+    for rec in records {
+        serde_json::to_writer(&mut out, rec).map_err(|e| e.to_string())?;
+        out.push(b'\n');
+    }
+    Ok(out)
+}
+
 pub fn write_collision_report<P: AsRef<Path>>(
     path: P,
     records: &[CollisionReportRecord],
 ) -> Result<(), String> {
     let p = path.as_ref();
+    let bytes = collision_report_bytes(records)?;
     let mut file =
         File::create(p).map_err(|e| format!("Failed to create collision report {:?}: {}", p, e))?;
-    for rec in records {
-        let json = serde_json::to_string(rec).map_err(|e| e.to_string())?;
-        writeln!(file, "{}", json)
-            .map_err(|e| format!("Failed to write to collision report {:?}: {}", p, e))?;
-    }
+    file.write_all(&bytes)
+        .map_err(|e| format!("Failed to write to collision report {:?}: {}", p, e))?;
     Ok(())
 }

@@ -369,6 +369,6 @@ pub fn partition_corpora<P: AsRef<Path>>(root_dir: P) -> Result<PartitionSummary
         }
     }
 
-    println!("⚡ CORPUS PARTITIONING COMPLETED! Outputs at data/build/corpus-partitions/");
+    eprintln!("⚡ CORPUS PARTITIONING COMPLETED! Outputs at data/build/corpus-partitions/");
     Ok(summary)
 }

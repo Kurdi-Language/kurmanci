@@ -105,6 +105,21 @@ enum Commands {
     },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
+    /// Read-only, fail-closed verification of the whole production state: registries, policy, review artifacts and identities, trust subsets, committed language model, in-memory pack reproducibility, built manifests. Changes nothing.
+    VerifyProductionState {
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// Deliberate rebuild from committed human decisions: corpus statistics if needed, the committed language model, all packs, then validation. Never assigns or promotes a decision. Fails without changes when the Kuwiki corpus is absent unless --acquire is given.
+    RebuildProduction {
+        /// Download and verify the external Kuwiki corpus if it is not present locally
+        #[arg(long)]
+        acquire: bool,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Read-only: shows what the repository records about one word (pack membership, sources, human review history per source). Never assigns or changes a decision.
     InspectWord {
         /// Word to inspect (normalized to its canonical review identity)
@@ -160,9 +175,9 @@ enum Commands {
     BuildLanguageModel {
         #[arg(short, long, default_value = "kuwiki")]
         corpus_id: String,
-        #[arg(long, default_value_t = 2)]
+        #[arg(long, default_value_t = data_builder_lib::pack::PRODUCTION_LANGUAGE_MODEL_BUILD.bigram_min_count)]
         bigram_min_count: u64,
-        #[arg(long, default_value_t = 3)]
+        #[arg(long, default_value_t = data_builder_lib::pack::PRODUCTION_LANGUAGE_MODEL_BUILD.trigram_min_count)]
         trigram_min_count: u64,
     },
     /// Analyzes document-level anomalies, script distribution, technical noise, and lexicon matching for a corpus
@@ -643,6 +658,45 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error inspecting '{}': {}", word, e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::VerifyProductionState { json } => {
+            match data_builder_lib::production::verify_production_state(".") {
+                Ok(report) => {
+                    if json {
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::production::render_state_text(&report)
+                        );
+                    }
+                    if !report.ok {
+                        std::process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error verifying production state: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::RebuildProduction { acquire, json } => {
+            match data_builder_lib::production::rebuild_production(".", acquire) {
+                Ok(report) => {
+                    if json {
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::production::render_rebuild_text(&report)
+                        );
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error rebuilding production state: {}", e);
                     std::process::exit(1);
                 }
             }
