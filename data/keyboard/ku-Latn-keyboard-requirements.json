@@ -1,0 +1,87 @@
+{
+  "schema_version": "ku-latn-keyboard-requirements-v1",
+  "locale_tag": "ku-Latn",
+  "orthography_contract": "data/keyboard/ku-Latn-orthography.json",
+  "review_status": "draft-pending-human-review",
+  "reviewed_by": null,
+  "review_date": null,
+  "review_notes": [
+    "Vendor-neutral capability requirements for a platform keyboard serving the ku-Latn target. They state what must be typeable, not how a vendor arranges its keys."
+  ],
+  "requirements": [
+    {
+      "id": "letters-typeable",
+      "statement": "All 31 letters of the alphabet, in lower and upper case, must be directly or conveniently typeable, including ç ê î ş û.",
+      "letters": [
+        "a", "b", "c", "ç", "d", "e", "ê", "f", "g", "h", "i", "î", "j", "k", "l", "m",
+        "n", "o", "p", "q", "r", "s", "ş", "t", "u", "û", "v", "w", "x", "y", "z"
+      ]
+    },
+    {
+      "id": "access-mechanism-vendor-choice",
+      "statement": "How ç ê î ş û are reached (dedicated keys, long press, an alternate layer, or the vendor's established convention for its other Latin-script keyboards) is the vendor's implementation choice. No access mechanism is prescribed.",
+      "access_mechanism": "vendor-choice"
+    },
+    {
+      "id": "distinct-letter-identity",
+      "statement": "ç ê î ş û are distinct Kurmancî alphabet letters, not interchangeable representations of c e i s u. Text storage, normalization, comparison, casing and lexical identity must preserve the distinction. Spell correction and diacritic restoration may propose or apply a base-letter ↔ distinct-Kurmancî-letter change when the correction engine determines that it is the intended spelling; such a change is a linguistic correction, never Unicode normalization or character equivalence."
+    },
+    {
+      "id": "casing",
+      "statement": "Casing follows the orthography contract: Unicode default casing, 'i' ↔ 'I' only; no other locale's dotted or dotless i behaviour may be applied to ku-Latn text."
+    },
+    {
+      "id": "encoding",
+      "statement": "The keyboard may emit precomposed letters or base letter plus combining mark; both normalize to the same word. Precomposed NFC output is preferred."
+    },
+    {
+      "id": "locale-tag",
+      "statement": "The keyboard, the language pack and the engine identify the language as ku-Latn (BCP 47: language ku, script Latn)."
+    },
+    {
+      "id": "non-lexical-layers",
+      "statement": "Digits, punctuation and symbol layers are not Kurmancî-specific and follow the host's conventions; nothing outside the 31 letters is a lexical requirement of this keyboard."
+    }
+  ],
+  "layout_arrangement": {
+    "status": "intentionally-unspecified",
+    "statement": "The project intentionally does not prescribe a universal physical key arrangement. Shipping platform keyboards differ in both placement and access mechanism while satisfying the same Kurmancî orthographic requirements. Vendors may use their established native layout conventions provided all 31 Kurmancî letters and their casing are supported.",
+    "decision": {
+      "statement": "No universal physical layout or access mechanism will be prescribed by this project.",
+      "kind": "project decision (not a linguistic decision)",
+      "decided_by": "project owner",
+      "date": "2026-09-17",
+      "basis": "docs/evaluation/ku-latn-platform-keyboard-inspection-2026-09-17.md"
+    },
+    "observed_implementations": [
+      {
+        "vendor": "Apple",
+        "evidence_level": "preliminary: iOS 27 Simulator observation; real iPhone confirmation pending",
+        "letter_access": "dedicated-keys",
+        "note": "input mode ku_Latn; all 31 lowercase letters observed; uppercase Ç Ê Î Ş Û observed on the same keys; i shifts to I"
+      },
+      {
+        "vendor": "Google (Gboard)",
+        "evidence_level": "Android emulator with a shipping Gboard build",
+        "letter_access": "dedicated-keys",
+        "note": "Kurdish keyboard; all 31 lowercase letters observed; uppercase Ç Ê Î Ş Û observed on the same keys; arrangement differs from Apple; i shifts to I"
+      },
+      {
+        "vendor": "Samsung (Samsung Keyboard)",
+        "evidence_level": "real Galaxy S26 hardware via Samsung Remote Test Lab",
+        "letter_access": "long-press",
+        "note": "language shown as Kurdî, Kurdish (Kurmanji); all 31 lowercase letters observed; ç ê î ş û via long press; i shifts to I; shifted long-press access to Ç Ê Î Ş Û not captured; Kurmancî prediction and diacritic restoration observed"
+      }
+    ],
+    "observed_implementations_note": "Representative evidence only: these observations document interoperability and are not requirements. Nothing seen in a vendor's long-press menu is part of the Kurmancî alphabet.",
+    "engine_evidence": "data/keyboard/layout_ku.json is the engine's key-adjacency evidence used for typo-cost estimation on a QWERTY-shaped arrangement; it is not a layout authority and prescribes nothing to vendors. Its neighbourhoods do not correspond to the observed vendor layouts; evaluating adjacency and edit-cost evidence against real vendor layouts is a separate future engine task that requires correction and ranking evaluation and is never bundled with this contract.",
+    "existing_platform_keyboards": [
+      "Apple, Google/Gboard and Samsung each ship a first-party Kurdish/Kurmancî keyboard implementation. This project's language infrastructure is intended for vendor and platform integration and does not propose replacing their keyboard products."
+    ]
+  },
+  "open_questions_for_human_review": [
+    "Continue platform-specific implementation verification for interoperability evidence (real-iPhone confirmation of the Simulator observation is useful evidence); no universal physical arrangement is prescribed and none is to be chosen.",
+    "Word-internal hyphen and apostrophes: typeable as word characters, and what the host tokenizer does with them (separate tokenization policy).",
+    "Which reference orthography document should be cited by the orthography contract?"
+  ]
+}
