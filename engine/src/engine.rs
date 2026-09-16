@@ -1,5 +1,6 @@
 use crate::distance::weighted_damerau_levenshtein;
 use crate::errors::PackLoadError;
+use crate::index::{QueryIndex, MAX_STRIPPED_UNIT_DISTANCE};
 use crate::normalization::{normalize, strip_diacritics};
 use crate::ranking::{
     calculate_score, FrequencyMetadata, NextWordPrediction, RankedCandidate, RankingConfig,
@@ -51,6 +52,8 @@ pub struct Engine {
     pub(crate) typo_map: HashMap<String, String>,
     pub(crate) bigram_index: HashMap<usize, Vec<(usize, u64, u32)>>,
     pub(crate) trigram_index: TrigramIndex,
+    /// Candidate index for suggest/correct/complete (see `crate::index`); rebuilt on load.
+    pub(crate) index: QueryIndex,
 }
 
 impl Engine {
@@ -78,6 +81,7 @@ impl Engine {
             self.lexicon.push(entry);
         }
         self.trie.build();
+        self.index = QueryIndex::build(&self.lexicon);
     }
 
     /// Loads custom typo mappings into the engine.
@@ -619,9 +623,11 @@ impl Engine {
 
         // Atomically replace engine state upon 100% successful parsing
         staged_trie.build();
+        let staged_index = QueryIndex::build(&staged_lexicon);
         let loaded = staged_lexicon.len();
         self.lexicon = staged_lexicon;
         self.trie = staged_trie;
+        self.index = staged_index;
         self.max_frequency = staged_max_frequency;
         self.bigram_index = staged_bigram_index;
         self.trigram_index = staged_trigram_index;
@@ -770,7 +776,25 @@ impl Engine {
     }
 
     /// Full suggestion pipeline executing with custom ranking configuration.
+    ///
+    /// Production path: the candidate index (`crate::index`) supplies a provable superset of
+    /// the entries the full scan could accept, and every stage is the same code the
+    /// reference full scan runs (`suggest_reference_full_scan`), so results are identical.
     pub fn suggest_with_config(
+        &self,
+        query: &str,
+        limit: usize,
+        config: &RankingConfig,
+    ) -> Vec<Suggestion> {
+        self.suggest_indexed(query, limit, config)
+    }
+
+    /// Reference implementation: exact match and prefix completion from the trie (each hit
+    /// resolved by a linear search of the lexicon), then every lexicon entry through the
+    /// scoring stage. This is the semantic oracle for the indexed path and is deliberately
+    /// kept verbatim; it is not part of the public runtime API.
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn suggest_reference_full_scan(
         &self,
         query: &str,
         limit: usize,
@@ -780,14 +804,89 @@ impl Engine {
         if norm_query.is_empty() {
             return Vec::new();
         }
-
         let query_stripped = strip_diacritics(&norm_query);
         let mut candidate_ranks: HashMap<String, RankedCandidate> = HashMap::new();
 
         // 1. Exact match & Prefix completion from Trie
-        let prefix_matches = self.trie.find_by_prefix(&norm_query);
+        self.prefix_stage(
+            &norm_query,
+            &query_stripped,
+            &mut candidate_ranks,
+            |norm_word| self.lexicon.iter().find(|e| e.normalized == norm_word),
+        );
+
+        // 2. Scan Lexicon for Diacritic Restoration & Edit Distance
+        for entry in &self.lexicon {
+            score_entry(
+                entry,
+                &norm_query,
+                &query_stripped,
+                config,
+                &mut candidate_ranks,
+            );
+        }
+
+        finish_suggestions(candidate_ranks, query, &norm_query, limit, config)
+    }
+
+    /// Indexed path: identical stages, but trie hits are resolved by binary search and the
+    /// scoring stage only visits the index's candidate superset, in ascending lexicon order
+    /// (the order the reference visits them, which matters only for entries sharing a
+    /// normalized form).
+    fn suggest_indexed(
+        &self,
+        query: &str,
+        limit: usize,
+        config: &RankingConfig,
+    ) -> Vec<Suggestion> {
+        let norm_query = normalize(query);
+        if norm_query.is_empty() {
+            return Vec::new();
+        }
+        let query_stripped = strip_diacritics(&norm_query);
+        let mut candidate_ranks: HashMap<String, RankedCandidate> = HashMap::new();
+
+        self.prefix_stage(
+            &norm_query,
+            &query_stripped,
+            &mut candidate_ranks,
+            |norm_word| {
+                self.index
+                    .find_normalized(&self.lexicon, norm_word)
+                    .map(|i| &self.lexicon[i])
+            },
+        );
+
+        for idx in self
+            .index
+            .candidates(&query_stripped, MAX_STRIPPED_UNIT_DISTANCE)
+        {
+            score_entry(
+                &self.lexicon[idx as usize],
+                &norm_query,
+                &query_stripped,
+                config,
+                &mut candidate_ranks,
+            );
+        }
+
+        finish_suggestions(candidate_ranks, query, &norm_query, limit, config)
+    }
+
+    /// Stage 1 of the pipeline: every trie word under the normalized query becomes an Exact
+    /// or Completion candidate. `lookup` resolves a normalized trie word to its lexicon entry.
+    fn prefix_stage<'a, F>(
+        &'a self,
+        norm_query: &str,
+        query_stripped: &str,
+        candidate_ranks: &mut HashMap<String, RankedCandidate>,
+        lookup: F,
+    ) where
+        F: Fn(&str) -> Option<&'a LexiconEntry>,
+    {
+        let prefix_matches = self.trie.find_by_prefix(norm_query);
         for (norm_word, _freq) in prefix_matches {
-            let lex_entry = self.lexicon.iter().find(|e| e.normalized == norm_word);
+            let lex_entry = lookup(&norm_word);
             let display_word = lex_entry
                 .map(|e| e.word.clone())
                 .unwrap_or_else(|| norm_word.clone());
@@ -821,109 +920,166 @@ impl Engine {
 
             candidate_ranks.insert(norm_word, candidate);
         }
+    }
 
-        // 2. Scan Lexicon for Diacritic Restoration & Edit Distance
-        for entry in &self.lexicon {
+    /// Lexicon indices the scoring stage accepts for `query` (diacritic restoration, or length
+    /// within 2 and weighted distance within 2.0), by full scan. Test support for the index
+    /// superset invariant.
+    #[cfg(test)]
+    pub(crate) fn reference_accepted_entries(&self, query: &str) -> Vec<u32> {
+        let norm_query = normalize(query);
+        if norm_query.is_empty() {
+            return Vec::new();
+        }
+        let query_stripped = strip_diacritics(&norm_query);
+        let mut out = Vec::new();
+        for (i, entry) in self.lexicon.iter().enumerate() {
             let candidate_norm = &entry.normalized;
             let candidate_stripped = strip_diacritics(candidate_norm);
-            let is_diac_match = candidate_stripped == query_stripped;
-
-            // Diacritic restoration match
-            if is_diac_match && candidate_norm != &norm_query {
-                let candidate = RankedCandidate {
-                    word: entry.word.clone(),
-                    edit_cost: 0, // diacritic restoration is 0 edit distance penalty
-                    is_diacritic_match: true,
-                    prefix_quality: 0,
-                    frequency: entry.frequency_metadata.clone(),
-                    kind: SuggestionKind::DiacriticCorrection,
-                };
-                candidate_ranks.insert(candidate_norm.clone(), candidate);
+            if candidate_stripped == query_stripped && candidate_norm != &norm_query {
+                out.push(i as u32);
                 continue;
             }
-
-            // Weighted edit distance fallback
             let len_diff = (candidate_norm.chars().count() as isize
                 - norm_query.chars().count() as isize)
                 .abs();
-            if len_diff <= 2 {
-                let dist = weighted_damerau_levenshtein(&norm_query, candidate_norm);
-                if dist <= 2.0 {
-                    let is_exact = candidate_norm == &norm_query;
-                    let edit_cost = if is_exact {
-                        0
-                    } else {
-                        (dist * 10.0).round() as u32
-                    };
-                    let kind = if is_exact {
-                        SuggestionKind::Exact
-                    } else if candidate_norm.starts_with(&norm_query) {
-                        SuggestionKind::Completion
-                    } else {
-                        SuggestionKind::Correction
-                    };
-                    let candidate = RankedCandidate {
-                        word: entry.word.clone(),
-                        edit_cost,
-                        is_diacritic_match: is_diac_match,
-                        prefix_quality: if candidate_norm.starts_with(&norm_query) {
-                            norm_query.chars().count() as u32
-                        } else {
-                            0
-                        },
-                        frequency: entry.frequency_metadata.clone(),
-                        kind,
-                    };
-
-                    candidate_ranks
-                        .entry(candidate_norm.clone())
-                        .and_modify(|existing| {
-                            if candidate.cmp_with_config(existing, config)
-                                == std::cmp::Ordering::Less
-                            {
-                                *existing = candidate.clone();
-                            }
-                        })
-                        .or_insert(candidate);
-                }
+            if len_diff <= 2 && weighted_damerau_levenshtein(&norm_query, candidate_norm) <= 2.0 {
+                out.push(i as u32);
             }
         }
-
-        let mut ranked_list: Vec<RankedCandidate> = candidate_ranks.into_values().collect();
-        ranked_list.sort_by(|a, b| a.cmp_with_config(b, config));
-        ranked_list.truncate(limit);
-
-        // Convert RankedCandidate to public Suggestion with query-case-preserving display text
-        let query_is_lowercase = is_all_lowercase(query);
-        ranked_list
-            .into_iter()
-            .map(|rc| {
-                let display_text = if query_is_lowercase && is_title_case_like(&rc.word) {
-                    rc.word.to_lowercase()
-                } else {
-                    rc.word.clone()
-                };
-
-                let score = calculate_score(
-                    &norm_query,
-                    &display_text,
-                    rc.frequency.token_count,
-                    1000,
-                    rc.edit_cost as f64 / 10.0,
-                    rc.kind.clone(),
-                );
-                Suggestion {
-                    text: display_text,
-                    score,
-                    kind: rc.kind.clone(),
-                    edit_cost: rc.edit_cost,
-                    zipf_milli: rc.frequency.zipf_milli,
-                    document_count: rc.frequency.document_count,
-                    ranking_reason: rc.ranking_reason(config),
-                }
-            })
-            .collect()
+        out
     }
+
+    /// The index's candidate superset for `query`. Test support.
+    #[cfg(test)]
+    pub(crate) fn indexed_candidate_entries(&self, query: &str) -> Vec<u32> {
+        let norm_query = normalize(query);
+        if norm_query.is_empty() {
+            return Vec::new();
+        }
+        self.index
+            .candidates(&strip_diacritics(&norm_query), MAX_STRIPPED_UNIT_DISTANCE)
+    }
+}
+
+/// Stage 2 of the pipeline for one lexicon entry: diacritic restoration, then the weighted
+/// edit-distance fallback. This is the only copy of the scoring semantics; the reference
+/// applies it to every entry, the indexed path to the index's candidate superset.
+fn score_entry(
+    entry: &LexiconEntry,
+    norm_query: &str,
+    query_stripped: &str,
+    config: &RankingConfig,
+    candidate_ranks: &mut HashMap<String, RankedCandidate>,
+) {
+    let candidate_norm = &entry.normalized;
+    let candidate_stripped = strip_diacritics(candidate_norm);
+    let is_diac_match = candidate_stripped == query_stripped;
+
+    // Diacritic restoration match
+    if is_diac_match && candidate_norm != norm_query {
+        let candidate = RankedCandidate {
+            word: entry.word.clone(),
+            edit_cost: 0, // diacritic restoration is 0 edit distance penalty
+            is_diacritic_match: true,
+            prefix_quality: 0,
+            frequency: entry.frequency_metadata.clone(),
+            kind: SuggestionKind::DiacriticCorrection,
+        };
+        candidate_ranks.insert(candidate_norm.clone(), candidate);
+        return;
+    }
+
+    // Weighted edit distance fallback
+    let len_diff =
+        (candidate_norm.chars().count() as isize - norm_query.chars().count() as isize).abs();
+    if len_diff <= 2 {
+        let dist = weighted_damerau_levenshtein(norm_query, candidate_norm);
+        if dist <= 2.0 {
+            let is_exact = candidate_norm == norm_query;
+            let edit_cost = if is_exact {
+                0
+            } else {
+                (dist * 10.0).round() as u32
+            };
+            let kind = if is_exact {
+                SuggestionKind::Exact
+            } else if candidate_norm.starts_with(norm_query) {
+                SuggestionKind::Completion
+            } else {
+                SuggestionKind::Correction
+            };
+            let candidate = RankedCandidate {
+                word: entry.word.clone(),
+                edit_cost,
+                is_diacritic_match: is_diac_match,
+                prefix_quality: if candidate_norm.starts_with(norm_query) {
+                    norm_query.chars().count() as u32
+                } else {
+                    0
+                },
+                frequency: entry.frequency_metadata.clone(),
+                kind,
+            };
+
+            candidate_ranks
+                .entry(candidate_norm.clone())
+                .and_modify(|existing| {
+                    if candidate.cmp_with_config(existing, config) == std::cmp::Ordering::Less {
+                        *existing = candidate.clone();
+                    }
+                })
+                .or_insert(candidate);
+        }
+    }
+}
+
+/// Stage 3 of the pipeline: rank, truncate and materialize. The ordering is
+/// `RankedCandidate::cmp_with_config`, which ends in the display word; distinct candidates
+/// always have distinct display words (they are keyed by normalized form, and the display
+/// word determines the normalized form), so the order is a total order independent of the
+/// hash map's iteration order and of how the candidates were found.
+fn finish_suggestions(
+    candidate_ranks: HashMap<String, RankedCandidate>,
+    query: &str,
+    norm_query: &str,
+    limit: usize,
+    config: &RankingConfig,
+) -> Vec<Suggestion> {
+    let mut ranked_list: Vec<RankedCandidate> = candidate_ranks.into_values().collect();
+    ranked_list.sort_by(|a, b| a.cmp_with_config(b, config));
+    ranked_list.truncate(limit);
+
+    // Convert RankedCandidate to public Suggestion with query-case-preserving display text
+    let query_is_lowercase = is_all_lowercase(query);
+    ranked_list
+        .into_iter()
+        .map(|rc| {
+            let display_text = if query_is_lowercase && is_title_case_like(&rc.word) {
+                rc.word.to_lowercase()
+            } else {
+                rc.word.clone()
+            };
+
+            let score = calculate_score(
+                norm_query,
+                &display_text,
+                rc.frequency.token_count,
+                1000,
+                rc.edit_cost as f64 / 10.0,
+                rc.kind.clone(),
+            );
+            Suggestion {
+                text: display_text,
+                score,
+                kind: rc.kind.clone(),
+                edit_cost: rc.edit_cost,
+                zipf_milli: rc.frequency.zipf_milli,
+                document_count: rc.frequency.document_count,
+                ranking_reason: rc.ranking_reason(config),
+            }
+        })
+        .collect()
 }
 
 fn is_title_case_like(s: &str) -> bool {

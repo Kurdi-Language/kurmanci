@@ -264,6 +264,9 @@ jobs:
       - name: Run Cargo Workspace Tests
         run: cargo test --workspace
 
+      - name: Verify Query Index Equivalence (release, reviewed + experimental-full vs reference full scan)
+        run: cargo test --release -p kurmanci-engine indexed_equals_reference_on_real_packs -- --ignored --nocapture
+
       - name: Run Data-Builder Compiler (First Pass)
         run: cargo run -p kurmanci-data-builder -- build
 

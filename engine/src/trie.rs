@@ -212,6 +212,80 @@ impl Trie {
         }
     }
 
+    /// Payloads (the value given to `insert`) of every word whose unit-cost optimal string
+    /// alignment distance from `query` (insertion, deletion, substitution and adjacent
+    /// transposition, each costing 1) is at most `max_dist`, in depth-first code point order.
+    ///
+    /// Exact: for every node a full DP row against `query` is computed from its parent's row
+    /// (and its grandparent's for the transposition), and a subtree is skipped only when the
+    /// minimum of the row exceeds `max_dist`. That pruning is sound for OSA because extending
+    /// the candidate by one character can never lower the distance to any query prefix below
+    /// the row minimum: substitution, deletion and insertion transitions add a non-negative
+    /// cost to a cell of the current or previous row, and the transposition value
+    /// `row[d-2][j-2] + 1` is at least `row[d-1][j-1]`, itself at least the previous row's
+    /// minimum. Rows are kept per depth on an explicit stack, so neither the recursion depth
+    /// nor the row storage depends on the call stack.
+    pub fn fuzzy_terminals(&self, query: &[char], max_dist: u32) -> Vec<u64> {
+        debug_assert!(self.is_built(), "trie queried before build()");
+        let mut results = Vec::new();
+        if self.labels.is_empty() {
+            return results;
+        }
+        let m = query.len();
+        let width = m + 1;
+        // rows[d * width + j]: distance between the d-character path prefix and query[..j].
+        let mut rows: Vec<u32> = (0..=m as u32).collect();
+        let mut path: Vec<char> = Vec::new();
+        if self.terminal[0] != NO_WORD && rows[m] <= max_dist {
+            results.push(self.word_frequency[self.terminal[0] as usize]);
+        }
+        let mut stack: Vec<(u32, u32)> = Vec::new();
+        let first = self.first_child[0] as usize;
+        let count = self.child_count[0] as usize;
+        for child in (first..first + count).rev() {
+            stack.push((child as u32, 1));
+        }
+        while let Some((node, depth)) = stack.pop() {
+            let node = node as usize;
+            let d = depth as usize;
+            path.truncate(d - 1);
+            let c = self.labels[node];
+            path.push(c);
+            if rows.len() < (d + 1) * width {
+                rows.resize((d + 1) * width, 0);
+            }
+            let (before, after) = rows.split_at_mut(d * width);
+            let cur = &mut after[..width];
+            let prev = &before[(d - 1) * width..];
+            cur[0] = d as u32;
+            let mut row_min = cur[0];
+            for j in 1..=m {
+                let substitution = prev[j - 1] + u32::from(c != query[j - 1]);
+                let deletion = prev[j] + 1;
+                let insertion = cur[j - 1] + 1;
+                let mut v = substitution.min(deletion).min(insertion);
+                if d >= 2 && j >= 2 && c == query[j - 2] && path[d - 2] == query[j - 1] {
+                    let prev2 = &before[(d - 2) * width..(d - 1) * width];
+                    v = v.min(prev2[j - 2] + 1);
+                }
+                cur[j] = v;
+                row_min = row_min.min(v);
+            }
+            let k = self.terminal[node];
+            if k != NO_WORD && cur[m] <= max_dist {
+                results.push(self.word_frequency[k as usize]);
+            }
+            if row_min <= max_dist {
+                let first = self.first_child[node] as usize;
+                let count = self.child_count[node] as usize;
+                for child in (first..first + count).rev() {
+                    stack.push((child as u32, depth + 1));
+                }
+            }
+        }
+        results
+    }
+
     /// Memory accounting for attribution (read-only).
     pub fn memory(&self) -> TrieMemory {
         fn vec_bytes<T>(v: &Vec<T>) -> (usize, usize) {
@@ -310,6 +384,115 @@ mod tests {
         assert_eq!(m.nodes, 5); // root, r, o, j, a
         assert_eq!(m.terminal_nodes, 2);
         assert_eq!(m.pending_allocations, 0);
+    }
+
+    /// Unit OSA distance, the reference for `fuzzy_terminals`.
+    fn osa(a: &[char], b: &[char]) -> u32 {
+        let (n, m) = (a.len(), b.len());
+        let mut dp = vec![vec![0u32; m + 1]; n + 1];
+        for (i, row) in dp.iter_mut().enumerate() {
+            row[0] = i as u32;
+        }
+        for j in 0..=m {
+            dp[0][j] = j as u32;
+        }
+        for i in 1..=n {
+            for j in 1..=m {
+                let mut v = (dp[i - 1][j - 1] + u32::from(a[i - 1] != b[j - 1]))
+                    .min(dp[i - 1][j] + 1)
+                    .min(dp[i][j - 1] + 1);
+                if i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1] {
+                    v = v.min(dp[i - 2][j - 2] + 1);
+                }
+                dp[i][j] = v;
+            }
+        }
+        dp[n][m]
+    }
+
+    #[test]
+    fn test_fuzzy_terminals_equal_brute_force_osa() {
+        let words = [
+            "",
+            "a",
+            "ab",
+            "ba",
+            "abc",
+            "acb",
+            "bac",
+            "abcd",
+            "abdc",
+            "bacd",
+            "xabc",
+            "abcx",
+            "roj",
+            "rojbas",
+            "rojbaz",
+            "rojbsa",
+            "rjobas",
+            "ojbas",
+            "rrojbas",
+            "bijî",
+            "biji",
+            "şev",
+            "sev",
+            "çav",
+            "cav",
+            "kurmanci",
+            "kurmancî",
+            "kurmanc",
+            "kurmanciy",
+        ];
+        let mut trie = Trie::new();
+        for (k, w) in words.iter().enumerate() {
+            trie.insert(w, k as u64);
+        }
+        trie.build();
+        let queries = [
+            "",
+            "a",
+            "b",
+            "ab",
+            "ba",
+            "abc",
+            "cba",
+            "abcd",
+            "rojbas",
+            "rojbaş",
+            "rojba",
+            "ojbas",
+            "rjobas",
+            "rojbsa",
+            "rojbasx",
+            "xrojbas",
+            "kurmanci",
+            "kurmancî",
+            "kurmnaci",
+            "zzzzzz",
+            "sev",
+            "çav",
+            "ç",
+            "kurmanciyê",
+            "abcdef",
+        ];
+        for max_dist in 0..=3u32 {
+            for q in queries {
+                let qc: Vec<char> = q.chars().collect();
+                let mut got = trie.fuzzy_terminals(&qc, max_dist);
+                got.sort_unstable();
+                let mut expected: Vec<u64> = words
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, w)| {
+                        let wc: Vec<char> = w.chars().collect();
+                        osa(&wc, &qc) <= max_dist
+                    })
+                    .map(|(k, _)| k as u64)
+                    .collect();
+                expected.sort_unstable();
+                assert_eq!(got, expected, "query {:?} max_dist {}", q, max_dist);
+            }
+        }
     }
 
     #[test]
