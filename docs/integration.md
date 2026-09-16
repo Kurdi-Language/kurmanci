@@ -51,6 +51,31 @@ correction) and `edit_cost`; prediction items carry `text`, `count`,
 `probability_millionths` and `source` (trigram, bigram backoff, bigram). Results are
 deterministic for a given pack and input.
 
+## Input handling
+
+The engine applies the repository's canonical normalization to every input before lookup,
+the same rule that produced the words stored in the packs and the review identities:
+Unicode control characters, U+200B (zero-width space) and U+FEFF (byte order mark) are
+removed, then the text is NFC-normalized and lower-cased. The Kurmancî letters `ç ê î ş û`
+are preserved as distinct letters. The SDKs pass strings through unchanged, so all surfaces
+answer identically. Consequences, pinned by `engine/tests/concurrency_unicode_test.rs`,
+`ffi/tests/boundary_test.rs` and the Swift and Android tests:
+
+- precomposed and decomposed forms (for example `ş` and `s` + U+0327) and any casing query
+  the same word;
+- a word decorated with a byte order mark, zero-width spaces or control characters (tabs,
+  NUL, C0/C1 controls) is the same word: applications do not need to strip them;
+- ordinary spaces and NBSP are not removed, so ` welat` and `welat` + NBSP are different
+  inputs from `welat`; tokenize on whitespace before querying;
+- empty input is known-word false and yields empty completion, correction and prediction
+  lists on every surface, including Kotlin; mixed ASCII and Kurmancî input is answered
+  deterministically;
+- malformed UTF-8 at the C boundary is rejected with `KMR_ERROR_INVALID_ARGUMENT` by every
+  function before anything is read; an embedded NUL cannot be passed through C, Swift or
+  Kotlin strings (it terminates or is rejected at those boundaries) even though a Rust
+  `&str` may contain one and has it removed by normalization; a failing call on one thread
+  never affects another thread's last error message.
+
 ## Ownership and lifetime
 
 - Every handle the library returns (`kmr_engine`, `kmr_suggestion_list`,
@@ -66,9 +91,16 @@ deterministic for a given pack and input.
 ## Threading
 
 A loaded `kmr_engine` is immutable. Any number of threads may call the query functions and
-`kmr_engine_get_info` on the same handle concurrently. Creation and destruction are the
-caller's responsibility to order: do not destroy a handle while another thread may still use
-it. Result lists are independent objects and may be used and destroyed on any thread.
+`kmr_engine_get_info` on the same handle concurrently, and every call returns exactly what
+the same call returns single-threaded (tested with 16 threads interleaving all operations on
+the Rust API and 12 threads on the C API). Creation and destruction are the caller's
+responsibility to order: destroy a handle only after every thread is done with it; the
+Swift wrapper ties destruction to the object's lifetime and the Kotlin SDK guards `close()`
+with a read-write lock so a query never observes a freed handle. Result lists are
+independent objects and may be used and destroyed on any thread. The engine keeps no
+caches: 100,000 mixed queries on a resident engine leave the live heap exactly where it was
+(`engine/tests/leak_test.rs`), and 500 create/query/destroy cycles plus 20,000 query and
+list-destroy cycles through the C ABI return the heap to baseline (`ffi/tests/leak_test.rs`).
 
 ## Errors
 
