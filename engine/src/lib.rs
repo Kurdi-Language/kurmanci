@@ -4,10 +4,14 @@ pub mod distance;
 pub mod engine;
 pub mod errors;
 pub mod format;
+pub(crate) mod index;
 pub mod memory;
 pub mod normalization;
 pub mod ranking;
 pub mod trie;
+
+#[cfg(test)]
+mod query_equivalence_tests;
 
 // Recommended high-level public integration API
 pub use api::{

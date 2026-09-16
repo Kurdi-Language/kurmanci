@@ -164,3 +164,75 @@ representation changes only; any such change must reproduce byte-identical sugge
 completion, correction and prediction output on the engine fixtures and the 357-case
 diagnostics before it merges, and must not alter ranking or pack semantics. The linear
 query paths are a distinct piece of work and are not part of the memory fix.
+
+## Results after the query-time candidate index
+
+`suggest`, `correct` and `complete` no longer scan the lexicon. The reference pipeline is kept
+verbatim as `Engine::suggest_reference_full_scan` (crate-private); the production path
+`suggest_indexed` runs the same stages (`prefix_stage`, `score_entry`, `finish_suggestions`,
+one copy each) over a candidate superset from `engine/src/index.rs`. Same host and profile as
+above (Apple M4, release, 300 iterations per operation).
+
+### Where the reference spent its time (experimental-full, mean per query)
+
+| Stage | µs |
+|---|---:|
+| normalize + strip the query | 0.9 |
+| prefix: trie enumeration | 4.7 |
+| prefix: linear lexicon lookup per trie hit (23.9 hits/query) | small for these inputs; grows with the number of hits (thousands for one-letter prefixes) |
+| scan: `strip_diacritics` per entry (42,435 allocations) | 24,083 |
+| scan: length filter | 1,525 |
+| scan: weighted edit distance (20,074 calls/query) | 18,877 |
+| whole reference call | 46,979 |
+| whole indexed call | 445 |
+
+### The index
+
+- `by_normalized`: lexicon indices sorted by normalized form; a binary search replaces the
+  linear `find` for each trie prefix hit and returns the same entry (the smallest index).
+- `by_stripped` and a second compact trie over the distinct diacritic-stripped forms; each
+  terminal carries the run of `by_stripped` holding the entries with that form.
+- A query walks the stripped trie with a unit-cost optimal-string-alignment bound of 2 and
+  re-scores only the entries found, in ascending lexicon order.
+
+Why the walk cannot drop a candidate: the scorer accepts an entry only when the stripped forms
+are equal or the weighted distance is at most 2.0. In an optimal weighted alignment every
+transition that is not a diacritic substitution (cost 0.25, exactly the pairs the stripping
+merges) costs at least 0.75 and remains a valid unit-cost transition on the stripped strings,
+so at most two of them fit under 2.0 and the stripped OSA distance is at most 2. The proof is
+in `engine/src/index.rs`; `stripped_osa_bound_covers_every_accepted_weighted_distance`
+brute-forces it, and `indexed_equals_reference_on_real_packs` checks on the reviewed and
+experimental packs that every entry the reference accepts is in the candidate set and that the
+ranked output is byte-identical (see `engine/src/query_equivalence_tests.rs`).
+
+Ordering is unchanged because the final comparison (`RankedCandidate::cmp_with_config`) ends in
+the display word and every pack has unique display words (asserted by
+`packs_have_unique_display_words_and_normalized_forms`), so it is a total order that does not
+depend on how or in which order candidates were found.
+
+### Latency, p50 / p95 microseconds
+
+| Operation | Input | reviewed before | reviewed after | experimental-full before | experimental-full after | speedup (experimental) |
+|---|---|---:|---:|---:|---:|---:|
+| known_hit | welat | 0.6 / 0.7 | 0.5 / 0.5 | 0.5 / 0.5 | 0.5 / 0.5 | – |
+| known_miss | xyzqwv | 0.6 / 0.7 | 0.5 / 0.5 | 0.5 / 0.5 | 0.5 / 0.5 | – |
+| suggest_exact | welat | 1,317 / 1,382 | 46 / 48 | 37,085 / 37,877 | 352 / 370 | 105× |
+| suggest_diacritic | rojbas | 1,494 / 1,637 | 31 / 31 | 41,734 / 42,153 | 179 / 189 | 233× |
+| correct_typo | spaz | 1,022 / 1,052 | 18 / 18 | 28,392 / 28,799 | 188 / 199 | 151× |
+| complete_short | ro | 774 / 799 | 74 / 89 | 33,220 / 33,939 | 636 / 680 | 52× |
+| complete_long | rojb | 1,021 / 1,042 | 28 / 30 | 28,593 / 29,083 | 165 / 184 | 173× |
+
+Prediction is unchanged (it does not use the index).
+
+### Memory and load
+
+| Pack | Pack size | Engine heap before | Engine heap after | Query index | Trie (unchanged) | Lexicon records (unchanged) | n-gram tables (unchanged) | RSS after load before | RSS after load after | Load before | Load after |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| reviewed | 0.55 MB | 1.45 MB | 1.57 MB | 0.12 MB (arrays 0.012, trie nodes 0.073, trie words 0.033; 1,442 stripped forms) | 0.11 MB | 0.29 MB | 0.90 MB | 5.0 MB | 5.6 MB | 4.9 ms | 5.9 ms |
+| experimental-full | 7.01 MB | 22.35 MB | 25.49 MB | 3.15 MB (arrays 0.34, trie nodes 1.83, trie words 0.98; 41,281 stripped forms) | 3.03 MB | 8.49 MB | 5.8 MB | 45.8 MB | 51.1 MB | 71.9 ms | 118.8 ms |
+
+The index is a second compact trie plus two `u32` arrays: 3.15 MB on the experimental pack
+(12% of the heap; the compact-trie saving of 36 MB stands). Load time grows by 47 ms on the
+experimental pack, spent sorting the entries twice (by normalized and by stripped form) and
+building the stripped trie; allocation calls during load rise from 601,833 to 972,261 (the
+temporary stripped strings), all freed before load returns.

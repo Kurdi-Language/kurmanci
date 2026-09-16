@@ -75,6 +75,14 @@ pub struct MemoryAttribution {
     pub trigram_lists: StructureMemory,
     /// Typo map (unused by packs; present for completeness).
     pub typo_map: StructureMemory,
+    /// Distinct diacritic-stripped forms in the query index.
+    pub query_index_stripped_forms: usize,
+    /// Query index: the two sorted lexicon-index arrays.
+    pub query_index_arrays: StructureMemory,
+    /// Query index: node arrays of the stripped-form trie.
+    pub query_index_trie_node_arrays: StructureMemory,
+    /// Query index: word store of the stripped-form trie.
+    pub query_index_trie_words: StructureMemory,
     /// Sum of all structures above.
     pub total: StructureMemory,
 }
@@ -190,6 +198,23 @@ pub fn attribute(engine: &Engine) -> MemoryAttribution {
         report.trigram_lists.add(b, a);
     }
 
+    // Query index: sorted index arrays plus a second compact trie over stripped forms.
+    let index = engine.index.memory();
+    report.query_index_stripped_forms = index.stripped_forms;
+    report
+        .query_index_arrays
+        .add(index.array_bytes, index.array_allocations);
+    report.query_index_trie_node_arrays.add(
+        index.trie.node_array_bytes,
+        index.trie.node_array_allocations,
+    );
+    report
+        .query_index_trie_words
+        .add(index.trie.word_bytes, index.trie.word_allocations);
+    report
+        .query_index_trie_words
+        .add(index.trie.pending_bytes, index.trie.pending_allocations);
+
     let (b, a) = hashmap_heap(&engine.typo_map);
     report.typo_map.add(b, a);
     for (k, v) in &engine.typo_map {
@@ -210,6 +235,9 @@ pub fn attribute(engine: &Engine) -> MemoryAttribution {
         &report.trigram_table,
         &report.trigram_lists,
         &report.typo_map,
+        &report.query_index_arrays,
+        &report.query_index_trie_node_arrays,
+        &report.query_index_trie_words,
     ] {
         report.total.bytes += part.bytes;
         report.total.allocations += part.allocations;
@@ -281,6 +309,18 @@ mod tests {
                 + report.lexicon_regions_sources.bytes
                 + report.trie_node_arrays.bytes
                 + report.trie_words.bytes
+                + report.query_index_arrays.bytes
+                + report.query_index_trie_node_arrays.bytes
+                + report.query_index_trie_words.bytes
+        );
+        // Query index: two u32 arrays over 3 entries, and a stripped-form trie over
+        // "roj", "roja", "bas" (baş strips to bas): root + r,o,j,a + b,a,s = 8 nodes.
+        assert_eq!(report.query_index_arrays.allocations, 2);
+        assert_eq!(report.query_index_arrays.bytes, 2 * 3 * size_of::<u32>());
+        assert_eq!(report.query_index_stripped_forms, 3);
+        assert_eq!(
+            report.query_index_trie_node_arrays.bytes,
+            8 * report.trie_node_record_bytes
         );
         assert!(report.total.allocations > 0);
     }

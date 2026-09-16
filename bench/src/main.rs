@@ -508,7 +508,7 @@ fn print_text(r: &Report) {
         a.entry_record_bytes,
         a.trie_node_record_bytes
     );
-    let rows: [(&str, &kurmanci_engine::StructureMemory, String); 10] = [
+    let rows: [(&str, &kurmanci_engine::StructureMemory, String); 13] = [
         (
             "lexicon records",
             &a.lexicon_records,
@@ -555,6 +555,21 @@ fn print_text(r: &Report) {
             format!("{} predictions", a.trigram_predictions),
         ),
         ("typo map", &a.typo_map, String::new()),
+        (
+            "query index arrays",
+            &a.query_index_arrays,
+            format!("{} entries x 2", a.entry_count),
+        ),
+        (
+            "query index trie nodes",
+            &a.query_index_trie_node_arrays,
+            format!("{} stripped forms", a.query_index_stripped_forms),
+        ),
+        (
+            "query index trie words",
+            &a.query_index_trie_words,
+            String::new(),
+        ),
     ];
     println!(
         "  {:<26}{:>12}{:>8}{:>14}  count",
