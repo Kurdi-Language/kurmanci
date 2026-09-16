@@ -41,6 +41,20 @@ public func XCTAssertGreaterThan<T: Comparable>(_ expression1: @autoclosure () t
     }
 }
 
+public func XCTAssertGreaterThanOrEqual<T: Comparable>(_ expression1: @autoclosure () throws -> T, _ expression2: @autoclosure () throws -> T, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
+    do {
+        let val1 = try expression1()
+        let val2 = try expression2()
+        if !(val1 >= val2) {
+            print("❌ Failure at \(file):\(line) - Expected '\(val1)' to be greater than or equal to '\(val2)'. \(message())")
+            exit(1)
+        }
+    } catch {
+        print("❌ Unexpected error at \(file):\(line): \(error)")
+        exit(1)
+    }
+}
+
 public func XCTAssertLessThanOrEqual<T: Comparable>(_ expression1: @autoclosure () throws -> T, _ expression2: @autoclosure () throws -> T, _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
     do {
         let val1 = try expression1()

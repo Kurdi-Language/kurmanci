@@ -199,4 +199,67 @@ class AndroidInstrumentationTest {
 
         assertTrue("Total query results must equal thread total", querySuccesses.get() + closedExceptions.get() == queryThreads * 200)
     }
+
+    @Test
+    fun testDecomposedAndCasedInputMatchPrecomposedWord() {
+        val packBytes = loadAssetBytes("apple_consumer_test.bin")
+        KurmanciEngine.open(packBytes).use { engine ->
+            // The core normalizes to NFC and lower case; the SDK passes strings through.
+            // ş = U+015F; decomposed form is s + U+0327. î = U+00EE; decomposed i + U+0302.
+            val precomposed = "rojbaş"
+            val decomposed = "rojbas\u0327"
+            assertTrue(engine.isKnownWord(precomposed))
+            assertEquals(engine.isKnownWord(precomposed), engine.isKnownWord(decomposed))
+            assertEquals(engine.isKnownWord(precomposed), engine.isKnownWord("ROJBAŞ"))
+            assertEquals(
+                engine.suggest(precomposed, 5).candidates.map { it.text },
+                engine.suggest(decomposed, 5).candidates.map { it.text }
+            )
+            assertEquals(
+                engine.complete("bijî", 5).candidates.map { it.text },
+                engine.complete("biji\u0302", 5).candidates.map { it.text }
+            )
+            // Canonical cleaning removes BOM, zero-width space and control characters, so a
+            // decorated known word is the same word; ordinary spaces and NBSP are not removed.
+            assertTrue(engine.isKnownWord("\uFEFFrojbaş"))
+            assertTrue(engine.isKnownWord("rojbaş\u200B"))
+            assertTrue(engine.isKnownWord("rojbaş\t"))
+            assertEquals(
+                engine.suggest("rojbaş", 5).candidates.map { it.text },
+                engine.suggest("\u200Brojbaş\u0001", 5).candidates.map { it.text }
+            )
+            assertTrue(!engine.isKnownWord(" rojbaş"))
+            assertTrue(!engine.isKnownWord("rojbaş\u00A0"))
+            // Empty input is known-word false on every surface, Kotlin included.
+            assertTrue(!engine.isKnownWord(""))
+        }
+    }
+
+    @Test
+    fun testJniStressLoopAcrossCreateCloseCyclesAndUnicodeQueries() {
+        val packBytes = loadAssetBytes("apple_consumer_test.bin")
+        val inputs = listOf(
+            "welat", "spaz", "roj", "rojb", "rojbas\u0327", "ÇAV", "xyz", "welat\u200B", "ez", ""
+        )
+        // Many queries on one handle: result arrays and native lists must not accumulate.
+        KurmanciEngine.open(packBytes).use { engine ->
+            var total = 0
+            for (i in 0 until 5_000) {
+                val input = inputs[i % inputs.size]
+                if (input.isNotEmpty() && engine.isKnownWord(input)) total++
+                total += engine.suggest(input, 5).candidates.size
+                total += engine.correct(input, 5).candidates.size
+                total += engine.complete(input, 5).candidates.size
+                total += engine.predictNextWord(listOf("ez", input), 5).candidates.size
+            }
+            assertTrue(total > 0)
+        }
+        // Repeated create/close cycles with queries in between.
+        for (i in 0 until 200) {
+            KurmanciEngine.open(packBytes).use { engine ->
+                assertTrue(engine.isKnownWord("welat"))
+                assertTrue(engine.complete("roj", 3).candidates.isNotEmpty())
+            }
+        }
+    }
 }

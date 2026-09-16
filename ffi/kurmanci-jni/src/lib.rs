@@ -12,6 +12,15 @@ use kurmanci_ffi::{
 use std::ffi::{CStr, CString};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
+// Contract of every bridge function:
+// - a closed handle (0) throws IllegalStateException before any native call;
+// - invalid input (unreadable string, embedded NUL) throws InvalidArgumentException;
+// - a non-OK C status throws the mapped KurmanciException with the native message;
+// - a Rust panic never crosses into the JVM: it is caught and surfaced as NativeException;
+// - every C result list is destroyed on every path, and per-element local references are
+//   released once they are stored in the returned array;
+// - a JNIEnv error (which leaves a JVM exception pending) returns null/false immediately.
+
 fn get_last_error_string() -> String {
     unsafe {
         let ptr = kmr_last_error_message();
@@ -249,11 +258,23 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativeIsKnownWord(
     let res = catch_unwind(AssertUnwindSafe(|| {
         let word_str: String = match env.get_string(&word) {
             Ok(s) => s.into(),
-            Err(_) => return JNI_FALSE,
+            Err(e) => {
+                let _ = env.throw_new(
+                    "org/kurmanci/KurmanciException$InvalidArgumentException",
+                    format!("Invalid word string: {}", e),
+                );
+                return JNI_FALSE;
+            }
         };
         let c_word = match CString::new(word_str) {
             Ok(c) => c,
-            Err(_) => return JNI_FALSE,
+            Err(_) => {
+                let _ = env.throw_new(
+                    "org/kurmanci/KurmanciException$InvalidArgumentException",
+                    "Word contains NUL byte",
+                );
+                return JNI_FALSE;
+            }
         };
 
         let mut is_known = false;
@@ -274,7 +295,13 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativeIsKnownWord(
 
     match res {
         Ok(b) => b,
-        Err(_) => JNI_FALSE,
+        Err(_) => {
+            let _ = env.throw_new(
+                "org/kurmanci/KurmanciException$NativeException",
+                "Internal panic during nativeIsKnownWord",
+            );
+            JNI_FALSE
+        }
     }
 }
 
@@ -359,6 +386,10 @@ fn convert_suggestion_list(env: &mut JNIEnv, list_ptr: *mut kmr_suggestion_list)
             unsafe { kmr_suggestion_list_destroy(list_ptr) };
             return std::ptr::null_mut();
         }
+        // The array holds the element now; release the per-element local references so long
+        // result lists never exhaust the local reference table.
+        let _ = env.delete_local_ref(obj);
+        let _ = env.delete_local_ref(j_text);
     }
 
     unsafe { kmr_suggestion_list_destroy(list_ptr) };
@@ -423,7 +454,13 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativeSuggest(
 
     match res {
         Ok(ptr) => ptr,
-        Err(_) => std::ptr::null_mut(),
+        Err(_) => {
+            let _ = env.throw_new(
+                "org/kurmanci/KurmanciException$NativeException",
+                "Internal panic during nativeSuggest",
+            );
+            std::ptr::null_mut()
+        }
     }
 }
 
@@ -485,7 +522,13 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativeComplete(
 
     match res {
         Ok(ptr) => ptr,
-        Err(_) => std::ptr::null_mut(),
+        Err(_) => {
+            let _ = env.throw_new(
+                "org/kurmanci/KurmanciException$NativeException",
+                "Internal panic during nativeComplete",
+            );
+            std::ptr::null_mut()
+        }
     }
 }
 
@@ -547,7 +590,13 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativeCorrect(
 
     match res {
         Ok(ptr) => ptr,
-        Err(_) => std::ptr::null_mut(),
+        Err(_) => {
+            let _ = env.throw_new(
+                "org/kurmanci/KurmanciException$NativeException",
+                "Internal panic during nativeCorrect",
+            );
+            std::ptr::null_mut()
+        }
     }
 }
 
@@ -569,30 +618,46 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativePredict(
     }
 
     let res = catch_unwind(AssertUnwindSafe(|| {
-        let count = match env
-            .get_array_length(unsafe { &jni::objects::JObjectArray::from_raw(context_words) })
-        {
-            Ok(n) => n as usize,
-            Err(_) => 0,
+        // A null array is treated as an empty context; a non-null array is read once.
+        let context_array = unsafe { jni::objects::JObjectArray::from_raw(context_words) };
+        let count = if context_words.is_null() {
+            0
+        } else {
+            match env.get_array_length(&context_array) {
+                Ok(n) => n as usize,
+                Err(_) => return std::ptr::null_mut(), // JNI exception already pending
+            }
         };
 
         let mut c_strings = Vec::with_capacity(count);
         let mut ptrs = Vec::with_capacity(count);
 
-        let context_array = unsafe { jni::objects::JObjectArray::from_raw(context_words) };
         for i in 0..count {
             let obj = match env.get_object_array_element(&context_array, i as jint) {
                 Ok(o) => o,
-                Err(_) => return std::ptr::null_mut(),
+                Err(_) => return std::ptr::null_mut(), // JNI exception already pending
             };
             let j_str: JString = obj.into();
             let string_val: String = match env.get_string(&j_str) {
                 Ok(s) => s.into(),
-                Err(_) => return std::ptr::null_mut(),
+                Err(e) => {
+                    let _ = env.throw_new(
+                        "org/kurmanci/KurmanciException$InvalidArgumentException",
+                        format!("Invalid context word string: {}", e),
+                    );
+                    return std::ptr::null_mut();
+                }
             };
+            let _ = env.delete_local_ref(j_str);
             let c_str = match CString::new(string_val) {
                 Ok(c) => c,
-                Err(_) => return std::ptr::null_mut(),
+                Err(_) => {
+                    let _ = env.throw_new(
+                        "org/kurmanci/KurmanciException$InvalidArgumentException",
+                        "Context word contains NUL byte",
+                    );
+                    return std::ptr::null_mut();
+                }
             };
             ptrs.push(c_str.as_ptr());
             c_strings.push(c_str);
@@ -699,6 +764,8 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativePredict(
                 unsafe { kmr_prediction_list_destroy(list_ptr) };
                 return std::ptr::null_mut();
             }
+            let _ = env.delete_local_ref(obj);
+            let _ = env.delete_local_ref(j_text);
         }
 
         unsafe { kmr_prediction_list_destroy(list_ptr) };
@@ -707,6 +774,12 @@ pub extern "system" fn Java_org_kurmanci_NativeModule_nativePredict(
 
     match res {
         Ok(ptr) => ptr,
-        Err(_) => std::ptr::null_mut(),
+        Err(_) => {
+            let _ = env.throw_new(
+                "org/kurmanci/KurmanciException$NativeException",
+                "Internal panic during nativePredict",
+            );
+            std::ptr::null_mut()
+        }
     }
 }

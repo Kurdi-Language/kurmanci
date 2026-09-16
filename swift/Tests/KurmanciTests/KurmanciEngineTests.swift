@@ -304,6 +304,61 @@ final class KurmanciEngineTests: XCTestCase {
         }
     }
 
+    func testDecomposedAndCasedInputMatchPrecomposedWord() throws {
+        let engine = try KurmanciEngine(packURL: seedPackURL)
+        // The core normalizes to NFC and lower case; the wrapper passes strings through.
+        let pairs: [(String, String)] = [
+            ("rojbaş", "rojbas\u{0327}"),   // ş = s + combining cedilla
+            ("bijî", "biji\u{0302}"),       // î = i + combining circumflex
+            ("çav", "c\u{0327}av"),
+            ("pirtûk", "pirtu\u{0302}k"),
+            ("şev", "s\u{0327}ev"),
+        ]
+        for (precomposed, decomposed) in pairs {
+            XCTAssertTrue(try engine.isKnownWord(precomposed), precomposed)
+            XCTAssertEqual(try engine.isKnownWord(decomposed), try engine.isKnownWord(precomposed), precomposed)
+            XCTAssertEqual(try engine.isKnownWord(precomposed.uppercased()), try engine.isKnownWord(precomposed), precomposed)
+            XCTAssertEqual(
+                try engine.suggest(decomposed, limit: 5).map { $0.text },
+                try engine.suggest(precomposed, limit: 5).map { $0.text },
+                precomposed
+            )
+            XCTAssertEqual(
+                try engine.correct(decomposed, limit: 5).map { $0.text },
+                try engine.correct(precomposed, limit: 5).map { $0.text },
+                precomposed
+            )
+        }
+        // Canonical cleaning removes BOM, zero-width space and control characters, so a
+        // decorated known word is the same word; ordinary spaces and NBSP are not removed.
+        XCTAssertTrue(try engine.isKnownWord("\u{FEFF}rojbaş"))
+        XCTAssertTrue(try engine.isKnownWord("rojbaş\u{200B}"))
+        XCTAssertTrue(try engine.isKnownWord("rojbaş\t"))
+        XCTAssertEqual(
+            try engine.suggest("\u{200B}rojbaş\u{0001}", limit: 5).map { $0.text },
+            try engine.suggest("rojbaş", limit: 5).map { $0.text }
+        )
+        XCTAssertFalse(try engine.isKnownWord(" rojbaş"))
+        XCTAssertFalse(try engine.isKnownWord("rojbaş\u{00A0}"))
+        XCTAssertFalse(try engine.isKnownWord(""))
+        XCTAssertTrue(try engine.predictNext(context: [""], limit: 5).isEmpty)
+    }
+
+    func testStressLoopOnResidentEngine() throws {
+        let engine = try KurmanciEngine(packURL: seedPackURL)
+        let inputs = ["welat", "spaz", "roj", "rojb", "rojbas\u{0327}", "ÇAV", "xyz", "welat\u{200B}", "ez"]
+        var total = 0
+        for i in 0..<3000 {
+            let input = inputs[i % inputs.count]
+            if try engine.isKnownWord(input) { total += 1 }
+            total += try engine.suggest(input, limit: 5).count
+            total += try engine.correct(input, limit: 5).count
+            total += try engine.complete(input, limit: 5).count
+            total += try engine.predictNext(context: ["ez", input], limit: 5).count
+        }
+        XCTAssertGreaterThan(total, 0)
+    }
+
     func testRepeatedCreationAndDestruction() throws {
         let data = try Data(contentsOf: seedPackURL)
         for _ in 0..<50 {
@@ -336,6 +391,8 @@ struct TestRunner {
         try tests.testErrorHandling()
         try tests.testUnicodeInput()
         tests.testEnumAndStatusConversionFallbacks()
+        try tests.testDecomposedAndCasedInputMatchPrecomposedWord()
+        try tests.testStressLoopOnResidentEngine()
         try tests.testRepeatedCreationAndDestruction()
         print("✅ All KurmanciEngineTests passed successfully!")
     }

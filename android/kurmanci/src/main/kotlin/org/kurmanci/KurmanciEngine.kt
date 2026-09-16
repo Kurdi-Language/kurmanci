@@ -25,7 +25,6 @@ class KurmanciEngine private constructor(
         }
 
     fun isKnownWord(word: String): Boolean {
-        require(word.isNotEmpty()) { "Word must not be empty" }
         return withHandle { h ->
             NativeModule.nativeIsKnownWord(h, word)
         }
