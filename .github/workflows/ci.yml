@@ -267,6 +267,9 @@ jobs:
       - name: Verify Query Index Equivalence (release, reviewed + experimental-full vs reference full scan)
         run: cargo test --release -p kurmanci-engine indexed_equals_reference_on_real_packs -- --ignored --nocapture
 
+      - name: Validate Device Benchmark Wrapper Semantics (fake xcodebuild, no report on failure)
+        run: bash scripts/apple/test-device-benchmark-wrapper.sh
+
       - name: Run Data-Builder Compiler (First Pass)
         run: cargo run -p kurmanci-data-builder -- build
 
