@@ -63,6 +63,32 @@ class AndroidInstrumentationTest {
         }
     }
 
+    /**
+     * The clean-room contract, end to end on the packaged AAR: load a pack, then known,
+     * correct, complete and predict through the public Kotlin API only. Run by
+     * scripts/android/verify-clean-room-consumer.sh in a job without any Rust toolchain.
+     */
+    @Test
+    fun testCleanRoomContractKnownCorrectCompletePredict() {
+        KurmanciEngine.open(loadAssetBytes("apple_consumer_test.bin")).use { engine ->
+            assertEquals(4, engine.packInfo.formatVersion)
+            assertTrue("known: welat", engine.isKnownWord("welat"))
+            assertTrue("known miss: xyzqwv", !engine.isKnownWord("xyzqwv"))
+            val correction = engine.correct("spaz", 5).candidates
+            assertTrue("correct: spaz has candidates", correction.isNotEmpty())
+            assertEquals("spas", correction.first().text)
+            val completion = engine.complete("roj", 5).candidates
+            assertTrue("complete: roj has candidates", completion.isNotEmpty())
+            assertEquals("roj", completion.first().text)
+            assertTrue("suggest: welat", engine.suggest("welat", 5).candidates.isNotEmpty())
+        }
+        KurmanciEngine.open(loadAssetBytes("prediction_test.bin")).use { engine ->
+            val predictions = engine.predictNextWord(listOf("ez"), 5).candidates
+            assertTrue("predict: ez has candidates", predictions.isNotEmpty())
+            assertEquals("ji", predictions.first().text)
+        }
+    }
+
     @Test
     fun testNextWordPredictionIntegration() {
         val predBytes = loadAssetBytes("prediction_test.bin")

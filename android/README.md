@@ -69,6 +69,28 @@ KurmanciEngine.open(packBytes).use { engine ->
 
 ## 3. Building & Testing for Contributors
 
+### Clean-room verification (what a consumer actually needs)
+
+CI proves the consumer path in two separate jobs. `Android AAR + Emulator Consumer` builds
+the AAR with Rust and cargo-ndk and uploads it; `Android Consumer Clean-Room (Rust-Free)`
+runs on a runner whose PATH has been stripped of Rust, installs no NDK, downloads the AAR
+into the local Maven layout and runs `scripts/android/verify-clean-room-consumer.sh`, which:
+
+1. fails if `cargo`, `rustc` or `cargo-ndk` is reachable (set `ALLOW_RUST_ON_PATH=1` only for
+   local developer runs; the tools are never invoked either way);
+2. requires the packaged `kurmanci-android-<version>.aar` and `.pom` under
+   `dist/android/maven/` and checks that the AAR carries `libkurmanci_jni.so` for
+   `arm64-v8a`, `armeabi-v7a` and `x86_64`, recording its SHA-256;
+3. builds the standalone consumer in `integration/android/android-consumer` with
+   `CONSUMER_MODE=local` and runs its JVM unit tests;
+4. runs the instrumentation suite on the emulator, including
+   `testCleanRoomContractKnownCorrectCompletePredict`: load pack → `isKnownWord` →
+   `correct` → `complete` → `predictNextWord` through the public Kotlin API only.
+
+Locally, after `scripts/android/build-aar.sh`, run
+`ALLOW_RUST_ON_PATH=1 scripts/android/verify-clean-room-consumer.sh` (instrumentation runs
+when an emulator or device is connected).
+
 Contributors can build native shared libraries, assemble the AAR, and publish to local `dist/android/maven`:
 
 ```bash

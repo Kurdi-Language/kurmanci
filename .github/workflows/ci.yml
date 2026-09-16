@@ -586,26 +586,23 @@ jobs:
         run: |
           cargo run -p kurmanci-data-builder -- build-pack seed
 
-      - name: Enable KVM permissions
+      # The AAR (native libraries for every ABI, packaged with Rust + cargo-ndk here) and the
+      # SDK's own JVM unit tests. The consumer is exercised by the Rust-free job below.
+      - name: Build Android AAR & Run SDK JVM Unit Tests
         run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+          ./scripts/android/build-aar.sh
+          cd android && chmod +x ./gradlew && ./gradlew :kurmanci:test
 
-      # Android SDK & Emulator Instrumentation
-      - name: Run Android AAR Build & Emulator Instrumentation Tests
-        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+      - name: Upload Android AAR Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          api-level: 29
-          target: default
-          arch: x86_64
-          profile: Nexus 6
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: |
-            ./scripts/android/build-aar.sh
-            ./scripts/android/test-consumers.sh
+          name: android-aar-artifacts
+          # Consumed only by the Rust-free consumer job of this same run; short retention
+          # keeps CI artifact storage within the plan allowance.
+          retention-days: ${{ github.ref == 'refs/heads/main' && 3 || 1 }}
+          path: |
+            dist/android/maven/
+            dist/kurmanci-android-*.aar
 
       # Maven Central Bundle Layout & Verification Preflight
       - name: Run Signed Central-Bundle CI Preflight
@@ -645,6 +642,52 @@ jobs:
           ./scripts/android/verify-central-bundle.sh
 
           rm -rf "$TMP_GPG_HOME"
+
+  android-consumer-rust-free:
+    name: Android Consumer Clean-Room (Rust-Free)
+    needs: android-aar-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # No Rust toolchain, Cargo, cargo-ndk or NDK is installed here, and the runner's
+      # preinstalled Rust is removed from PATH so the verification script can prove it.
+      - name: Remove the Runner's Preinstalled Rust From PATH
+        run: |
+          STRIPPED="$(printf '%s' "$PATH" | tr ':' '\n' | grep -v -E '/\.cargo/|/rust' | paste -sd: -)"
+          echo "PATH=$STRIPPED" >> "$GITHUB_ENV"
+
+      - name: Download Android AAR Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-aar-artifacts
+          path: dist
+
+      - name: Enable KVM permissions
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Standalone Kotlin Consumer Against the Packaged AAR (load pack, known, correct, complete, predict)
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          profile: Nexus 6
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: ./scripts/android/verify-clean-room-consumer.sh
 
   release-bundle-determinism:
     name: Release Bundle Clean-Checkout Determinism
