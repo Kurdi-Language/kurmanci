@@ -37,7 +37,7 @@ use crate::review::kuwiki_decisions::load_and_validate_all_kuwiki_decisions;
 use crate::review::merger::load_validated_review_snapshot;
 use crate::review::schema::ReviewDecisionRecord;
 use crate::sources::SourceRegistry;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
@@ -49,7 +49,7 @@ pub const PACK_IDS: [&str; 3] = ["seed", "reviewed", "experimental-full"];
 const HUNSPELL_SOURCE_ID: &str = "kurdish-hunspell-kmr";
 const KUWIKI_CORPUS_ID: &str = "kuwiki";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CheckStatus {
     Pass,
@@ -57,7 +57,7 @@ pub enum CheckStatus {
     Skipped,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Check {
     pub name: String,
     pub status: CheckStatus,
@@ -65,7 +65,7 @@ pub struct Check {
 }
 
 /// One file of a built pack, compared between the in-memory assembly and the build directory.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PackArtifactState {
     pub name: String,
     pub in_memory_sha256: String,
@@ -76,7 +76,7 @@ pub struct PackArtifactState {
     pub built_matches: Option<bool>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PackReproducibility {
     pub pack_id: String,
     /// SHA-256 of the in-memory `lexicon.bin`.
@@ -91,7 +91,7 @@ pub struct PackReproducibility {
     pub artifacts: Vec<PackArtifactState>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LanguageModelState {
     pub model_id: String,
     pub manifest_sha256: String,
@@ -99,7 +99,7 @@ pub struct LanguageModelState {
     pub vocabulary_size: usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProductionStateReport {
     pub schema_version: String,
     pub ok: bool,
@@ -727,7 +727,7 @@ pub fn render_state_text(r: &ProductionStateReport) -> String {
     s
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HashChange {
     pub artifact: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -736,7 +736,7 @@ pub struct HashChange {
     pub changed: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RebuildReport {
     pub schema_version: String,
     pub steps: Vec<String>,

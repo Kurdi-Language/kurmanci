@@ -53,3 +53,5 @@ integration/android/**/.gradle/
 # Scratch directory & local review worksheets
 /scratch/
 scratch/kuwiki_batch_001_worksheet.json
+# Release bundles and platform artifacts (derived; see docs/RELEASE_PROVENANCE.md)
+dist/

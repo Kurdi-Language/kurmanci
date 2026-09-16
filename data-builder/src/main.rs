@@ -111,6 +111,35 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Builds the deterministic release bundle (packs, committed language model, C header, licences, attribution, compatibility.json, provenance.json, SHA256SUMS) after verify-production-state passes; optional Apple/Android artifacts are attached and hashed
+    BuildReleaseBundle {
+        /// Output directory; the bundle is installed as <out>/kurmanci-ku-Latn-<version>/
+        #[arg(long, default_value = "dist/release")]
+        out: PathBuf,
+        /// Release version (default: the engine crate version)
+        #[arg(long)]
+        release_version: Option<String>,
+        /// Build even when the working tree has uncommitted or untracked files (recorded in provenance.json; the bundle is then an evaluation release)
+        #[arg(long)]
+        allow_dirty: bool,
+        /// File or directory produced by scripts/apple to attach under apple/ (repeatable; symbolic links are rejected, so supply trees such as an unpacked XCFramework as the archive)
+        #[arg(long = "apple")]
+        apple: Vec<PathBuf>,
+        /// File or directory produced by scripts/android to attach under android/ (repeatable; symbolic links are rejected, so supply symlink-bearing trees as an archive)
+        #[arg(long = "android")]
+        android: Vec<PathBuf>,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// Read-only verification of a release bundle directory: every file listed in SHA256SUMS with its hash, no unlisted file, provenance and compatibility consistent
+    VerifyReleaseBundle {
+        /// Bundle directory (e.g. dist/release/kurmanci-ku-Latn-0.1.0)
+        dir: PathBuf,
+        /// Output as JSON
+        #[arg(long)]
+        json: bool,
+    },
     /// Deliberate rebuild from committed human decisions: corpus statistics if needed, the committed language model, all packs, then validation. Never assigns or promotes a decision. Fails without changes when the Kuwiki corpus is absent unless --acquire is given.
     RebuildProduction {
         /// Download and verify the external Kuwiki corpus if it is not present locally
@@ -679,6 +708,55 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error verifying production state: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildReleaseBundle {
+            out,
+            release_version,
+            allow_dirty,
+            apple,
+            android,
+            json,
+        } => {
+            let options = data_builder_lib::release::ReleaseOptions {
+                release_version,
+                allow_dirty,
+                apple_artifacts: apple,
+                android_artifacts: android,
+            };
+            match data_builder_lib::release::build_release_bundle(".", &options, &out) {
+                Ok(report) => {
+                    if json {
+                        println!("{}", serde_json::to_string_pretty(&report).unwrap());
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::release::render_release_text(&report)
+                        );
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error building release bundle: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::VerifyReleaseBundle { dir, json } => {
+            match data_builder_lib::release::verify_release_bundle(&dir) {
+                Ok(v) => {
+                    if json {
+                        println!("{}", serde_json::to_string_pretty(&v).unwrap());
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::release::render_verification_text(&v)
+                        );
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error verifying release bundle: {}", e);
                     std::process::exit(1);
                 }
             }

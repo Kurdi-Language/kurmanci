@@ -11,6 +11,7 @@ pub mod merge;
 pub mod normalize;
 pub mod pack;
 pub mod production;
+pub mod release;
 pub mod report;
 pub mod review;
 pub mod sources;

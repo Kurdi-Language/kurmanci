@@ -70,6 +70,13 @@ cargo run -p kurmanci-data-builder -- verify-production-state
 cargo run -p kurmanci-data-builder -- rebuild-production   # needs the Kuwiki corpus locally; add --acquire to download it
 ```
 
+Deterministic release bundle (refuses unless the production state verifies; see [docs/RELEASE_PROVENANCE.md](docs/RELEASE_PROVENANCE.md)) and its read-only check:
+```bash
+cargo run -p kurmanci-data-builder -- build-release-bundle                       # → dist/release/kurmanci-ku-Latn-<version>/
+cargo run -p kurmanci-data-builder -- verify-release-bundle dist/release/kurmanci-ku-Latn-0.1.0
+scripts/release/verify-clean-checkout-determinism.sh                            # two clean clones → byte-identical bundle
+```
+
 Repository-side inspection (what the review data records about a word; read-only, never assigns a status):
 ```bash
 cargo run -p kurmanci-data-builder -- inspect-word newroz
