@@ -719,10 +719,13 @@ mod equivalence_tests {
             };
             let mut engine = crate::engine::Engine::new();
             engine.load_binary_pack(&bytes).unwrap();
-            let words: Vec<(String, u64)> = engine
-                .lexicon
-                .iter()
-                .map(|e| (e.normalized.clone(), e.frequency))
+            let words: Vec<(String, u64)> = (0..engine.lexicon.len())
+                .map(|i| {
+                    (
+                        engine.lexicon.normalized(i).to_string(),
+                        engine.lexicon.frequency(i),
+                    )
+                })
                 .collect();
             assert!(!words.is_empty());
             assert_equivalent(&words);

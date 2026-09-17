@@ -36,16 +36,19 @@ impl StructureMemory {
 pub struct MemoryAttribution {
     /// Number of lexicon entries.
     pub entry_count: usize,
-    /// Bytes of one `LexiconEntry` record (inline part, excluding heap payloads).
+    /// Bytes of one entry's inline record: the per-entry parallel arrays of the compact
+    /// lexicon store (text spans, frequency, frequency metadata, status and part-of-speech
+    /// ids, region/source list offsets), excluding the shared text arena and tables.
     pub entry_record_bytes: usize,
-    /// `Vec<LexiconEntry>` backing storage (capacity × record size).
+    /// The per-entry parallel arrays of the lexicon store (capacity × element size).
     pub lexicon_records: StructureMemory,
-    /// Heap payloads of the five per-entry strings (word, normalized, lemma, part of speech,
-    /// status).
+    /// The shared text arena holding every word, normalized form and lemma once per entry
+    /// (a form equal to another form of the same entry is stored once).
     pub lexicon_strings: StructureMemory,
-    /// Heap payloads of the per-entry `regions` and `sources` vectors and their strings.
+    /// Region and source id lists plus the interned status, part-of-speech, region and
+    /// source tables.
     pub lexicon_regions_sources: StructureMemory,
-    /// Total characters stored across all per-entry strings (payload length, not capacity).
+    /// Total characters stored: the text arena plus the interned tables.
     pub lexicon_string_chars: usize,
     /// Number of trie nodes including the root.
     pub trie_nodes: usize,
@@ -133,38 +136,25 @@ fn hashmap_heap<K, V>(map: &HashMap<K, V>) -> (usize, usize) {
 
 /// Computes the attribution of `engine` (read-only).
 pub fn attribute(engine: &Engine) -> MemoryAttribution {
+    let lexicon = engine.lexicon.memory();
     let mut report = MemoryAttribution {
         entry_count: engine.lexicon.len(),
-        entry_record_bytes: size_of::<crate::engine::LexiconEntry>(),
+        entry_record_bytes: lexicon.record_bytes,
         trie_node_record_bytes: size_of::<char>() + 3 * size_of::<u32>(),
         ..Default::default()
     };
 
-    // Lexicon records and their heap payloads.
-    let (b, a) = vec_heap(&engine.lexicon);
-    report.lexicon_records.add(b, a);
-    for entry in &engine.lexicon {
-        for s in [
-            &entry.word,
-            &entry.normalized,
-            &entry.lemma,
-            &entry.part_of_speech,
-            &entry.status,
-        ] {
-            let (b, a) = string_heap(s);
-            report.lexicon_strings.add(b, a);
-            report.lexicon_string_chars += s.len();
-        }
-        for list in [&entry.regions, &entry.sources] {
-            let (b, a) = vec_heap(list);
-            report.lexicon_regions_sources.add(b, a);
-            for s in list {
-                let (b, a) = string_heap(s);
-                report.lexicon_regions_sources.add(b, a);
-                report.lexicon_string_chars += s.len();
-            }
-        }
-    }
+    // Lexicon store: parallel arrays, the text arena, id lists and interned tables.
+    report
+        .lexicon_records
+        .add(lexicon.record_array_bytes, lexicon.record_array_allocations);
+    report
+        .lexicon_strings
+        .add(lexicon.text_bytes, lexicon.text_allocations);
+    report
+        .lexicon_regions_sources
+        .add(lexicon.tables_bytes, lexicon.tables_allocations);
+    report.lexicon_string_chars = lexicon.text_chars + lexicon.table_chars;
 
     // Trie: flat node arrays plus one concatenated word store.
     let trie = engine.trie.memory();
@@ -291,16 +281,19 @@ mod tests {
             report.trie_node_arrays.bytes,
             8 * report.trie_node_record_bytes
         );
-        // 5 strings per entry, all non-empty
-        assert_eq!(report.lexicon_strings.allocations, 15);
-        // word/normalized/lemma (3 each; "baş" is 4 bytes) + "noun" + "approved" per entry,
-        // plus "general" + "manual-seed" per entry.
+        // The compact store: one text arena for every word (normalized and lemma equal the
+        // word here, so each is stored once: 3 + 4 + 4 bytes), the per-entry parallel arrays
+        // (9 allocations however many entries), and interned tables holding "noun",
+        // "approved", "general" and "manual-seed" once each.
+        assert_eq!(report.lexicon_strings.allocations, 1);
+        assert_eq!(report.lexicon_records.allocations, 9);
+        assert_eq!(report.entry_record_bytes, 72);
         assert_eq!(
             report.lexicon_string_chars,
-            (9 + 4 + 8) + (12 + 4 + 8) + (12 + 4 + 8) + 3 * (7 + 11)
+            (3 + 4 + 4) + (4 + 8) + (7 + 11)
         );
-        // regions and sources: one vec + one string each, per entry
-        assert_eq!(report.lexicon_regions_sources.allocations, 3 * 4);
+        // region ids, source ids, four tables, four table strings
+        assert_eq!(report.lexicon_regions_sources.allocations, 2 + 4 + 4);
         assert_eq!(report.bigram_contexts, 0);
         assert_eq!(
             report.total.bytes,

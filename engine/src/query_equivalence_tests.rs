@@ -371,7 +371,7 @@ fn check_query(engine: &Engine, query: &str, config: &RankingConfig, label: &str
         accepted
             .iter()
             .filter(|x| candidates.binary_search(x).is_err())
-            .map(|&i| engine.lexicon[i as usize].normalized.clone())
+            .map(|&i| engine.lexicon.normalized(i as usize).to_string())
             .collect::<Vec<_>>()
     );
     let reference = engine.suggest_reference_full_scan(query, usize::MAX, config);
@@ -473,7 +473,7 @@ fn indexed_equals_reference_on_synthetic_lexicon() {
     let engine = synthetic_engine();
     let mut rng = Lcg(0x77);
     let mut queries: Vec<String> = edge_case_queries();
-    let words: Vec<String> = engine.lexicon.iter().map(|e| e.word.clone()).collect();
+    let words: Vec<String> = engine.lexicon.words().map(str::to_string).collect();
     for w in &words {
         queries.extend(mutations(w, &mut rng));
     }
@@ -503,12 +503,8 @@ fn packs_have_unique_display_words_and_normalized_forms() {
         let Some(engine) = load_pack(name) else {
             continue;
         };
-        let words: BTreeSet<&str> = engine.lexicon.iter().map(|e| e.word.as_str()).collect();
-        let normalized: BTreeSet<&str> = engine
-            .lexicon
-            .iter()
-            .map(|e| e.normalized.as_str())
-            .collect();
+        let words: BTreeSet<&str> = engine.lexicon.words().collect();
+        let normalized: BTreeSet<&str> = engine.lexicon.normalized_forms().collect();
         assert_eq!(
             words.len(),
             engine.lexicon.len(),
@@ -600,9 +596,9 @@ fn indexed_equals_reference_on_real_packs() {
         // C. generated near-miss corpus over the pack's own vocabulary, deterministic stride
         let mut rng = Lcg(0xC0FFEE);
         let mut queries = fixed.clone();
-        for (i, entry) in engine.lexicon.iter().enumerate() {
+        for (i, word) in engine.lexicon.words().enumerate() {
             if i % stride == 0 {
-                queries.extend(mutations(&entry.word, &mut rng));
+                queries.extend(mutations(word, &mut rng));
             }
         }
         let mut count = 0usize;
@@ -669,29 +665,26 @@ fn profile_reference_stages() {
             t_prefix_trie += t.elapsed();
             let t = Instant::now();
             for (norm_word, _) in &prefix_matches {
-                std::hint::black_box(engine.lexicon.iter().find(|e| &e.normalized == norm_word));
+                std::hint::black_box(engine.lexicon.position_normalized(norm_word));
                 prefix_hits += 1;
             }
             t_prefix_lookup += t.elapsed();
 
             let qlen = norm_query.chars().count() as isize;
-            for entry in &engine.lexicon {
+            for entry_norm in engine.lexicon.normalized_forms() {
                 let t = Instant::now();
-                let stripped = std::hint::black_box(strip_diacritics(&entry.normalized));
+                let stripped = std::hint::black_box(strip_diacritics(entry_norm));
                 let diac = stripped == query_stripped;
                 t_scan_strip += t.elapsed();
                 if diac {
                     continue;
                 }
                 let t = Instant::now();
-                let len_ok = (entry.normalized.chars().count() as isize - qlen).abs() <= 2;
+                let len_ok = (entry_norm.chars().count() as isize - qlen).abs() <= 2;
                 t_scan_len += t.elapsed();
                 if len_ok {
                     let t = Instant::now();
-                    std::hint::black_box(weighted_damerau_levenshtein(
-                        &norm_query,
-                        &entry.normalized,
-                    ));
+                    std::hint::black_box(weighted_damerau_levenshtein(&norm_query, entry_norm));
                     t_scan_distance += t.elapsed();
                     distance_calls += 1;
                 }
