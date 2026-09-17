@@ -1,0 +1,54 @@
+{
+  "schema_version": "ku-latn-orthography-v1",
+  "locale_tag": "ku-Latn",
+  "language_name": {
+    "native": "Kurmancî",
+    "english": "Northern Kurdish (Kurmanji), Latin script"
+  },
+  "review_status": "draft-pending-human-review",
+  "reviewed_by": null,
+  "review_date": null,
+  "review_notes": [
+    "Normative orthography contract for the project's ku-Latn target. The letter set is the project's explicit alphabet policy (data-builder/src/alphabet.rs); the reference orthography document to cite is a human review question."
+  ],
+  "alphabet": [
+    "a", "b", "c", "ç", "d", "e", "ê", "f", "g", "h", "i", "î", "j", "k", "l", "m",
+    "n", "o", "p", "q", "r", "s", "ş", "t", "u", "û", "v", "w", "x", "y", "z"
+  ],
+  "alphabet_basis": "The 31-letter Kurmancî Latin alphabet, identical to the project's default-pack alphabet policy, the seed vocabulary, the review identities and the engine normalization.",
+  "distinct_letters": [
+    { "letter": "ç", "base": "c", "uppercase": "Ç", "code_point": "U+00E7", "decomposition": "c U+0327" },
+    { "letter": "ê", "base": "e", "uppercase": "Ê", "code_point": "U+00EA", "decomposition": "e U+0302" },
+    { "letter": "î", "base": "i", "uppercase": "Î", "code_point": "U+00EE", "decomposition": "i U+0302" },
+    { "letter": "ş", "base": "s", "uppercase": "Ş", "code_point": "U+015F", "decomposition": "s U+0327" },
+    { "letter": "û", "base": "u", "uppercase": "Û", "code_point": "U+00FB", "decomposition": "u U+0302" }
+  ],
+  "distinct_letters_note": "ç ê î ş û are distinct Kurmancî alphabet letters, not interchangeable representations of c e i s u. Their canonical Unicode decompositions (base letter plus combining mark) are an encoding property; orthographic letter identity is separate, and replacing one with its base letter changes the word. A base-letter ↔ distinct-letter change proposed by spell correction is a linguistic correction, never an equivalence.",
+  "casing": {
+    "rule": "unicode-default",
+    "pairs": [
+      ["a", "A"], ["b", "B"], ["c", "C"], ["ç", "Ç"], ["d", "D"], ["e", "E"], ["ê", "Ê"],
+      ["f", "F"], ["g", "G"], ["h", "H"], ["i", "I"], ["î", "Î"], ["j", "J"], ["k", "K"],
+      ["l", "L"], ["m", "M"], ["n", "N"], ["o", "O"], ["p", "P"], ["q", "Q"], ["r", "R"],
+      ["s", "S"], ["ş", "Ş"], ["t", "T"], ["u", "U"], ["û", "Û"], ["v", "V"], ["w", "W"],
+      ["x", "X"], ["y", "Y"], ["z", "Z"]
+    ],
+    "notes": [
+      "Casing is locale-independent Unicode default casing: 'i' pairs only with 'I' (U+0049) and 'I' only with 'i' (U+0069). A host must never apply another locale's dotted or dotless i rules to ku-Latn text.",
+      "Sentence-initial and title capitalization keep the letter's identity: 'êvar' → 'Êvar', 'şev' → 'Şev'."
+    ]
+  },
+  "normalization": {
+    "reference": "engine normalize(): Unicode control characters, U+200B and U+FEFF removed, then NFC, then lowercase; identical to the repository's canonical review identity rule (normalize_text)",
+    "decomposed_input_accepted": true,
+    "notes": [
+      "Precomposed letters and base letter plus combining mark are the same text: 's' + U+0327 and 'ş' normalize to the same word.",
+      "Ordinary whitespace and NBSP are not stripped; the host tokenizes on whitespace before querying the engine."
+    ]
+  },
+  "not_covered_by_this_contract": [
+    "Word-internal hyphen and apostrophes ('-', U+0027, U+2019): whether and how they occur inside words is a separate, human-reviewed tokenization policy; this contract neither admits nor forbids them.",
+    "Digits, punctuation and symbols: not letters of the alphabet and not lexical characters; they follow the host's ordinary layers.",
+    "Characters observed in source data that are outside the alphabet: source-quality findings recorded by the generated alphabet audit (data-builder audit-alphabet), never part of this contract."
+  ]
+}
