@@ -85,9 +85,6 @@ $
 0
 1
 2
-2012an
-2015an
-20an
 3
 4
 5
@@ -13033,7 +13030,6 @@ comerdkirî
 comerdî
 comkirin
 como
-comté
 conxayî
 conî
 coq
@@ -13153,7 +13149,6 @@ cîranî
 cîwar
 cîwarbûn
 cîzme
-côte
 cûcebûn
 cûcebûyî
 cûcekirin
@@ -20391,8 +20386,6 @@ huçik
 huçikdar
 hwd
 hyperplane
-hérault
-héraultê
 hê
 hêb
 hêbdar
@@ -20916,7 +20909,6 @@ istismarat
 istisna
 istisnakirin
 istixbarat
-isère
 isûl
 itaet
 italia
@@ -22475,7 +22467,6 @@ klînîk
 klîp
 klîtorîs
 klûb
-km²
 ko
 koalisyon
 kobalt
@@ -29099,7 +29090,6 @@ piçopiço
 piçîn
 piçîskek
 piçûk
-più
 pişik
 pişikandin
 pişk
@@ -32815,7 +32805,6 @@ sazîkirî
 sazîn
 sazîtî
 sazûman
-saône
 schwerin
 seadet
 seans
@@ -34459,7 +34448,6 @@ swêdê
 swêdî
 swîcdar
 swîsre
-sèvres
 sê
 sêbarekirin
 sêbarekirî
@@ -37587,7 +37575,6 @@ wîçînîkirin
 wîşî
 wîşîgirtin
 wûrzburg
-württemberg
 x
 xa
 xacê

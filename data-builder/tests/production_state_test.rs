@@ -43,6 +43,9 @@ fn copy_tree(src: &Path, dst: &Path) {
             copy_tree(&e.path(), &dst.join(e.file_name()));
         }
     } else {
+        if let Some(parent) = dst.parent() {
+            fs::create_dir_all(parent).unwrap();
+        }
         fs::copy(src, dst).unwrap();
     }
 }
@@ -61,6 +64,7 @@ fn authoritative_inputs_copy() -> tempfile::TempDir {
         "data/source-registry",
         "data/pack-policy.toml",
         "data/language-model",
+        "data-builder/config/ngrams.toml",
     ] {
         let src = ws_root().join(rel);
         assert!(src.exists(), "{} missing in the workspace", rel);
@@ -432,4 +436,88 @@ model_profile = "none"
     assert!(err.contains("kuwiki-20260801"), "{}", err);
     assert!(err.contains("nothing was changed"), "{}", err);
     assert_eq!(snapshot(root), before);
+}
+
+/// The committed language model records the n-gram pruning configuration it was built with;
+/// a different `data-builder/config/ngrams.toml` makes the model stale and must fail closed
+/// (a test once left a modified configuration behind and the model silently disagreed).
+#[test]
+fn language_model_built_with_another_ngram_config_fails_closed() {
+    let temp = authoritative_inputs_copy();
+    let root = temp.path();
+    let config = root.join("data-builder/config/ngrams.toml");
+    fs::create_dir_all(config.parent().unwrap()).unwrap();
+
+    // Same configuration as the workspace: the model check passes on this copy.
+    fs::copy(ws_root().join("data-builder/config/ngrams.toml"), &config).unwrap();
+    let report = verify_production_state(root).unwrap();
+    let model_check = report
+        .checks
+        .iter()
+        .find(|c| c.name.starts_with("language-model:"))
+        .expect("language model check present");
+    assert_eq!(
+        model_check.status,
+        CheckStatus::Pass,
+        "{}",
+        model_check.detail
+    );
+
+    // A different pruning configuration: the same model is now stale.
+    fs::write(
+        &config,
+        "[bigram]\nminimum_count = 3\nmaximum_predictions_per_context = 8\n",
+    )
+    .unwrap();
+    let report = verify_production_state(root).unwrap();
+    let model_check = report
+        .checks
+        .iter()
+        .find(|c| c.name.starts_with("language-model:"))
+        .unwrap();
+    assert_eq!(
+        model_check.status,
+        CheckStatus::Fail,
+        "{}",
+        model_check.detail
+    );
+    assert!(
+        model_check.detail.contains("ngrams.toml"),
+        "{}",
+        model_check.detail
+    );
+    assert!(!report.ok);
+}
+
+/// A missing n-gram configuration cannot be verified against the committed model and must
+/// fail closed rather than be skipped.
+#[test]
+fn missing_ngram_config_fails_the_language_model_check() {
+    let temp = authoritative_inputs_copy();
+    let root = temp.path();
+    let config = root.join("data-builder/config/ngrams.toml");
+    assert!(config.is_file());
+    let report = verify_production_state(root).unwrap();
+    let check = |r: &data_builder_lib::production::ProductionStateReport| {
+        r.checks
+            .iter()
+            .find(|c| c.name.starts_with("language-model:"))
+            .cloned()
+            .expect("language model check present")
+    };
+    assert_eq!(
+        check(&report).status,
+        CheckStatus::Pass,
+        "{}",
+        check(&report).detail
+    );
+
+    fs::remove_file(&config).unwrap();
+    let report = verify_production_state(root).unwrap();
+    let c = check(&report);
+    assert_eq!(c.status, CheckStatus::Fail, "{}", c.detail);
+    assert!(c.detail.contains("ngrams.toml"), "{}", c.detail);
+    assert!(c.detail.contains("missing or unreadable"), "{}", c.detail);
+    assert!(!report.ok);
+    assert!(!config.exists(), "verification writes nothing");
 }

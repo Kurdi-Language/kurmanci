@@ -1,3 +1,4 @@
+pub mod alphabet;
 pub mod audit;
 pub mod compile;
 pub mod config;
@@ -17,6 +18,9 @@ pub mod review;
 pub mod sources;
 pub mod validate;
 
+pub use alphabet::{
+    default_pack_eligibility, is_kurmanci_letter, out_of_alphabet_chars, KURMANCI_ALPHABET,
+};
 pub use audit::run_quality_audit;
 pub use compile::{
     calculate_sha256, compile_binary_pack, compile_binary_pack_with_root, write_artifacts,

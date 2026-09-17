@@ -691,8 +691,8 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
     let exp_entries = resolve_authoritative_pack_lexicon("experimental-full", ws_root).unwrap();
 
     assert_eq!(seed_entries.len(), 33);
-    assert_eq!(reviewed_entries.len(), 1464); // 33 seed + 107 Hunspell + 733 Kuwiki batch 001 + 591 Kuwiki batch 002
-    assert_eq!(exp_entries.len(), 42435); // 41106 + 733 Kuwiki b1 app + 3 b1 exp + 591 b2 app + 2 b2 exp
+    assert_eq!(reviewed_entries.len(), 1451); // 33 seed + 107 Hunspell + 721 Kuwiki batch 001 + 590 Kuwiki batch 002 (13 alphabet-policy rejections applied 2026-09-17)
+    assert_eq!(exp_entries.len(), 42422); // 41106 + 721 Kuwiki b1 app + 3 b1 exp + 590 b2 app + 2 b2 exp
 
     let seed_set: BTreeSet<String> = seed_entries.iter().map(|e| e.normalized.clone()).collect();
     let reviewed_set: BTreeSet<String> = reviewed_entries
@@ -764,7 +764,7 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
         }
     }
 
-    // Invariant 2: All 733 approved Kuwiki entries are present in reviewed and experimental-full
+    // Invariant 2: every approved Kuwiki entry is present in reviewed and experimental-full
     for app in &approved_ku_tokens {
         assert!(
             reviewed_set.contains(app),

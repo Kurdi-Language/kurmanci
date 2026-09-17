@@ -201,6 +201,7 @@ fn test_review_queues_and_decisions_pipeline_determinism() {
         "capitalization-anomalies.jsonl",
         "multiword-entries.jsonl",
         "hunspell-only.jsonl",
+        "alphabet-policy-excluded.jsonl",
     ];
     for qf in &expected_queue_files {
         let path = queues_dir.join(qf);

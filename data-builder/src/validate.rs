@@ -25,6 +25,15 @@ pub struct SourceLexiconEntry {
     pub frequency_metadata: Option<FrequencyMetadata>,
 }
 
+/// Validates an entry at the default-vocabulary boundary: the manual seed lexicon
+/// (`data/reviewed/lexicon.jsonl`, `build`) and the replacement metadata of an
+/// `approved_with_metadata_change` decision (which enters the reviewed pack). Two concerns are
+/// kept apart: the structural checks below say whether the record is technically valid
+/// (fields present, length, no markup or URL fragment); the character rule is the one
+/// production lexical eligibility policy, `crate::alphabet::default_pack_eligibility`, and
+/// is not re-implemented here. A source record that is technically valid but ineligible
+/// (a space, a digit, a foreign letter) is therefore rejected here exactly as the pack
+/// resolver rejects it; hyphen and apostrophes are left to their own policy by both.
 pub fn validate_entry(entry: &SourceLexiconEntry, line_num: usize) -> Result<(), String> {
     if entry.word.trim().is_empty() {
         return Err(format!("Line {}: 'word' field is empty", line_num));
@@ -57,15 +66,14 @@ pub fn validate_entry(entry: &SourceLexiconEntry, line_num: usize) -> Result<(),
         ));
     }
 
-    // Flexible character set check (allowing letters, diacritics, apostrophes, hyphens, spaces)
-    for ch in entry.normalized.chars() {
-        let is_valid_char = ch.is_alphabetic() || ch == '\'' || ch == '’' || ch == '-' || ch == ' ';
-        if !is_valid_char {
-            return Err(format!(
-                "Line {}: Invalid character '{}' (U+{:04X}) in word '{}'",
-                line_num, ch, ch as u32, entry.word
-            ));
-        }
+    // Default-vocabulary character eligibility: the single shared policy.
+    if let Err(outside) = crate::alphabet::default_pack_eligibility(&entry.normalized) {
+        return Err(format!(
+            "Line {}: word '{}' is not eligible for the default vocabulary: {} outside the approved Kurmancî ku-Latn alphabet",
+            line_num,
+            entry.word,
+            crate::alphabet::describe_out_of_alphabet(&outside)
+        ));
     }
 
     Ok(())

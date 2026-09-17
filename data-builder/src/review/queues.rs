@@ -54,6 +54,11 @@ pub struct ReviewQueueSummary {
     pub capitalization_anomalies_count: usize,
     pub multiword_entries_count: usize,
     pub hunspell_only_entries_count: usize,
+    /// Imported entries whose normalized form violates the default-pack alphabet policy
+    /// (`crate::alphabet`): kept as source evidence in `alphabet-policy-excluded.jsonl`,
+    /// never placed in the ordinary review pool (`hunspell-only.jsonl`).
+    #[serde(default)]
+    pub alphabet_policy_excluded_count: usize,
 }
 
 /// Member record evidence inside a metadata conflict group queue item.
@@ -474,6 +479,7 @@ pub fn generate_review_queues<P: AsRef<Path>>(
     let mut cap_anomaly_records: Vec<EntryQueueRecord> = Vec::new();
     let mut multiword_records: Vec<EntryQueueRecord> = Vec::new();
     let mut hunspell_only_records: Vec<EntryQueueRecord> = Vec::new();
+    let mut alphabet_policy_excluded_records: Vec<EntryQueueRecord> = Vec::new();
 
     let mut seen_group_ids: BTreeSet<String> = BTreeSet::new();
 
@@ -591,30 +597,45 @@ pub fn generate_review_queues<P: AsRef<Path>>(
             &item.morphology,
         )?;
 
-        let make_record =
-            |rule_id: &str, reason: &str, action: &str, cat: &str| -> EntryQueueRecord {
-                EntryQueueRecord {
-                    schema_version: REVIEW_QUEUE_SCHEMA_VERSION.to_string(),
-                    rule_id: rule_id.to_string(),
-                    rule_version: "1".to_string(),
-                    target_type: "entry".to_string(),
-                    target_id: entry_id.clone(),
-                    display: item.word.clone(),
-                    normalized: item.normalized.clone(),
-                    source_id: source_id.to_string(),
-                    source_revision: source_revision.clone(),
-                    source_lines: vec![item.source_line_num],
-                    flags: item.flags.clone(),
-                    morphology: item.morphology.clone(),
-                    part_of_speech: item.part_of_speech.clone(),
-                    reason_codes: vec![reason.to_string()],
-                    suggested_action: action.to_string(),
-                    generated_status: "unreviewed".to_string(),
-                    effective_review_status: "unreviewed".to_string(),
-                    decision_entry_id: None,
-                    queue_categories: vec![cat.to_string()],
-                }
-            };
+        // Default-pack alphabet policy (explicit human policy, `crate::alphabet`): an entry
+        // whose normalized form carries characters outside the 31 letters is not assigned
+        // for ordinary vocabulary review; its outcome is already determined. Every queue
+        // record of such an entry carries the reason so no consumer can miss it.
+        let policy_outside = crate::alphabet::default_pack_eligibility(&item.normalized).err();
+
+        let make_record = |rule_id: &str,
+                           reason: &str,
+                           action: &str,
+                           cat: &str|
+         -> EntryQueueRecord {
+            let mut reason_codes = vec![reason.to_string()];
+            let mut suggested_action = action.to_string();
+            if policy_outside.is_some() && reason != crate::alphabet::OUT_OF_ALPHABET_REASON_CODE {
+                reason_codes.push(crate::alphabet::OUT_OF_ALPHABET_REASON_CODE.to_string());
+                suggested_action = crate::alphabet::EXCLUDED_BY_ALPHABET_POLICY_ACTION.to_string();
+            }
+            EntryQueueRecord {
+                schema_version: REVIEW_QUEUE_SCHEMA_VERSION.to_string(),
+                rule_id: rule_id.to_string(),
+                rule_version: "1".to_string(),
+                target_type: "entry".to_string(),
+                target_id: entry_id.clone(),
+                display: item.word.clone(),
+                normalized: item.normalized.clone(),
+                source_id: source_id.to_string(),
+                source_revision: source_revision.clone(),
+                source_lines: vec![item.source_line_num],
+                flags: item.flags.clone(),
+                morphology: item.morphology.clone(),
+                part_of_speech: item.part_of_speech.clone(),
+                reason_codes,
+                suggested_action,
+                generated_status: "unreviewed".to_string(),
+                effective_review_status: "unreviewed".to_string(),
+                decision_entry_id: None,
+                queue_categories: vec![cat.to_string()],
+            }
+        };
 
         if suspicious_set.contains(&(item.word.clone(), item.normalized.clone())) {
             suspicious_records.push(make_record(
@@ -735,7 +756,17 @@ pub fn generate_review_queues<P: AsRef<Path>>(
             ));
         }
 
-        if !seed_words.contains(&item.normalized) {
+        if let Some(outside) = &policy_outside {
+            let mut rec = make_record(
+                "ALPHABET_POLICY_V1",
+                crate::alphabet::OUT_OF_ALPHABET_REASON_CODE,
+                crate::alphabet::EXCLUDED_BY_ALPHABET_POLICY_ACTION,
+                "alphabet-policy-excluded",
+            );
+            rec.reason_codes
+                .push(crate::alphabet::describe_out_of_alphabet(outside));
+            alphabet_policy_excluded_records.push(rec);
+        } else if !seed_words.contains(&item.normalized) {
             hunspell_only_records.push(make_record(
                 "HUNSPELL_ONLY_V1",
                 "HUNSPELL_ONLY",
@@ -851,6 +882,10 @@ pub fn generate_review_queues<P: AsRef<Path>>(
     let cap_count = write_entry_queue("capitalization-anomalies.jsonl", cap_anomaly_records)?;
     let mw_count = write_entry_queue("multiword-entries.jsonl", multiword_records)?;
     let hun_only_count = write_entry_queue("hunspell-only.jsonl", hunspell_only_records)?;
+    let policy_excluded_count = write_entry_queue(
+        "alphabet-policy-excluded.jsonl",
+        alphabet_policy_excluded_records,
+    )?;
 
     let summary = ReviewQueueSummary {
         source_id: source_id.to_string(),
@@ -868,6 +903,7 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         capitalization_anomalies_count: cap_count,
         multiword_entries_count: mw_count,
         hunspell_only_entries_count: hun_only_count,
+        alphabet_policy_excluded_count: policy_excluded_count,
     };
 
     // Mandatory Audit Summary Count Cross-Check
@@ -917,9 +953,10 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         - **Total Imported Records**: {}\n\
         - **Metadata Conflict Groups**: {}\n\
         - **Suspicious Entries**: {}\n\
-        - **Hunspell-Only Entries**: {}\n\n\
+        - **Hunspell-Only Entries**: {}\n\
+        - **Excluded from ordinary review by the alphabet policy**: {} (kept as source evidence in `alphabet-policy-excluded.jsonl`; see docs/lexicon-review.md)\n\n\
         > **IMPORTANT**: Never edit generated review queues in `data/review-queues/`. Only edit `decisions.jsonl`. The queue generator is allowed to replace `review-queues/`. It is never allowed to rewrite `review-decisions/`. If a queue appears incorrect, fix the importer or audit—not the generated queue.\n",
-        source_id, source_id, source_revision, summary.total_imported_records, summary.metadata_conflict_groups_count, summary.suspicious_entries_count, summary.hunspell_only_entries_count
+        source_id, source_id, source_revision, summary.total_imported_records, summary.metadata_conflict_groups_count, summary.suspicious_entries_count, summary.hunspell_only_entries_count, summary.alphabet_policy_excluded_count
     );
     fs::write(stage_queues_dir.join("README.md"), readme)
         .map_err(|e| format!("Write README.md failed: {}", e))?;
@@ -941,6 +978,7 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         "capitalization-anomalies.jsonl",
         "multiword-entries.jsonl",
         "hunspell-only.jsonl",
+        "alphabet-policy-excluded.jsonl",
         "summary.json",
         "README.md",
     ];

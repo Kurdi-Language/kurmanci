@@ -442,3 +442,59 @@ pub fn select_candidates_for_pack(
 
     Ok((candidates, counts))
 }
+
+/// Default-pack alphabet policy (explicit human project policy; see `crate::alphabet`),
+/// enforced fail-closed at authoritative resolution.
+///
+/// Called once, after every source (queue decisions, manual seed, Kuwiki batches, any future
+/// source) has been merged into the candidate list and before collision resolution, so the
+/// check is source-independent. A candidate that would enter the default vocabulary
+/// (`seed`, `reviewed`, or an approved / metadata-change / seed population in any pack)
+/// whose normalized form carries a character outside the 31 Kurmancî letters is a
+/// contradiction between an authoritative decision and the production policy. It is never
+/// silently removed, reinterpreted or converted: resolution fails naming the form, its
+/// source and its decision, and the decision artifact must be corrected explicitly.
+/// Mechanical exclusion happens earlier, before review assignment (`generate-review-queues`,
+/// `classify_technical_noise`). Undecided or experimental-only evidence in the
+/// experimental-full reservoir is not gated: an out-of-alphabet source form is not an error.
+pub fn apply_default_pack_alphabet_policy(
+    pack_id: &str,
+    candidates: &[SelectedCandidate],
+) -> Result<(), String> {
+    let mut violations: Vec<String> = Vec::new();
+    for c in candidates {
+        let default_producing = matches!(
+            c.population,
+            EntryPopulation::ManualSeed
+                | EntryPopulation::SeedMetadataChange
+                | EntryPopulation::ExternalApproved
+                | EntryPopulation::ExternalApprovedMetadataChange
+        );
+        let gated = match pack_id {
+            "seed" | "reviewed" => true,
+            _ => default_producing,
+        };
+        if !gated {
+            continue;
+        }
+        if let Err(outside) = crate::alphabet::default_pack_eligibility(&c.normalized) {
+            violations.push(format!(
+                "token: {:?}\n  source: {}\n  decision: {}\n  reason: {} outside the approved Kurmancî ku-Latn alphabet",
+                c.display,
+                c.source_id,
+                c.status,
+                crate::alphabet::describe_out_of_alphabet(&outside)
+            ));
+        }
+    }
+    if violations.is_empty() {
+        return Ok(());
+    }
+    violations.sort();
+    Err(format!(
+        "production lexical eligibility violation ({} in pack '{}'): an authoritative decision admits a form outside the default-pack alphabet policy; correct the decision artifact (see docs/lexicon-review.md)\n{}",
+        violations.len(),
+        pack_id,
+        violations.join("\n")
+    ))
+}

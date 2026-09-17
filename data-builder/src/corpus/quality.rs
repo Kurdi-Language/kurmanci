@@ -585,6 +585,14 @@ pub fn classify_technical_noise(tok: &str) -> String {
         return "mediawiki_structural_remnant".to_string();
     }
 
+    // 7. Alphabet policy (explicit human project policy, see crate::alphabet), applied last so
+    //    the more specific reasons above keep their labels: a token with a character outside
+    //    the 31 Kurmancî letters (hyphen and apostrophes excepted) is not escalated for human
+    //    vocabulary review.
+    if !crate::alphabet::out_of_alphabet_chars(&lower).is_empty() {
+        return crate::alphabet::OUT_OF_ALPHABET_REASON.to_string();
+    }
+
     "none".to_string()
 }
 
