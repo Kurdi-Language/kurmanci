@@ -40,7 +40,7 @@
 //! search, replacing the reference's linear `find` for every trie prefix hit with the same
 //! answer (the entry of smallest index carrying that normalized form).
 
-use crate::engine::LexiconEntry;
+use crate::lexicon::LexiconStore;
 use crate::normalization::strip_diacritics;
 use crate::trie::{Trie, TrieMemory};
 use std::cmp::Ordering;
@@ -69,20 +69,17 @@ pub struct QueryIndexMemory {
 }
 
 impl QueryIndex {
-    pub(crate) fn build(lexicon: &[LexiconEntry]) -> Self {
+    pub(crate) fn build(lexicon: &LexiconStore) -> Self {
         let n = lexicon.len();
         let mut by_normalized: Vec<u32> = (0..n as u32).collect();
         by_normalized.sort_by(|&a, &b| {
-            lexicon[a as usize]
-                .normalized
-                .cmp(&lexicon[b as usize].normalized)
+            lexicon
+                .normalized(a as usize)
+                .cmp(lexicon.normalized(b as usize))
                 .then(a.cmp(&b))
         });
 
-        let stripped: Vec<String> = lexicon
-            .iter()
-            .map(|e| strip_diacritics(&e.normalized))
-            .collect();
+        let stripped: Vec<String> = lexicon.normalized_forms().map(strip_diacritics).collect();
         let mut by_stripped: Vec<u32> = (0..n as u32).collect();
         by_stripped.sort_by(|&a, &b| {
             stripped[a as usize]
@@ -115,16 +112,16 @@ impl QueryIndex {
     /// `lexicon.iter().position(|e| e.normalized == normalized)` returns.
     pub(crate) fn find_normalized(
         &self,
-        lexicon: &[LexiconEntry],
+        lexicon: &LexiconStore,
         normalized: &str,
     ) -> Option<usize> {
-        let first = self.by_normalized.partition_point(|&i| {
-            lexicon[i as usize].normalized.as_str().cmp(normalized) == Ordering::Less
-        });
+        let first = self
+            .by_normalized
+            .partition_point(|&i| lexicon.normalized(i as usize).cmp(normalized) == Ordering::Less);
         self.by_normalized
             .get(first)
             .map(|&i| i as usize)
-            .filter(|&i| lexicon[i].normalized == normalized)
+            .filter(|&i| lexicon.normalized(i) == normalized)
     }
 
     /// Ascending, duplicate-free lexicon indices of every entry whose stripped form is within
@@ -170,6 +167,7 @@ impl QueryIndex {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engine::LexiconEntry;
     use crate::ranking::FrequencyMetadata;
 
     fn entry(word: &str) -> LexiconEntry {
@@ -188,17 +186,18 @@ mod tests {
 
     #[test]
     fn find_normalized_matches_linear_position() {
-        let lexicon: Vec<LexiconEntry> = ["roj", "rojbaş", "bijî", "roj", "a", "şev"]
+        let entries: Vec<LexiconEntry> = ["roj", "rojbaş", "bijî", "roj", "a", "şev"]
             .iter()
             .map(|w| entry(w))
             .collect();
+        let lexicon = LexiconStore::from_entries(entries.clone()).unwrap();
         let index = QueryIndex::build(&lexicon);
         for probe in [
             "roj", "rojbaş", "bijî", "a", "şev", "rojba", "", "zzz", "ROJ",
         ] {
             assert_eq!(
                 index.find_normalized(&lexicon, probe),
-                lexicon.iter().position(|e| e.normalized == probe),
+                entries.iter().position(|e| e.normalized == probe),
                 "{}",
                 probe
             );
@@ -207,10 +206,13 @@ mod tests {
 
     #[test]
     fn candidates_group_entries_sharing_a_stripped_form_and_are_ascending() {
-        let lexicon: Vec<LexiconEntry> = ["baş", "bas", "baz", "xyz", "bâş", "ba"]
-            .iter()
-            .map(|w| entry(w))
-            .collect();
+        let lexicon = LexiconStore::from_entries(
+            ["baş", "bas", "baz", "xyz", "bâş", "ba"]
+                .iter()
+                .map(|w| entry(w))
+                .collect(),
+        )
+        .unwrap();
         let index = QueryIndex::build(&lexicon);
         let c = index.candidates("bas", 0);
         assert_eq!(c, vec![0, 1]); // "baş" and "bas" strip to "bas"

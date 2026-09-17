@@ -236,3 +236,42 @@ The index is a second compact trie plus two `u32` arrays: 3.15 MB on the experim
 experimental pack, spent sorting the entries twice (by normalized and by stripped form) and
 building the stripped trie; allocation calls during load rise from 601,833 to 972,261 (the
 temporary stripped strings), all freed before load returns.
+
+## Lexicon record compaction (after the query index)
+
+Third step, measured on the post-#67 packs (experimental-full 42,422 entries, reviewed
+1,451) with the same bench, release profile and host. Before the change the lexicon record
+and its payloads were the largest remaining structure: 200 B of `LexiconEntry` per entry plus
+nine heap allocations, 13.5 MB (53% of the 25.5 MB heap) and 381,799 allocations on
+experimental-full, with `status`, `part_of_speech`, `regions` and `sources` repeating the
+same few values.
+
+`engine/src/lexicon.rs` (`LexiconStore`) keeps the same information in flat arrays: one text
+arena for `word`, `normalized` and `lemma` (a form equal to another form of the same entry is
+stored once), per-entry spans, parallel frequency and frequency-metadata arrays, and `u32`
+ids into interned status, part-of-speech, region and source tables; 72 B of inline record per
+entry; the allocation count scales with the number of distinct interned categorical values
+rather than with the number of entries (the current experimental-full store uses 49
+allocations). The pack decoder borrows strings from the payload instead of allocating them. Next-word context lookup uses the query index's binary search
+(the first index a linear `position()` returns).
+
+| Pack | Engine heap before | after | Bytes/entry before | after | Lexicon structures before | after | RSS after load before | after | Load before | after |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| reviewed | 1.56 MB | 1.24 MB | 1,075 | 854 | 0.45 MB, 13,060 allocs | 0.13 MB, 35 allocs | 5.8 MB | 5.3 MB | 5.5 ms | 5.2 ms |
+| experimental-full | 25.48 MB | 15.73 MB | 601 | 371 | 13.53 MB, 381,799 allocs | 3.77 MB, 49 allocs | 51.3 MB | 38.7 MB | 118 ms | 109 ms |
+
+Experimental-full attribution after: lexicon records (parallel arrays) 3.05 MB, text arena
+0.38 MB (378,883 chars in one allocation), id lists and tables 0.34 MB; trie node arrays
+1.98 MB, trie words 1.05 MB; n-gram tables and lists 5.78 MB; query index 3.15 MB. Allocation
+calls at load 971,751 to 590,097 (the remaining ones are the per-context n-gram lists and the
+index build). Heap to pack ratio 3.64× to 2.25×.
+
+Query latency: suggest, correct and complete unchanged within noise (p50 336 / 181 / 605 µs
+on experimental-full); prediction now resolves its context through the index lookup instead of a linear scan of the lexicon: bigram 21.8 → 0.75 µs and trigram 75.7 → 1.29 µs p50 on experimental-full.
+
+Equivalence evidence: pack bytes unchanged; golden query JSON (`known`, `suggest`, `correct`,
+`complete`, `predict` over every evaluation-case input plus probes, 1,836 lines per pack) on
+the reviewed and experimental-full packs byte-identical before and after; the 357-case
+`evaluate-packs` reports byte-identical; `indexed_equals_reference_on_real_packs` passes in
+release mode. No ABI, SDK, ranking or prediction change.
+

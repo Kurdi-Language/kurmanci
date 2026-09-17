@@ -1,6 +1,7 @@
 use crate::distance::weighted_damerau_levenshtein;
 use crate::errors::PackLoadError;
 use crate::index::{QueryIndex, MAX_STRIPPED_UNIT_DISTANCE};
+use crate::lexicon::{LexiconStore, LexiconStoreBuilder};
 use crate::normalization::{normalize, strip_diacritics};
 use crate::ranking::{
     calculate_score, FrequencyMetadata, NextWordPrediction, RankedCandidate, RankingConfig,
@@ -45,7 +46,8 @@ pub type TrigramIndex = HashMap<TrigramContextKey, Vec<TrigramPredictionEntry>>;
 
 #[derive(Debug, Clone, Default)]
 pub struct Engine {
-    pub(crate) lexicon: Vec<LexiconEntry>,
+    /// The lexicon in compact storage (see `crate::lexicon`); entry order is pack order.
+    pub(crate) lexicon: LexiconStore,
     pub(crate) trie: Trie,
     max_frequency: u64,
     #[allow(dead_code)]
@@ -72,16 +74,63 @@ impl Engine {
     }
 
     /// Loads lexicon entries from JSON structures.
+    ///
+    /// Entries are appended after any already loaded, in the given order. The compact store
+    /// is rebuilt around the existing entries by borrowing their fields (no per-entry
+    /// re-materialization). All fallible work happens on staged values: the store, the
+    /// trie and the maximum frequency are rebuilt locally and the query index is built from
+    /// the completed store; only then are they assigned to the engine together. A lexicon
+    /// that exceeds the store's `u32` representation (text, list or table sizes) cannot be
+    /// represented: this method panics naming the limit and leaves the engine exactly as it
+    /// was (binary packs report the same condition as `PackLoadError::InvalidPayload`).
     pub fn load_lexicon(&mut self, entries: Vec<LexiconEntry>) {
-        for entry in entries {
-            if entry.frequency > self.max_frequency {
-                self.max_frequency = entry.frequency;
-            }
-            self.trie.insert(&entry.normalized, entry.frequency);
-            self.lexicon.push(entry);
+        const LIMIT: &str = "load_lexicon: lexicon exceeds the compact store's u32 representation";
+        let mut builder = LexiconStoreBuilder::with_capacity(self.lexicon.len() + entries.len());
+        let mut staged_trie = Trie::default();
+        let mut staged_max_frequency = 0u64;
+        for i in 0..self.lexicon.len() {
+            let frequency = self.lexicon.frequency(i);
+            staged_max_frequency = staged_max_frequency.max(frequency);
+            staged_trie.insert(self.lexicon.normalized(i), frequency);
+            builder
+                .push(
+                    self.lexicon.word(i),
+                    self.lexicon.normalized(i),
+                    self.lexicon.lemma(i),
+                    self.lexicon.part_of_speech(i),
+                    frequency,
+                    self.lexicon.status(i),
+                    self.lexicon.regions(i),
+                    self.lexicon.sources(i),
+                    self.lexicon.frequency_metadata(i),
+                )
+                .unwrap_or_else(|e| panic!("{}: {}", LIMIT, e));
         }
-        self.trie.build();
-        self.index = QueryIndex::build(&self.lexicon);
+        for entry in &entries {
+            staged_max_frequency = staged_max_frequency.max(entry.frequency);
+            staged_trie.insert(&entry.normalized, entry.frequency);
+            builder
+                .push(
+                    &entry.word,
+                    &entry.normalized,
+                    &entry.lemma,
+                    &entry.part_of_speech,
+                    entry.frequency,
+                    &entry.status,
+                    entry.regions.iter().map(String::as_str),
+                    entry.sources.iter().map(String::as_str),
+                    entry.frequency_metadata,
+                )
+                .unwrap_or_else(|e| panic!("{}: {}", LIMIT, e));
+        }
+        let staged_lexicon = builder.finish();
+        staged_trie.build();
+        let staged_index = QueryIndex::build(&staged_lexicon);
+        // Nothing above touched `self`; commit the staged state together.
+        self.lexicon = staged_lexicon;
+        self.trie = staged_trie;
+        self.max_frequency = self.max_frequency.max(staged_max_frequency);
+        self.index = staged_index;
     }
 
     /// Loads custom typo mappings into the engine.
@@ -167,19 +216,22 @@ impl Engine {
                 ),
             });
         }
-        let mut staged_lexicon = Vec::with_capacity(count);
+        let mut staged_builder = LexiconStoreBuilder::with_capacity(count);
+        let mut staged_count = 0usize;
         let mut staged_trie = Trie::default();
         let mut staged_max_frequency = 0u64;
         let mut payload_cursor = 0;
+        let mut regions: Vec<&str> = Vec::new();
+        let mut sources: Vec<&str> = Vec::new();
 
         for _ in 0..count {
-            let (word, new_c) = read_string(payload_bytes, payload_cursor)?;
+            let (word, new_c) = read_str(payload_bytes, payload_cursor)?;
             payload_cursor = new_c;
-            let (lemma, new_c) = read_string(payload_bytes, payload_cursor)?;
+            let (lemma, new_c) = read_str(payload_bytes, payload_cursor)?;
             payload_cursor = new_c;
-            let (normalized, new_c) = read_string(payload_bytes, payload_cursor)?;
+            let (normalized, new_c) = read_str(payload_bytes, payload_cursor)?;
             payload_cursor = new_c;
-            let (part_of_speech, new_c) = read_string(payload_bytes, payload_cursor)?;
+            let (part_of_speech, new_c) = read_str(payload_bytes, payload_cursor)?;
             payload_cursor = new_c;
 
             if payload_cursor + 8 > payload_bytes.len() {
@@ -192,7 +244,7 @@ impl Engine {
             );
             payload_cursor += 8;
 
-            let (status, new_c) = read_string(payload_bytes, payload_cursor)?;
+            let (status, new_c) = read_str(payload_bytes, payload_cursor)?;
             payload_cursor = new_c;
 
             if payload_cursor + 2 > payload_bytes.len() {
@@ -205,9 +257,9 @@ impl Engine {
             ) as usize;
             payload_cursor += 2;
 
-            let mut regions = Vec::with_capacity(regions_count);
+            regions.clear();
             for _ in 0..regions_count {
-                let (reg, new_c) = read_string(payload_bytes, payload_cursor)?;
+                let (reg, new_c) = read_str(payload_bytes, payload_cursor)?;
                 payload_cursor = new_c;
                 regions.push(reg);
             }
@@ -222,9 +274,9 @@ impl Engine {
             ) as usize;
             payload_cursor += 2;
 
-            let mut sources = Vec::with_capacity(sources_count);
+            sources.clear();
             for _ in 0..sources_count {
-                let (src, new_c) = read_string(payload_bytes, payload_cursor)?;
+                let (src, new_c) = read_str(payload_bytes, payload_cursor)?;
                 payload_cursor = new_c;
                 sources.push(src);
             }
@@ -254,28 +306,36 @@ impl Engine {
             );
             payload_cursor += 4;
 
-            let entry = LexiconEntry {
-                word,
-                normalized,
-                lemma,
-                part_of_speech,
-                frequency,
-                regions,
-                status,
-                sources,
-                frequency_metadata: FrequencyMetadata {
-                    token_count,
-                    document_count,
-                    zipf_milli,
-                },
-            };
-
-            if entry.frequency > staged_max_frequency {
-                staged_max_frequency = entry.frequency;
+            if frequency > staged_max_frequency {
+                staged_max_frequency = frequency;
             }
-            staged_trie.insert(&entry.normalized, entry.frequency);
-            staged_lexicon.push(entry);
+            staged_trie.insert(normalized, frequency);
+            // Representation limit: a payload whose text, list or table sizes do not fit
+            // the store's u32 offsets is rejected here, before the staged store is adopted,
+            // so the existing engine state is untouched.
+            staged_builder
+                .push(
+                    word,
+                    normalized,
+                    lemma,
+                    part_of_speech,
+                    frequency,
+                    status,
+                    regions.iter().copied(),
+                    sources.iter().copied(),
+                    FrequencyMetadata {
+                        token_count,
+                        document_count,
+                        zipf_milli,
+                    },
+                )
+                .map_err(|e| PackLoadError::InvalidPayload {
+                    message: e.to_string(),
+                })?;
+            staged_count += 1;
         }
+        let staged_lexicon = staged_builder.finish();
+        debug_assert_eq!(staged_lexicon.len(), staged_count);
 
         // 7. Decode Bigram Section (Section 2)
         if payload_cursor + 4 > payload_bytes.len() {
@@ -680,7 +740,7 @@ impl Engine {
             .iter()
             .take(limit)
             .map(|&(next_idx, count, prob)| NextWordPrediction {
-                word: self.lexicon[next_idx].word.clone(),
+                word: self.lexicon.word(next_idx).to_string(),
                 count,
                 probability_millionths: prob,
             })
@@ -714,7 +774,7 @@ impl Engine {
                     .iter()
                     .take(limit)
                     .map(|&(next_idx, count, prob)| NextWordPrediction {
-                        word: self.lexicon[next_idx].word.clone(),
+                        word: self.lexicon.word(next_idx).to_string(),
                         count,
                         probability_millionths: prob,
                     })
@@ -734,7 +794,7 @@ impl Engine {
                     .iter()
                     .take(limit)
                     .map(|&(next_idx, count, prob)| NextWordPrediction {
-                        word: self.lexicon[next_idx].word.clone(),
+                        word: self.lexicon.word(next_idx).to_string(),
                         count,
                         probability_millionths: prob,
                     })
@@ -753,11 +813,13 @@ impl Engine {
         }
     }
 
+    /// Index of the first entry with this normalized form: the query index's binary search,
+    /// which returns exactly what a linear `position` over the lexicon returns.
     fn find_lexicon_index(&self, normalized: &str) -> Option<usize> {
         if normalized.is_empty() {
             return None;
         }
-        self.lexicon.iter().position(|e| e.normalized == normalized)
+        self.index.find_normalized(&self.lexicon, normalized)
     }
 
     /// Generates prefix completion candidates.
@@ -812,13 +874,14 @@ impl Engine {
             &norm_query,
             &query_stripped,
             &mut candidate_ranks,
-            |norm_word| self.lexicon.iter().find(|e| e.normalized == norm_word),
+            |norm_word| self.lexicon.position_normalized(norm_word),
         );
 
         // 2. Scan Lexicon for Diacritic Restoration & Edit Distance
-        for entry in &self.lexicon {
+        for idx in 0..self.lexicon.len() {
             score_entry(
-                entry,
+                &self.lexicon,
+                idx,
                 &norm_query,
                 &query_stripped,
                 config,
@@ -850,11 +913,7 @@ impl Engine {
             &norm_query,
             &query_stripped,
             &mut candidate_ranks,
-            |norm_word| {
-                self.index
-                    .find_normalized(&self.lexicon, norm_word)
-                    .map(|i| &self.lexicon[i])
-            },
+            |norm_word| self.index.find_normalized(&self.lexicon, norm_word),
         );
 
         for idx in self
@@ -862,7 +921,8 @@ impl Engine {
             .candidates(&query_stripped, MAX_STRIPPED_UNIT_DISTANCE)
         {
             score_entry(
-                &self.lexicon[idx as usize],
+                &self.lexicon,
+                idx as usize,
                 &norm_query,
                 &query_stripped,
                 config,
@@ -875,23 +935,23 @@ impl Engine {
 
     /// Stage 1 of the pipeline: every trie word under the normalized query becomes an Exact
     /// or Completion candidate. `lookup` resolves a normalized trie word to its lexicon entry.
-    fn prefix_stage<'a, F>(
-        &'a self,
+    fn prefix_stage<F>(
+        &self,
         norm_query: &str,
         query_stripped: &str,
         candidate_ranks: &mut HashMap<String, RankedCandidate>,
         lookup: F,
     ) where
-        F: Fn(&str) -> Option<&'a LexiconEntry>,
+        F: Fn(&str) -> Option<usize>,
     {
         let prefix_matches = self.trie.find_by_prefix(norm_query);
         for (norm_word, _freq) in prefix_matches {
             let lex_entry = lookup(&norm_word);
             let display_word = lex_entry
-                .map(|e| e.word.clone())
+                .map(|i| self.lexicon.word(i).to_string())
                 .unwrap_or_else(|| norm_word.clone());
             let freq_meta = lex_entry
-                .map(|e| e.frequency_metadata.clone())
+                .map(|i| self.lexicon.frequency_metadata(i))
                 .unwrap_or_default();
 
             let is_exact = norm_word == norm_query;
@@ -933,10 +993,10 @@ impl Engine {
         }
         let query_stripped = strip_diacritics(&norm_query);
         let mut out = Vec::new();
-        for (i, entry) in self.lexicon.iter().enumerate() {
-            let candidate_norm = &entry.normalized;
+        for i in 0..self.lexicon.len() {
+            let candidate_norm = self.lexicon.normalized(i);
             let candidate_stripped = strip_diacritics(candidate_norm);
-            if candidate_stripped == query_stripped && candidate_norm != &norm_query {
+            if candidate_stripped == query_stripped && candidate_norm != norm_query {
                 out.push(i as u32);
                 continue;
             }
@@ -966,27 +1026,28 @@ impl Engine {
 /// edit-distance fallback. This is the only copy of the scoring semantics; the reference
 /// applies it to every entry, the indexed path to the index's candidate superset.
 fn score_entry(
-    entry: &LexiconEntry,
+    lexicon: &LexiconStore,
+    idx: usize,
     norm_query: &str,
     query_stripped: &str,
     config: &RankingConfig,
     candidate_ranks: &mut HashMap<String, RankedCandidate>,
 ) {
-    let candidate_norm = &entry.normalized;
+    let candidate_norm = lexicon.normalized(idx);
     let candidate_stripped = strip_diacritics(candidate_norm);
     let is_diac_match = candidate_stripped == query_stripped;
 
     // Diacritic restoration match
     if is_diac_match && candidate_norm != norm_query {
         let candidate = RankedCandidate {
-            word: entry.word.clone(),
+            word: lexicon.word(idx).to_string(),
             edit_cost: 0, // diacritic restoration is 0 edit distance penalty
             is_diacritic_match: true,
             prefix_quality: 0,
-            frequency: entry.frequency_metadata.clone(),
+            frequency: lexicon.frequency_metadata(idx),
             kind: SuggestionKind::DiacriticCorrection,
         };
-        candidate_ranks.insert(candidate_norm.clone(), candidate);
+        candidate_ranks.insert(candidate_norm.to_string(), candidate);
         return;
     }
 
@@ -1010,7 +1071,7 @@ fn score_entry(
                 SuggestionKind::Correction
             };
             let candidate = RankedCandidate {
-                word: entry.word.clone(),
+                word: lexicon.word(idx).to_string(),
                 edit_cost,
                 is_diacritic_match: is_diac_match,
                 prefix_quality: if candidate_norm.starts_with(norm_query) {
@@ -1018,12 +1079,12 @@ fn score_entry(
                 } else {
                     0
                 },
-                frequency: entry.frequency_metadata.clone(),
+                frequency: lexicon.frequency_metadata(idx),
                 kind,
             };
 
             candidate_ranks
-                .entry(candidate_norm.clone())
+                .entry(candidate_norm.to_string())
                 .and_modify(|existing| {
                     if candidate.cmp_with_config(existing, config) == std::cmp::Ordering::Less {
                         *existing = candidate.clone();
@@ -1112,6 +1173,24 @@ fn is_all_lowercase(query: &str) -> bool {
     has_alpha
 }
 
+/// Borrows a length-prefixed UTF-8 string from the payload without allocating.
+fn read_str(bytes: &[u8], cursor: usize) -> Result<(&str, usize), PackLoadError> {
+    if cursor + 2 > bytes.len() {
+        return Err(PackLoadError::TruncatedPayload);
+    }
+    let len = u16::from_le_bytes(bytes[cursor..cursor + 2].try_into().unwrap()) as usize;
+    let start = cursor + 2;
+    let end = start + len;
+    if end > bytes.len() {
+        return Err(PackLoadError::TruncatedPayload);
+    }
+    let s = std::str::from_utf8(&bytes[start..end]).map_err(|e| PackLoadError::InvalidPayload {
+        message: format!("UTF-8 error: {}", e),
+    })?;
+    Ok((s, end))
+}
+
+#[allow(dead_code)]
 fn read_string(bytes: &[u8], cursor: usize) -> Result<(String, usize), PackLoadError> {
     if cursor + 2 > bytes.len() {
         return Err(PackLoadError::TruncatedPayload);

@@ -5,6 +5,7 @@ pub mod engine;
 pub mod errors;
 pub mod format;
 pub(crate) mod index;
+mod lexicon;
 pub mod memory;
 pub mod normalization;
 pub mod ranking;

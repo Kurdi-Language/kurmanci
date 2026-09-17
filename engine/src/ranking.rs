@@ -12,7 +12,7 @@ pub enum SuggestionKind {
     NextWord,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct FrequencyMetadata {
     pub token_count: u64,
     pub document_count: u64,
