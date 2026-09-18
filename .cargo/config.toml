@@ -1,0 +1,15 @@
+# Android native libraries must support 16 KB page sizes: apps targeting Android 15 (API 35)
+# or newer must support them on 64-bit devices, and from 1 February 2027 Google Play no longer
+# accepts non-compliant updates. With NDK r27 or lower (the repository pins r26b) the linker
+# needs both settings: max-page-size aligns every LOAD segment to 16 KB, and common-page-size
+# makes the GNU_RELRO region end on a 16 KB boundary, which the platform loader also requires.
+# RELRO stays enabled. scripts/android/verify-elf-page-alignment.sh checks both invariants on
+# every staged library and on the libraries inside the packaged AAR, and fails closed.
+[target.aarch64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]
+
+[target.armv7-linux-androideabi]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]
+
+[target.x86_64-linux-android]
+rustflags = ["-C", "link-arg=-Wl,-z,max-page-size=16384", "-C", "link-arg=-Wl,-z,common-page-size=16384"]

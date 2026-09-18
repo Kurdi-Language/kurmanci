@@ -270,6 +270,9 @@ jobs:
       - name: Validate Device Benchmark Wrapper Semantics (fake xcodebuild, no report on failure)
         run: bash scripts/apple/test-device-benchmark-wrapper.sh
 
+      - name: Validate Android 16 KB ELF Verifier (fixtures for llvm-readelf and GNU readelf layouts)
+        run: bash scripts/android/test-verify-elf-page-alignment.sh
+
       - name: Run Data-Builder Compiler (First Pass)
         run: cargo run -p kurmanci-data-builder -- build
 

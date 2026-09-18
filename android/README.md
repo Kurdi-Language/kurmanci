@@ -4,6 +4,7 @@
 
 - **Architecture**: Kotlin SDK → JNI Bridge → Stable C ABI → Rust Engine.
 - **Native ABI Support**: `arm64-v8a`, `armeabi-v7a`, `x86_64` (compiled with NDK `r26b`, `minSdk = 23`).
+- **16 KB page size**: every `libkurmanci_jni.so` is linked with `-z max-page-size=16384` and `-z common-page-size=16384` (`.cargo/config.toml`; both are needed with NDK r27 or lower), so every LOAD segment is 16 KB-aligned and the GNU_RELRO region ends on a 16 KB boundary, with RELRO kept enabled. Apps targeting Android 15 (API 35) or newer must support 16 KB page sizes on 64-bit devices, and from 1 February 2027 Google Play no longer accepts non-compliant updates. `scripts/android/verify-elf-page-alignment.sh` checks both invariants (LOAD alignment, RELRO presence and end alignment) on every staged library and on the exact bytes inside the packaged AAR, and `scripts/android/build-aar.sh` fails closed on either; `scripts/android/test-verify-elf-page-alignment.sh` is its fixture-based regression test. The other half of the requirement is the app's packaging: build the consuming app with the Android Gradle Plugin 8.5.1 or newer (or run `zipalign -P 16`), so the uncompressed library sits at a 16 KB-aligned offset inside the APK and the platform maps it directly; the project's consumer test app uses AGP 8.5.2 on Gradle 8.7 and `scripts/android/verify-apk-16k-alignment.sh` (`zipalign -c -P 16 4`) checks its APK in `test-consumers.sh` and the clean-room verification.
 - **Zero Rust Setup**: Consuming Android apps do **not** require Rust, Cargo, or NDK build scripts.
 
 ---

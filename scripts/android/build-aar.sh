@@ -44,6 +44,13 @@ if [[ -z "${ANDROID_NDK_HOME:-}" && -z "${ANDROID_NDK_ROOT:-}" ]]; then
   echo "⚠️ Warning: ANDROID_NDK_HOME not set. cargo-ndk will attempt auto-detection from ANDROID_HOME."
 fi
 
+# 16 KB page-size invariants (every LOAD segment aligned to at least 16 KB; the GNU_RELRO region
+# present and ending on a 16 KB boundary; .cargo/config.toml sets max-page-size and
+# common-page-size) are checked fail-closed on every staged library and again on the exact
+# bytes packaged in the AAR by scripts/android/verify-elf-page-alignment.sh.
+VERIFY_ELF="$SCRIPT_DIR/verify-elf-page-alignment.sh"
+[[ -x "$VERIFY_ELF" ]] || { echo "❌ Error: $VERIFY_ELF not found or not executable." >&2; exit 1; }
+
 # 1. Cross-compile native libkurmanci_jni.so for each target ABI
 for i in "${!REQUIRED_ABIS[@]}"; do
   abi="${REQUIRED_ABIS[$i]}"
@@ -55,6 +62,7 @@ for i in "${!REQUIRED_ABIS[@]}"; do
   JNI_STAGE_DIR="$REPO_ROOT/android/kurmanci/src/main/jniLibs/${abi}"
   mkdir -p "$JNI_STAGE_DIR"
   cp "$REPO_ROOT/target/${triple}/release/libkurmanci_jni.so" "$JNI_STAGE_DIR/libkurmanci_jni.so"
+  "$VERIFY_ELF" "$JNI_STAGE_DIR/libkurmanci_jni.so" "staged ${abi}"
   echo "✅ Staged $JNI_STAGE_DIR/libkurmanci_jni.so"
 done
 
@@ -110,5 +118,15 @@ else
   echo "❌ Error: Local Maven repository publication incomplete at $MAVEN_BASE" >&2
   exit 1
 fi
+
+# 4. The release invariant applies to what is shipped: check the exact bytes packaged in the
+#    published AAR for every ABI, not only the staged inputs Gradle consumed.
+echo "Verifying 16 KB page-size invariants on the libraries inside $MAVEN_AAR..."
+AAR_CHECK_DIR="$(mktemp -d)"
+trap 'rm -rf "$AAR_CHECK_DIR"' EXIT
+for abi in "${REQUIRED_ABIS[@]}"; do
+  unzip -q -o "$MAVEN_AAR" "jni/${abi}/libkurmanci_jni.so" -d "$AAR_CHECK_DIR" || { echo "❌ Error: jni/${abi}/libkurmanci_jni.so missing from $MAVEN_AAR" >&2; exit 1; }
+  "$VERIFY_ELF" "$AAR_CHECK_DIR/jni/${abi}/libkurmanci_jni.so" "packaged AAR ${abi}"
+done
 
 echo "=== Android SDK v${VERSION} build and packaging completed successfully ==="
