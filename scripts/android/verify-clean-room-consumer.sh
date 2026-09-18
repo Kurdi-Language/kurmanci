@@ -63,13 +63,17 @@ echo "✅ AAR carries every supported ABI; the consumer receives prebuilt native
 # 3. Standalone consumer: resolve the AAR from the Maven layout, build, JVM unit tests.
 cd "$REPO_ROOT/integration/android/android-consumer"
 if [[ ! -f "./gradlew" ]]; then
-  cp -r "$REPO_ROOT/android/gradle"* .
+  # Only the wrapper: the glob android/gradle* would also copy android/gradle.properties over
+  # the consumer's own tracked gradle.properties.
+  cp -r "$REPO_ROOT/android/gradle" .
   cp "$REPO_ROOT/android/gradlew"* .
 fi
 chmod +x ./gradlew
 export CONSUMER_MODE=local
 ./gradlew --quiet assembleDebug testDebugUnitTest -PkurmanciMavenGroup="$GROUP_ID" -PkurmanciVersion="$VERSION"
 echo "✅ consumer resolved $GROUP_ID:kurmanci-android:$VERSION from dist/android/maven, built and passed JVM unit tests"
+# The consumer APK must place the native libraries at 16 KB-aligned offsets (AGP 8.5.1+).
+"$REPO_ROOT/scripts/android/verify-apk-16k-alignment.sh" app/build/outputs/apk/debug/app-debug.apk
 
 # 4. Instrumentation on a connected emulator or device: load pack, known, correct, complete,
 #    predict (AndroidInstrumentationTest.testCleanRoomContractKnownCorrectCompletePredict and

@@ -89,7 +89,17 @@ host avoids cross-ISA emulation, but the rows remain emulator reference data who
 baseline (about 140 MB of instrumentation host), JNI behaviour and scheduling are not
 representative of a physical phone. On that 16 KB-page
 image the system logged `16kB AppCompat: Library 'libkurmanci_jni.so' is not
-PAGE(16384)-aligned - falling back to extraction from apk`: the AAR's native library is linked
-with 4 KB segment alignment and runs through the platform's compatibility path. That is a
-packaging matter for the Android SDK release, tracked separately; it does not affect the
-measurements above.
+PAGE(16384)-aligned - falling back to extraction from apk` at the time of these rows: the AAR's
+native library was then linked with 4 KB segment alignment and ran through the platform's
+compatibility path. The libraries are now linked with `-z max-page-size=16384` and
+`-z common-page-size=16384` (`.cargo/config.toml`), so every LOAD segment is 16 KB-aligned and
+the GNU_RELRO region ends on a 16 KB boundary with RELRO enabled; `scripts/android/build-aar.sh`
+verifies both invariants on every staged library and on the libraries inside the packaged AAR
+(`scripts/android/verify-elf-page-alignment.sh`). The other half is the
+app's packaging: with the Android Gradle Plugin 8.2.2 the consumer test app stored the
+uncompressed library at a 4 KB offset inside the APK, so the platform still extracted it
+before loading; the consumer test app now builds with AGP 8.5.2 on Gradle 8.7, its APK passes
+`zipalign -c -P 16 4`, and a rerun on the same image loads the library directly from the APK
+(`nativeloader: Load .../base.apk!/lib/arm64-v8a/libkurmanci_jni.so ... ok`) with no
+`16kB AppCompat` message. A consuming app needs the same (AGP 8.5.1 or newer, or
+`zipalign -P 16`). The rows above are kept as recorded.

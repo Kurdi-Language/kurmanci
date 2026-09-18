@@ -47,6 +47,8 @@ export CONSUMER_MODE="$CONSUMER_MODE"
 ./gradlew assembleDebug testDebugUnitTest -PkurmanciMavenGroup="${GROUP_ID}" -PkurmanciVersion="${VERSION}"
 
 echo "✅ Android consumer build and JVM unit tests passed in mode=${CONSUMER_MODE}."
+# The consumer APK must place the native libraries at 16 KB-aligned offsets (AGP 8.5.1+).
+"$REPO_ROOT/scripts/android/verify-apk-16k-alignment.sh" app/build/outputs/apk/debug/app-debug.apk
 
 # 4. Connected Android Instrumentation Test
 if command -v adb >/dev/null 2>&1 && adb devices | grep -q "device$"; then
