@@ -39,6 +39,13 @@ XCODEBUILD_EXTRA_ARGS="DEVELOPMENT_TEAM=<team id> -allowProvisioningUpdates" \
 scripts/android/device-benchmark.sh --pack data/build/packs/reviewed/lexicon.bin
 ```
 
+The iOS consumer host needs the local Swift package first (`scripts/apple/build-xcframework.sh`,
+`verify-xcframework.sh`, `create-release-archive.sh`, `generate-release-package.sh`, as CI runs them).
+It targets iOS 15 and uses the scene-based life cycle, which the iOS 26+ SDKs require; it has
+been verified under Xcode 27.0 (simulator and a real iPhone) and under the CI runner's Xcode.
+On a real iPhone the `XCODEBUILD_EXTRA_ARGS` signing
+flags above are required; Developer Mode must be enabled on the phone.
+
 Reports land in `dist/device-benchmarks/<platform>-<model>-<timestamp>.json` and a summary
 table is printed, starting with the pack's SHA-256. A run whose XCTest or instrumentation
 fails (the stability assertion included) exits non-zero and writes no report; the Apple
@@ -49,9 +56,40 @@ release-mode numbers in `docs/memory-attribution.md` are the reference point.
 
 ## Results
 
-To be filled from real devices (iPhone; Android/Samsung when available). Keep the JSON files
-alongside a row per device here:
+Real-device reports are committed under `docs/evaluation/device-benchmarks/` (one JSON per
+run, named `<platform>-<model>-<pack>-<timestamp>.json`) and summarised here, one row per
+device and pack. The host app is the Debug consumer build and every operation is invoked
+through the Swift SDK and the C FFI from the XCTest host, so the latencies are end-to-end
+SDK-path timings with a release-built engine (the XCFramework carries the release static
+library), not isolated engine timings. `RSS after load` is the resident size of the whole
+test-host process (UIKit app plus XCTest runner), not of the engine alone; no empty-host run is
+committed, so the host's own share is not established here. The difference between the two
+pack runs on the iPhone (42.2 MB → 74.2 MB, about 32 MB) is the observed incremental
+whole-process RSS between the two runs: it includes the incremental engine and data state
+together with allocator, process and runtime effects, and is not an attribution to individual
+components. The M4 numbers in `docs/memory-attribution.md` measure the engine heap in
+isolation and are the reference for component attribution.
 
-| Device | OS | Pack | Load ms | RSS after load | known / suggest / correct / complete / predict p50 µs | Stable |
+| Device | OS | Pack | Load ms (median of 5) | RSS after load | known / suggest / correct / complete / predict p50 µs | Stable |
 |---|---|---|---|---|---|---|
-| _pending_ | | | | | | |
+| iPhone 14 Pro (`iPhone15,2`) | iOS 26.7 (23H24) | reviewed `485b9d70…d34508` (2,144 entries, 1.14 MB) | 6.7 | 42.2 MB | 0.5 / 25.7 / 19.5 / 60.5 / 2.4 | 300 rounds |
+| iPhone 14 Pro (`iPhone15,2`) | iOS 26.7 (23H24) | experimental-full `65764b14…d04f7` (42,249 entries, 6.86 MB) | 68.4 | 74.2 MB | 0.5 / 125.6 / 121.8 / 368.3 / 2.5 | 300 rounds |
+| Android emulator, Pixel image `sdk_gphone16k_arm64` (16 KB pages) on an Apple M-series host | Android 17 (API 37) | reviewed `485b9d70…d34508` | 23.7 | 142.7 MB | 2.4 / 45.6 / 37.8 / 115.5 / 14.5 | 300 rounds |
+| Android emulator, Pixel image `sdk_gphone16k_arm64` (16 KB pages) on an Apple M-series host | Android 17 (API 37) | experimental-full `65764b14…d04f7` | 118.7 | 175.8 MB | 2.3 / 188.2 / 193.3 / 601.0 / 14.6 | 300 rounds |
+
+Measured 2026-09-18 with Xcode 27.0 over USB, phone unlocked, no other app in the
+foreground. Across the twelve operation rows of the two iPhone reports the p95 / p50 ratio lies
+between 1.01 (suggest, reviewed: 25.7 → 26.0 µs) and 1.17 (known_hit, reviewed: 0.500 →
+0.583 µs); the per-operation p50, p95 and max values are in the report files. RSS after the
+300 stability rounds remained within 0.2 MB of RSS after load (reviewed 42.16 → 42.22 MB,
+experimental-full 74.20 → 74.38 MB).
+The Android rows are emulator rows (`simulator: true` in the report), recorded as a reference
+until a physical Android or Samsung device is measured: the arm64 system image on an arm64
+host avoids cross-ISA emulation, but the rows remain emulator reference data whose process
+baseline (about 140 MB of instrumentation host), JNI behaviour and scheduling are not
+representative of a physical phone. On that 16 KB-page
+image the system logged `16kB AppCompat: Library 'libkurmanci_jni.so' is not
+PAGE(16384)-aligned - falling back to extraction from apk`: the AAR's native library is linked
+with 4 KB segment alignment and runs through the platform's compatibility path. That is a
+packaging matter for the Android SDK release, tracked separately; it does not affect the
+measurements above.
