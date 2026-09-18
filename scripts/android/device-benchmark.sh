@@ -47,7 +47,9 @@ fi
 
 cd "$CONSUMER"
 if [[ ! -f "./gradlew" ]]; then
-  cp -r "$REPO_ROOT/android/gradle"* .
+  # Only the wrapper: the glob android/gradle* would also copy android/gradle.properties over
+  # the consumer's own tracked gradle.properties.
+  cp -r "$REPO_ROOT/android/gradle" .
   cp "$REPO_ROOT/android/gradlew"* .
 fi
 chmod +x ./gradlew

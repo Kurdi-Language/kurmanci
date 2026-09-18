@@ -7,8 +7,9 @@
 #                        a tiny fixture). The file is swapped into integration/apple/fixtures
 #                        for the run and the placeholder is restored afterwards.
 #   --destination DEST   xcodebuild destination (default: the first available iPhone simulator).
-#                        For a real device use e.g. "platform=iOS,id=<UDID>" and provide signing
-#                        through XCODEBUILD_EXTRA_ARGS, e.g.
+#                        "platform=iOS Simulator,id=<UDID>" runs unsigned; "platform=iOS,id=<UDID>"
+#                        (a real device) runs with automatic Apple Development signing, the team
+#                        coming from XCODEBUILD_EXTRA_ARGS, e.g.
 #                        XCODEBUILD_EXTRA_ARGS="DEVELOPMENT_TEAM=ABCDE12345 -allowProvisioningUpdates"
 #   --out DIR            where to write the report (default: dist/device-benchmarks)
 # No timing gate; the numbers are recorded for the report.
@@ -43,10 +44,24 @@ for runtime, devices in data.get("devices", {}).items():
 ')"
   [[ -n "$SIM_UDID" ]] || { echo "❌ no available iPhone simulator; pass --destination" >&2; exit 1; }
   DEST="platform=iOS Simulator,id=$SIM_UDID"
-  SIGNING=(CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="")
-else
-  SIGNING=()
 fi
+
+# Signing follows the destination type, not whether it was supplied: a simulator runs the
+# host unsigned (the project's own setting); a real device needs a signed test host, so
+# automatic Apple Development signing is enabled and the team comes from XCODEBUILD_EXTRA_ARGS
+# (DEVELOPMENT_TEAM=... -allowProvisioningUpdates), which Xcode uses to create the development
+# certificate and provisioning profile on first use. Anything else is refused.
+destination_kind() {
+  if [[ "$1" =~ (^|,)platform=iOS\ Simulator(,|$) ]]; then echo simulator
+  elif [[ "$1" =~ (^|,)platform=iOS(,|$) ]]; then echo device
+  else echo unsupported
+  fi
+}
+case "$(destination_kind "$DEST")" in
+  simulator) SIGNING=(CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="") ;;
+  device) SIGNING=(CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES CODE_SIGN_STYLE=Automatic CODE_SIGN_IDENTITY="Apple Development") ;;
+  *) echo "❌ unsupported destination '$DEST': expected 'platform=iOS Simulator,...' or 'platform=iOS,...'" >&2; exit 1 ;;
+esac
 
 BACKUP="$(mktemp)"
 cp "$FIXTURE" "$BACKUP"
