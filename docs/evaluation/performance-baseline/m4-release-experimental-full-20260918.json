@@ -1,0 +1,233 @@
+{
+  "pack": "data/build/packs/experimental-full/lexicon.bin",
+  "build_profile": "release",
+  "host": "macos aarch64",
+  "reloads": 4,
+  "load": {
+    "pack_bytes": 6860008,
+    "entry_count": 42249,
+    "load_ms_median": 108.51525,
+    "load_ms_min": 106.239959,
+    "load_ms_max": 120.713417,
+    "heap_after_load_bytes": 21066463,
+    "heap_peak_during_load_bytes": 22419658,
+    "heap_temporary_load_bytes": 8213741,
+    "load_allocation_calls": 584371,
+    "engine_heap_bytes": 14205917,
+    "engine_heap_bytes_per_entry": 336.24268030012547,
+    "heap_to_pack_ratio": 2.0708309669609717,
+    "rss_after_load_bytes": 36962304,
+    "peak_rss_after_load_bytes": 36962304,
+    "attribution": {
+      "entry_count": 42249,
+      "entry_record_bytes": 72,
+      "lexicon_records": {
+        "bytes": 3041936,
+        "allocations": 9
+      },
+      "lexicon_strings": {
+        "bytes": 377571,
+        "allocations": 1
+      },
+      "lexicon_regions_sources": {
+        "bytes": 339167,
+        "allocations": 40
+      },
+      "lexicon_string_chars": 377930,
+      "trie_nodes": 123769,
+      "trie_terminal_nodes": 42249,
+      "trie_node_record_bytes": 16,
+      "trie_node_arrays": {
+        "bytes": 1980304,
+        "allocations": 4
+      },
+      "trie_words": {
+        "bytes": 1043478,
+        "allocations": 3
+      },
+      "bigram_contexts": 7371,
+      "bigram_predictions": 44820,
+      "bigram_table": {
+        "bytes": 540688,
+        "allocations": 1
+      },
+      "bigram_lists": {
+        "bytes": 1075680,
+        "allocations": 7371
+      },
+      "trigram_contexts": 27549,
+      "trigram_predictions": 55140,
+      "trigram_table": {
+        "bytes": 1343504,
+        "allocations": 1
+      },
+      "trigram_lists": {
+        "bytes": 1323360,
+        "allocations": 27549
+      },
+      "typo_map": {
+        "bytes": 0,
+        "allocations": 0
+      },
+      "query_index_stripped_forms": 41134,
+      "query_index_arrays": {
+        "bytes": 337992,
+        "allocations": 2
+      },
+      "query_index_trie_node_arrays": {
+        "bytes": 1826752,
+        "allocations": 4
+      },
+      "query_index_trie_words": {
+        "bytes": 975494,
+        "allocations": 3
+      },
+      "total": {
+        "bytes": 14205926,
+        "allocations": 34988
+      }
+    },
+    "attribution_coverage": 1.0000006335388276
+  },
+  "latencies": [
+    {
+      "operation": "known_hit",
+      "input": "welat",
+      "iterations": 500,
+      "p50_us": 0.5,
+      "p95_us": 0.5419999999999999,
+      "p99_us": 0.583,
+      "max_us": 3.334,
+      "non_empty": 500,
+      "result_count": 1,
+      "transient_peak_bytes": 26
+    },
+    {
+      "operation": "known_miss",
+      "input": "xyzqwv",
+      "iterations": 500,
+      "p50_us": 0.5,
+      "p95_us": 0.5419999999999999,
+      "p99_us": 0.5840000000000001,
+      "max_us": 1.125,
+      "non_empty": 0,
+      "result_count": 0,
+      "transient_peak_bytes": 28
+    },
+    {
+      "operation": "suggest_exact",
+      "input": "welat",
+      "iterations": 500,
+      "p50_us": 334.208,
+      "p95_us": 369.917,
+      "p99_us": 444.667,
+      "max_us": 567.3330000000001,
+      "non_empty": 500,
+      "result_count": 5,
+      "transient_peak_bytes": 19216
+    },
+    {
+      "operation": "suggest_diacritic",
+      "input": "rojbas",
+      "iterations": 500,
+      "p50_us": 173.917,
+      "p95_us": 183.5,
+      "p99_us": 216.75,
+      "max_us": 275.66700000000003,
+      "non_empty": 500,
+      "result_count": 5,
+      "transient_peak_bytes": 4552
+    },
+    {
+      "operation": "correct_typo",
+      "input": "spaz",
+      "iterations": 500,
+      "p50_us": 177.583,
+      "p95_us": 184.334,
+      "p99_us": 213.75,
+      "max_us": 335.375,
+      "non_empty": 500,
+      "result_count": 5,
+      "transient_peak_bytes": 18046
+    },
+    {
+      "operation": "complete_short",
+      "input": "ro",
+      "iterations": 500,
+      "p50_us": 585.833,
+      "p95_us": 616.833,
+      "p99_us": 671.834,
+      "max_us": 839.042,
+      "non_empty": 500,
+      "result_count": 5,
+      "transient_peak_bytes": 143106
+    },
+    {
+      "operation": "complete_long",
+      "input": "rojb",
+      "iterations": 500,
+      "p50_us": 157.375,
+      "p95_us": 166.083,
+      "p99_us": 191.708,
+      "max_us": 222.917,
+      "non_empty": 500,
+      "result_count": 5,
+      "transient_peak_bytes": 9102
+    },
+    {
+      "operation": "predict_bigram",
+      "input": "ez",
+      "iterations": 500,
+      "p50_us": 0.75,
+      "p95_us": 0.792,
+      "p99_us": 0.833,
+      "max_us": 7.75,
+      "non_empty": 500,
+      "result_count": 5,
+      "prediction_source": "Bigram",
+      "transient_peak_bytes": 238
+    },
+    {
+      "operation": "predict_backoff",
+      "input": "xyzqwv ez",
+      "iterations": 500,
+      "p50_us": 1.4160000000000001,
+      "p95_us": 1.458,
+      "p99_us": 1.541,
+      "max_us": 5.542,
+      "non_empty": 500,
+      "result_count": 5,
+      "prediction_source": "BigramBackoff",
+      "transient_peak_bytes": 274
+    },
+    {
+      "operation": "predict_trigram",
+      "input": "ez ê",
+      "iterations": 500,
+      "p50_us": 1.291,
+      "p95_us": 1.333,
+      "p99_us": 1.375,
+      "max_us": 5.375,
+      "non_empty": 500,
+      "result_count": 5,
+      "prediction_source": "Trigram",
+      "transient_peak_bytes": 269
+    },
+    {
+      "operation": "predict_zero",
+      "input": "xyzqwv zzqxw",
+      "iterations": 500,
+      "p50_us": 1.333,
+      "p95_us": 1.375,
+      "p99_us": 1.458,
+      "max_us": 3.416,
+      "non_empty": 0,
+      "result_count": 0,
+      "transient_peak_bytes": 86
+    }
+  ],
+  "heap_growth_during_queries_bytes": 2409,
+  "rss_after_queries_bytes": 37486592,
+  "peak_rss_after_queries_bytes": 37486592,
+  "peak_rss_after_reloads_bytes": 61833216
+}

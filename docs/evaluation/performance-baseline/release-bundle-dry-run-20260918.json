@@ -1,0 +1,267 @@
+{
+ "schema_version": "release-bundle-dry-run-evidence-v1",
+ "purpose": "Evidence of the manual release-bundle dry run cited by performance-baseline-2026-09-18.md. Values are copied from the JSON output of verify-release-bundle on the produced bundle; this is a local dry run, not the CI clean-checkout run (which builds a bundle without the optional platform artifacts).",
+ "run_date": "2026-09-18",
+ "source_commit": "5ed81d98c1ade0bca0aa17e38a95caf883f0bd89",
+ "data_tree": "ddfc51808df1d2445539720d644054d9eb384706",
+ "worktree_dirty": true,
+ "worktree_dirty_note": "untracked files present: android/kurmanci/src/main/jniLibs/ (AAR build output) and keyboard-inspect.sh; --allow-dirty was passed; the bundle is therefore not reproducible from the recorded commit and data tree alone, as its evaluation notice states",
+ "commands": [
+  "scripts/apple/build-xcframework.sh --version 0.1.0 && scripts/apple/verify-xcframework.sh && scripts/apple/create-release-archive.sh --version 0.1.0 && scripts/apple/generate-release-package.sh --version 0.1.0",
+  "scripts/android/build-aar.sh",
+  "cargo run --release -p kurmanci-data-builder -- build-release-bundle --out <dir> --allow-dirty --apple dist/artifacts/KurmanciFFI.xcframework --android dist/android/maven/io/github/ferhatguneri/kurmanci-android/0.1.0/kurmanci-android-0.1.0.aar --json",
+  "cargo run --release -p kurmanci-data-builder -- verify-release-bundle <dir>/kurmanci-ku-Latn-0.1.0 --json"
+ ],
+ "toolchain": {
+  "rust": "1.85.0",
+  "xcode": "27.0",
+  "android_ndk": "26.1.10909125",
+  "host": "Mac16,12 (Apple M4), macOS 27.0 (26A428)"
+ },
+ "result": {
+  "release_version": "0.1.0",
+  "release_kind": "evaluation",
+  "evaluation_notice": "Evaluation/development release: redistribution is not determined to be allowed for: language-model:kuwiki-20260801 = pending-review (determinations are copied from the registries and the language model as recorded; this tool makes no legal determination; do not redistribute until they are resolved); the working tree had uncommitted or untracked files when the bundle was built (worktree_dirty = true), so the bundle is not reproducible from the recorded source commit and data tree.",
+  "files_verified": 44,
+  "sha256sums_entries": 43,
+  "sha256sums_sha256": "3e27f86ebabd5b97e6339404ea8d27a3791a80949d78ed61fd3b9e2d24c07d9d",
+  "engine_version": "0.1.0",
+  "c_abi_version": {
+   "major": 1,
+   "minor": 1
+  },
+  "pack_schema_version": 4,
+  "language_model_schema_version": 1
+ },
+ "packs": [
+  {
+   "pack_id": "seed",
+   "model_profile": "none",
+   "entry_count": 33,
+   "lexicon_sha256": "4e186130f1d00893f12d3cb7684945fe55c4414a1b31f910571c84ce5a12a8f1"
+  },
+  {
+   "pack_id": "reviewed",
+   "model_profile": "prediction",
+   "entry_count": 2144,
+   "lexicon_sha256": "485b9d70d25b6708af8e0b3f63f924cab23c0eab8110a5e9a3b6b25e88d34508"
+  },
+  {
+   "pack_id": "experimental-full",
+   "model_profile": "prediction",
+   "entry_count": 42249,
+   "lexicon_sha256": "65764b14928a0fde3eff31c085a37322d8d5ee6815279d81ae9e171e950d04f7"
+  }
+ ],
+ "language_model": {
+  "model_id": "kuwiki-20260801",
+  "schema_version": "language-model-v1",
+  "manifest_sha256": "8feb29d20f9d1d0fe519bb0c96f58bb7506e6ae02d5c06adc9232b9aa00ec8d2",
+  "vocabulary_fingerprint": "62963ced1ddafd782045aa2e968bf5baf92e70be1d6fd34fc31706ca2bdb8bbd",
+  "vocabulary_size": 42247,
+  "corpus_id": "kuwiki",
+  "corpus_version": "20260801",
+  "corpus_source_artifact_sha256": "158b726695cb55fb46eadf06ac2c966b0e146cad1b714be43e72716926f186cf",
+  "corpus_documents_sha256": "083607fb631536bdb00d8ac0e0e8cfc44fb0d2dcfd77e9bb60c0cb8104c7e1f1",
+  "train_document_count": 73212,
+  "train_document_set_sha256": "19b6366127b866aa508ffd891ada8a4715ebc47e77c1718c4fd4fd15cea787ca",
+  "bigram_min_count": 2,
+  "trigram_min_count": 3,
+  "files": {
+   "artifacts.sha256": "e070c91dc5a4118d235e86bdf9fb1af4f55008f482e349589cb64e139fab7824",
+   "bigrams.tsv": "9a091761f8ab16e449bb6b4b9869fefabf49eb47f0c6f9023d9418689f042ab1",
+   "manifest.json": "8feb29d20f9d1d0fe519bb0c96f58bb7506e6ae02d5c06adc9232b9aa00ec8d2",
+   "trigrams.tsv": "dece936cc49ba0a0ad96569afac2e8c81728a733f54d676a0e09682b4a6f1751",
+   "unigrams.tsv": "0afa23d69c08411ea2a65f3b05151fb5adf41159df78d91875b694a5396c6505",
+   "vocabulary.txt": "62963ced1ddafd782045aa2e968bf5baf92e70be1d6fd34fc31706ca2bdb8bbd"
+  },
+  "licensing": {
+   "corpus_name": "Kurmancî Wikipedia (kuwiki) main-namespace article prose",
+   "license": "CC BY-SA 4.0",
+   "license_spdx": "CC-BY-SA-4.0",
+   "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "attribution": "Wikipedia contributors, Wîkîpediya (Kurmancî edition), CC BY-SA 4.0",
+   "source_url": "https://dumps.wikimedia.org/kuwiki/20260801/",
+   "redistribution_determination": "pending-review"
+  }
+ },
+ "attached_platform_artifacts_in_bundle": [
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/Info.plist",
+   "sha256": "f5d44319c651a0e1937bbaa26381209ca562e17533e2e95dc8d1c809a6a01f48",
+   "size_bytes": 1754,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/ios-arm64/Headers/kurmanci.h",
+   "sha256": "121139dae4fc69b83d25d50423af48cabfcf5fbadfdad4c0c93007295d2ba9f7",
+   "size_bytes": 11342,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/ios-arm64/Headers/module.modulemap",
+   "sha256": "7b5ffa98e378f527aa5404142f71a2b842073b945c6e9f993b089d22b53c2a46",
+   "size_bytes": 60,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/ios-arm64/libkurmanci_ffi_ios.a",
+   "sha256": "66ea93ea4e3a6982282ab02f51a1a5168e6ca10bf9c4fca00e50f1a16a6bdd6e",
+   "size_bytes": 16573384,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/ios-arm64_x86_64-simulator/Headers/kurmanci.h",
+   "sha256": "121139dae4fc69b83d25d50423af48cabfcf5fbadfdad4c0c93007295d2ba9f7",
+   "size_bytes": 11342,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/ios-arm64_x86_64-simulator/Headers/module.modulemap",
+   "sha256": "7b5ffa98e378f527aa5404142f71a2b842073b945c6e9f993b089d22b53c2a46",
+   "size_bytes": 60,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/ios-arm64_x86_64-simulator/libkurmanci_ffi_iossim.a",
+   "sha256": "83d69a8420fec940f24fb82e859265facf131e2d96c6ec0b5c00d0024edc71d5",
+   "size_bytes": 33113848,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/macos-arm64_x86_64/Headers/kurmanci.h",
+   "sha256": "121139dae4fc69b83d25d50423af48cabfcf5fbadfdad4c0c93007295d2ba9f7",
+   "size_bytes": 11342,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/macos-arm64_x86_64/Headers/module.modulemap",
+   "sha256": "7b5ffa98e378f527aa5404142f71a2b842073b945c6e9f993b089d22b53c2a46",
+   "size_bytes": 60,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "apple",
+   "path": "apple/KurmanciFFI.xcframework/macos-arm64_x86_64/libkurmanci_ffi_macos.a",
+   "sha256": "6d1a0af92f3bccb9013eda65a80b88dfc453c4e9b2d445f203e7a534a2036ae4",
+   "size_bytes": 33314192,
+   "reproducibility": "not asserted by this bundle; built by scripts/apple and hashed as received"
+  },
+  {
+   "platform": "android",
+   "path": "android/kurmanci-android-0.1.0.aar",
+   "sha256": "3f02e837d6b87e381a09fdfe5a555bfe8d85c769a0a4ebb11b6e41f3a922f69f",
+   "size_bytes": 1156556,
+   "reproducibility": "not asserted by this bundle; built by scripts/android and hashed as received"
+  }
+ ],
+ "pack_artifact_verification": {
+  "note": "per-file records of the three packs as verified by build-release-bundle (each committed pack artifact rebuilt in memory and compared with the built file); copied from the same provenance block, listed separately from the platform artifacts",
+  "records": [
+   {
+    "name": "lexicon.bin",
+    "in_memory_sha256": "4e186130f1d00893f12d3cb7684945fe55c4414a1b31f910571c84ce5a12a8f1",
+    "built_sha256": "4e186130f1d00893f12d3cb7684945fe55c4414a1b31f910571c84ce5a12a8f1",
+    "built_matches": true
+   },
+   {
+    "name": "manifest.json",
+    "in_memory_sha256": "585eb1a112b555170dc76b449eb2b5342f0bdb79cf50fd1e289774b0189a7389",
+    "built_sha256": "585eb1a112b555170dc76b449eb2b5342f0bdb79cf50fd1e289774b0189a7389",
+    "built_matches": true
+   },
+   {
+    "name": "collision-report.jsonl",
+    "in_memory_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "built_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "built_matches": true
+   },
+   {
+    "name": "attribution.txt",
+    "in_memory_sha256": "362b5b42fb227ab4f71b19e58cd6da095eddf7d9eedfba4a7b0a27c3756c4420",
+    "built_sha256": "362b5b42fb227ab4f71b19e58cd6da095eddf7d9eedfba4a7b0a27c3756c4420",
+    "built_matches": true
+   },
+   {
+    "name": "artifacts.sha256",
+    "in_memory_sha256": "e11f4030613cd1efcfa5f17bd0f5f3611c908f347d65bfc2c4ba9067d68320f6",
+    "built_sha256": "e11f4030613cd1efcfa5f17bd0f5f3611c908f347d65bfc2c4ba9067d68320f6",
+    "built_matches": true
+   },
+   {
+    "name": "lexicon.bin",
+    "in_memory_sha256": "485b9d70d25b6708af8e0b3f63f924cab23c0eab8110a5e9a3b6b25e88d34508",
+    "built_sha256": "485b9d70d25b6708af8e0b3f63f924cab23c0eab8110a5e9a3b6b25e88d34508",
+    "built_matches": true
+   },
+   {
+    "name": "manifest.json",
+    "in_memory_sha256": "739c025bb06f54aeeb57f74ddba814235247d595fc2ab4fd6380ee6d8000dfed",
+    "built_sha256": "739c025bb06f54aeeb57f74ddba814235247d595fc2ab4fd6380ee6d8000dfed",
+    "built_matches": true
+   },
+   {
+    "name": "collision-report.jsonl",
+    "in_memory_sha256": "3fae5754fb19d43116350f292245cc0a64720b6b5ecd20f50e6bd27076de3bf4",
+    "built_sha256": "3fae5754fb19d43116350f292245cc0a64720b6b5ecd20f50e6bd27076de3bf4",
+    "built_matches": true
+   },
+   {
+    "name": "attribution.txt",
+    "in_memory_sha256": "1020caf5de94d41f504523acaa4998693d9ab6cb83f45cc760451a2cfac55644",
+    "built_sha256": "1020caf5de94d41f504523acaa4998693d9ab6cb83f45cc760451a2cfac55644",
+    "built_matches": true
+   },
+   {
+    "name": "artifacts.sha256",
+    "in_memory_sha256": "517974e0e3681fc85bf31e1493e8d4334188a11b6514a6609a0218108178339d",
+    "built_sha256": "517974e0e3681fc85bf31e1493e8d4334188a11b6514a6609a0218108178339d",
+    "built_matches": true
+   },
+   {
+    "name": "lexicon.bin",
+    "in_memory_sha256": "65764b14928a0fde3eff31c085a37322d8d5ee6815279d81ae9e171e950d04f7",
+    "built_sha256": "65764b14928a0fde3eff31c085a37322d8d5ee6815279d81ae9e171e950d04f7",
+    "built_matches": true
+   },
+   {
+    "name": "manifest.json",
+    "in_memory_sha256": "2e41e2af9239be00e5e033a756a7c5ffebca97c2d65560a240bc8e2e7c135941",
+    "built_sha256": "2e41e2af9239be00e5e033a756a7c5ffebca97c2d65560a240bc8e2e7c135941",
+    "built_matches": true
+   },
+   {
+    "name": "collision-report.jsonl",
+    "in_memory_sha256": "123d1665a2c3d9013e9779628a1bc93d8ebd246ddca9aa8bbba94d1603b5eb86",
+    "built_sha256": "123d1665a2c3d9013e9779628a1bc93d8ebd246ddca9aa8bbba94d1603b5eb86",
+    "built_matches": true
+   },
+   {
+    "name": "attribution.txt",
+    "in_memory_sha256": "1020caf5de94d41f504523acaa4998693d9ab6cb83f45cc760451a2cfac55644",
+    "built_sha256": "1020caf5de94d41f504523acaa4998693d9ab6cb83f45cc760451a2cfac55644",
+    "built_matches": true
+   },
+   {
+    "name": "artifacts.sha256",
+    "in_memory_sha256": "7bd4239463e3c071120c6a779cb5eefac710b25e9553f130db1bd26c271d01b3",
+    "built_sha256": "7bd4239463e3c071120c6a779cb5eefac710b25e9553f130db1bd26c271d01b3",
+    "built_matches": true
+   }
+  ]
+ },
+ "artifact_archives_built_from_the_same_tree": {
+  "KurmanciFFI-v0.1.0.xcframework.zip_sha256": "941af1a1af124db9b4f37447a2c7df52287aeb70581ff16cd9e59fbdc2cafe9a",
+  "kurmanci-android-0.1.0.aar_sha256": "3f02e837d6b87e381a09fdfe5a555bfe8d85c769a0a4ebb11b6e41f3a922f69f",
+  "note": "the bundle attaches the XCFramework as a directory (per-file hashes above) and the AAR as one file; the zip is the SwiftPM binary-target archive of the same XCFramework"
+ }
+}
