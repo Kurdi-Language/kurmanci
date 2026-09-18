@@ -691,8 +691,8 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
     let exp_entries = resolve_authoritative_pack_lexicon("experimental-full", ws_root).unwrap();
 
     assert_eq!(seed_entries.len(), 33);
-    assert_eq!(reviewed_entries.len(), 1451); // 33 seed + 107 Hunspell + 721 Kuwiki batch 001 + 590 Kuwiki batch 002 (13 alphabet-policy rejections applied 2026-09-17)
-    assert_eq!(exp_entries.len(), 42422); // 41106 + 721 Kuwiki b1 app + 3 b1 exp + 590 b2 app + 2 b2 exp
+    assert_eq!(reviewed_entries.len(), 2144); // 33 seed + 800 Hunspell (107 + Review Desk batch 001: 698 approved, 8 metadata change, less seed/collision overlap) + 721 Kuwiki batch 001 + 590 Kuwiki batch 002
+    assert_eq!(exp_entries.len(), 42249); // Hunspell reservoir after 93 rejections and 466 needs-linguist exclusions + 721 Kuwiki b1 app + 3 b1 exp + 590 b2 app + 2 b2 exp
 
     let seed_set: BTreeSet<String> = seed_entries.iter().map(|e| e.normalized.clone()).collect();
     let reviewed_set: BTreeSet<String> = reviewed_entries
@@ -777,19 +777,27 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
             app
         );
 
-        // Verify technical fallback metadata for Kuwiki entry in reviewed pack
+        // Verify technical fallback metadata for Kuwiki entry in reviewed pack. When the same
+        // normalized form is also a human-approved Hunspell entry (Review Desk batches),
+        // collision resolution keeps the Hunspell record with its real metadata, so the
+        // fallback applies only to entries backed by Kuwiki alone.
         let entry = reviewed_entries
             .iter()
             .find(|e| e.normalized == *app)
             .unwrap();
-        assert_eq!(
-            entry.part_of_speech, "unknown",
-            "POS fallback must be 'unknown'"
-        );
-        assert_eq!(
-            entry.lemma, entry.word,
-            "Lemma fallback must be display token"
-        );
+        let hunspell_backed = entry.sources.iter().any(|s| s == "kurdish-hunspell-kmr");
+        if !hunspell_backed {
+            assert_eq!(
+                entry.part_of_speech, "unknown",
+                "POS fallback must be 'unknown' for {}",
+                app
+            );
+            assert_eq!(
+                entry.lemma, entry.word,
+                "Lemma fallback must be display token for {}",
+                app
+            );
+        }
     }
 
     // Invariant 3: Experimental-only entries present in experimental-full, NOT in reviewed

@@ -742,7 +742,6 @@ albirin
 albstadt
 albîno
 albînotî
-albûm
 albûma
 albûmên
 albûmî
@@ -763,7 +762,6 @@ alenen
 aleqe
 aleqedar
 alerjî
-alessandria
 alet
 aletrîk
 aletî
@@ -807,7 +805,6 @@ alkol
 alkoldar
 alkolxwarî
 alkolîzm
-alman
 almanak
 almanhez
 almanya
@@ -1126,7 +1123,6 @@ angaştkirî
 angaştname
 angelok
 angelokî
-ango
 angola
 angorî
 anhieb
@@ -1148,7 +1144,6 @@ anketorî
 anketî
 ankor
 anku
-anne
 anoka
 anoke
 anomalî
@@ -1474,7 +1469,6 @@ arsenal
 arsenîk
 arsim
 arsimî
-art
 artbûn
 artbûyî
 artiş
@@ -2496,7 +2490,6 @@ aşûrî
 aşûrîtî
 aşûvk
 aşûyî
-b
 ba
 babane
 babanî
@@ -3094,7 +3087,6 @@ barûte
 barûtpêj
 barûtxane
 barûve
-bas
 basam
 basen
 basim
@@ -3632,7 +3624,6 @@ bejî
 bejîn
 bekmez
 bekçîtî
-bel
 bela
 belabûn
 belabûyî
@@ -3742,7 +3733,6 @@ belg
 belgandin
 belgar
 belgdar
-belge
 belgedan
 belgedank
 belgedar
@@ -3783,7 +3773,6 @@ belişandî
 belişîn
 belkirinî
 belku
-belkî
 belkîtî
 belkû
 belli
@@ -4042,7 +4031,6 @@ berbaḧis
 berbaḧs
 berbehis
 berbehs
-berbelav
 berbelavane
 berbelavbûyî
 berbelave
@@ -4166,7 +4154,6 @@ berdewamiya
 berdewamkirî
 berdewamkî
 berdewampîv
-berdewamî
 berdij
 berdil
 berdilk
@@ -5457,13 +5444,11 @@ bicesaretî
 bicewr
 bicewrî
 bicewî
-bicih
 bicihanî
 bicihanîn
 bicihbûn
 bicihbûnî
 bicihgirî
-bicihkirin
 bicihkirî
 bicihêzî
 bicihî
@@ -9407,7 +9392,6 @@ brazzaville
 brazîl
 breda
 bremen
-brescia
 bretonî
 bridgetown
 bristol
@@ -11286,7 +11270,6 @@ bêmîsyonî
 bêmîx
 bêmûkirin
 bêmûz
-bên
 bêna
 bênakokî
 bênakokîtî
@@ -12258,7 +12241,6 @@ bêşûşe
 bî
 bîbar
 bîber
-bîbliyografî
 bîbîk
 bîdar
 bîdarkirin
@@ -12471,7 +12453,6 @@ calût
 cam
 camaxgirtin
 cambazî
-cambridge
 cambûn
 cambûyî
 camdar
@@ -12777,7 +12758,6 @@ ceza
 cezadan
 cezadar
 cezagirtin
-cezakirin
 cezanekirin
 cezaxane
 cezayir
@@ -12827,12 +12807,10 @@ cihunîn
 cihwarbûyî
 cihwarkirî
 cihçûyî
-cihê
 cihêbûn
 cihêkirin
 cihêl
 cihên
-cihêreng
 cihêrengbûn
 cihêrengkirin
 cihêrengî
@@ -13005,7 +12983,6 @@ cm
 coban
 cobar
 codelîk
-cografya
 cografî
 col
 coland
@@ -13019,7 +12996,6 @@ colemêrg
 colemêrgê
 colkirin
 colîn
-com
 combûn
 comerd
 comerdane
@@ -13069,7 +13045,6 @@ coşîn
 cranbrook
 cremona
 cube
-cuda
 cudabûn
 cudagirtin
 cudagirî
@@ -13086,7 +13061,6 @@ cume
 cumhûriyet
 cumle
 cumleten
-cuneo
 cunta
 cunûtin
 cura
@@ -13165,7 +13139,6 @@ cûtî
 cûyan
 cûzele
 cû|tî
-d
 da
 dab
 dabance
@@ -13247,7 +13220,6 @@ dageryayî
 dagerî
 dagerîn
 dagestin
-dagir
 dagirbûn
 dagirker
 dagirkerî
@@ -13336,7 +13308,6 @@ damxe
 damîşbûn
 damûdezgeh
 dan
-dana
 danan
 danasîn
 danasîna
@@ -13502,7 +13473,6 @@ dawîbûn
 dawîdan
 dawîk
 dawîkirin
-dawîn
 dawîng
 dawîngdar
 dawîvekirî
@@ -13858,7 +13828,6 @@ derbaskirin
 derbasnebûyî
 derbasê
 derbasî
-derbaz
 derbazbûn
 derbazkirin
 derbe
@@ -14018,7 +13987,6 @@ derxistinbar
 derxistindar
 derxistî
 derxûn
-derya
 deryaya
 deryayê
 deryayî
@@ -14246,7 +14214,6 @@ devîdevî
 devûdev
 devşêr
 dew
-dewam
 dewamkirin
 dewamkirî
 dewance
@@ -14403,7 +14370,6 @@ dihê
 dihêl
 dihêle
 dihî
-dij
 dijatîkirin
 dijatîkirî
 dijav
@@ -15204,7 +15170,6 @@ dêwane
 dêwaz
 dêwîn
 dêxun
-dî
 dîana
 dîbaçe
 dîbek
@@ -15219,7 +15184,6 @@ dîfa
 dîgerkam
 dîk
 dîkêl
-dîl
 dîlan
 dîlanane
 dîlane
@@ -15504,7 +15468,6 @@ edalî
 edeb
 edebiyat
 edebiyatvanî
-edebî
 edebîyat
 eded
 edembûn
@@ -15773,19 +15736,16 @@ empresyon
 emê
 emîliya
 emîlokî
-emîn
 emînkirin
 emîr
 emîre
 emîsar
 emîsarane
-en
 ena
 encam
 encama
 encambar
 encambûn
-encamdan
 encamdar
 encamgirtin
 encamkirin
@@ -15938,7 +15898,6 @@ erdhêj
 erdim
 erdnasî
 erdnîgar
-erdnîgarî
 erdrakirin
 erdê
 erdên
@@ -16127,7 +16086,6 @@ esîrkirin
 esîrkirî
 esûsekîbûn
 esûsekîkirin
-et
 etab
 etarok
 etir
@@ -16214,7 +16172,6 @@ ewaz
 ewende
 eweyî
 ewham
-ewil
 ewiqîn
 ewirkîbûn
 ewitîn
@@ -16313,7 +16270,6 @@ eyne
 eynek
 eynen
 eynik
-eynî
 eynîbûn
 eynîbûyî
 eynîkirin
@@ -16459,7 +16415,6 @@ farisand
 farisandin
 farisandî
 farisvanî
-farisî
 farisîn
 farqînê
 fas
@@ -17047,7 +17002,6 @@ fitûr
 fiyasko
 fizirîn
 fizyolojîk
-fizîk
 fizîkî
 fiçî
 fişandin
@@ -17066,7 +17020,6 @@ flamenko
 flamî
 flashback
 flaş
-flora
 floransa
 flort
 flortkirin
@@ -17313,7 +17266,6 @@ galayane
 galegal
 galegalkirin
 galegot
-galerî
 galeyan
 galiske
 galon
@@ -17459,12 +17411,10 @@ gelemşedar
 gelemşeyîbûn
 gelender
 gelhanasî
-gelhe
 gelhenasî
 gelheya
 geliyê
 gelkujî
-gellek
 gelo
 gelp
 gelpirsî
@@ -17913,7 +17863,6 @@ girikbûn
 girikkirin
 girikîbûn
 girikîkirin
-giring
 giringbûn
 giringbûyî
 giringgirtin
@@ -18099,7 +18048,6 @@ gogling
 goglingvanî
 gogpîkerî
 gogpîvanî
-gol
 golbûn
 golevir
 golf
@@ -18153,7 +18101,6 @@ gorîkirin
 gorîkirî
 gosirmet
 got
-gotar
 gotarkirin
 gotarvanî
 gotebêj
@@ -18176,7 +18123,6 @@ gotlak
 gotî
 gotûbêj
 gotûbêjkirin
-gov
 govanî
 govanîdan
 govanîkirin
@@ -18647,7 +18593,6 @@ gûsî
 gûz
 gûzan
 gûzek
-ha
 haarlem
 habaqûq
 hacer
@@ -18698,7 +18643,6 @@ hamid
 hamilton
 hamiz
 hamizdar
-han
 hana
 hanakî
 handan
@@ -18829,7 +18773,6 @@ haştkirin
 haştkirî
 haştî
 hd
-he
 heb
 heba
 hebabûyî
@@ -18954,7 +18897,6 @@ heftêûçar
 heftêûşeş
 heftûheşt
 hegemonî
-heger
 heh
 heho
 hej
@@ -19548,7 +19490,6 @@ hevpejirandin
 hevperwerde
 hevpeydabûn
 hevpeyivîn
-hevpeyvîn
 hevpişkîbûn
 hevpişkîkirin
 hevqa
@@ -19659,8 +19600,6 @@ hewarjî
 hewarkirin
 hewarîkirî
 hewayê
-hewayî
-hewce
 hewcebûn
 hewcedar
 hewcedarbûn
@@ -19732,7 +19671,6 @@ hewînî
 hewûg
 hewş
 hewşengeh
-hey
 heya
 heyal
 heyam
@@ -19792,7 +19730,6 @@ heyzbûn
 heyzbûyî
 heyzkirin
 heyzkirî
-heyî
 heyîn
 hez
 hezand
@@ -20030,7 +19967,6 @@ hilûkbûn
 hilûkirin
 hilûkirî
 hilûkkirin
-him
 himayet
 himban
 himbilbûn
@@ -20084,7 +20020,6 @@ hindirîn
 hindistan
 hinduîzm
 hindê
-hindî
 hindûîranî
 hinek
 hinekirî
@@ -20107,7 +20042,6 @@ hingorî
 hingulîsk
 hingur
 hingvanî
-hingê
 hingîn
 hingûr
 hinik
@@ -20207,7 +20141,6 @@ hişmendkirin
 hişmendî
 hişmiraz
 hişsivik
-hişt
 hiştibûn
 hiştin
 hişyar
@@ -20405,7 +20338,6 @@ hêgin
 hêginbûn
 hêginkirin
 hêginî
-hêj
 hêja
 hêjabilind
 hêjabûn
@@ -20787,7 +20719,6 @@ imkan
 imla
 imtihan
 imtiyaz
-in
 incik
 incikî
 incîl
@@ -20796,7 +20727,6 @@ indre
 informatîv
 ingirandin
 ingirîn
-inglîzî
 ingûz
 inkar
 inkarkirin
@@ -20813,7 +20743,6 @@ inteintkirin
 inteintkirî
 interlingua
 interlingue
-internet
 internêt
 intiba
 intifade
@@ -21118,7 +21047,6 @@ jovankirî
 jovanî
 jubîle
 junta
-jura
 jurayê
 jurî
 jê
@@ -21445,7 +21373,6 @@ kargo
 karguzer
 kargêrî
 karistan
-kariyer
 karkenarbar
 karkenarbûn
 karkenarkirin
@@ -21496,7 +21423,6 @@ karzanî
 karçîn
 karê
 karên
-karî
 karîger
 karîgerî
 karîgerîbûn
@@ -21754,7 +21680,6 @@ kelîme
 kelîn
 kelînok
 kelûş
-kemal
 kemalîzm
 kemame
 keman
@@ -22114,7 +22039,6 @@ kewîkirin
 kewîkirî
 kewîn
 kewşkirin
-key
 keya
 keyan
 keyane
@@ -22170,7 +22094,6 @@ keçên
 keş
 keşadar
 keşafane
-keşf
 keşfkirin
 keşfkirî
 keşfvanî
@@ -22393,7 +22316,6 @@ kitkitand
 kitkitandin
 kitkitîn
 kitle
-kitêb
 kitêbxane
 kitêbî
 kitûpir
@@ -22467,7 +22389,6 @@ klînîk
 klîp
 klîtorîs
 klûb
-ko
 koalisyon
 kobalt
 koban
@@ -22693,7 +22614,6 @@ kontratvanî
 kontrbas
 kontrol
 kontrolbar
-kontrolkirin
 kontînent
 kontînental
 konvensiyon
@@ -23404,7 +23324,6 @@ lamerkeziyet
 lamerkezî
 lamik
 lampe
-land
 landesê
 landik
 lanik
@@ -23506,7 +23425,6 @@ lebitîn
 lebt
 lebê
 lec
-lecce
 leckirin
 leeds
 leeuwarden
@@ -23822,7 +23740,6 @@ liyan
 lişt
 liştdar
 liştkirî
-lo
 loband
 lobandin
 lobandî
@@ -23870,7 +23787,6 @@ lorîkirin
 lorîkirî
 lorîn
 lorîvanî
-los
 losyon
 lot
 lotandin
@@ -24295,7 +24211,6 @@ mandîbûn
 mandîbûyî
 mandîkirin
 mandîkirî
-mane
 manedan
 manedar
 manedarbûn
@@ -24360,7 +24275,6 @@ marjînalbûyî
 marjînalkirin
 marjînalkirî
 marjînalî
-mark
 markdar
 market
 markeyê
@@ -24396,7 +24310,6 @@ masmedya
 masonane
 mast
 mastav
-master
 masterplan
 masterî
 masturbasyon
@@ -24431,7 +24344,6 @@ matruşka
 matî
 maurîtius
 mawe
-max
 may
 mayakirin
 mayakirî
@@ -24452,7 +24364,6 @@ mayîn
 mayîndar
 mazenderanî
 mazeret
-mazin
 mazlûmiyet
 mazmaz
 mazot
@@ -24494,10 +24405,8 @@ mebestnekirî
 mecal
 mecaz
 mecazî
-mecbûr
 mecbûrbûn
 mecbûrkirin
-mecbûrî
 mechûl
 mecklenburg
 meclis
@@ -24618,7 +24527,6 @@ mehûkirin
 mehşer
 mehşî
 mejgdar
-mejî
 mejîdar
 mejîk
 mejûdar
@@ -24632,7 +24540,7 @@ meknes
 meknûn
 mekok
 mekokvanî
-meksîk
+meksîka
 meksîko
 meksîm
 mekteb
@@ -24773,7 +24681,6 @@ meqezer
 meqtûl
 meqtûlî
 meqtûlîtî
-mer
 merakeş
 meras
 merasim
@@ -24979,7 +24886,6 @@ metreçargoşe
 metreçarnik
 metreçarçuh
 metrolojî
-metropol
 metropolîten
 metrûk
 metîl
@@ -25324,7 +25230,6 @@ milhid
 milhêb
 milk
 milkiyet
-millî
 millîkirin
 millîkirî
 milmilandin
@@ -25567,7 +25472,6 @@ miswedekirin
 misyonerane
 misêwa
 misîn
-mit
 mitabeqet
 mitabiq
 mitabiqbûn
@@ -26039,7 +25943,6 @@ mîlad
 mîladî
 mîlano
 mîlanoyê
-mîlyon
 mîm
 mîmarî
 mîmarîkirin
@@ -26392,7 +26295,6 @@ navê
 navên
 navêşî
 navêşîbûn
-navî
 navîgasyon
 navîn
 navîna
@@ -26663,7 +26565,6 @@ nemal
 nemam
 neman
 nemayekirin
-nemaze
 nemerd
 nemerdbûn
 nemerdbûyî
@@ -26747,7 +26648,6 @@ nepîvanbar
 neqand
 neqandin
 neqandî
-neqanûnî
 neqeb
 neqebk
 neqenc
@@ -27069,7 +26969,6 @@ nifrînkirin
 niftik
 nifîn
 nifînkirî
-nifûs
 nifûsa
 nifûz
 nifûzkirin
@@ -27145,13 +27044,11 @@ nimêjkirin
 nimînendekirin
 nimînendekirî
 nimînok
-nimûne
 nimûnebûn
 nimûnedan
 nimûnegirtin
 nimûnekirin
 nimûnende
-nin
 nipînû
 niqirand
 niqirandin
@@ -27280,7 +27177,6 @@ nişandan
 nişkivîn
 nişmî
 nişt
-niştecihên
 nişter
 niştergerî
 nişterkirin
@@ -27346,7 +27242,6 @@ normalîzebûn
 normalîzebûyî
 normalîzekirî
 normandiyayê
-normandî
 normandîyê
 norolojî
 norwec
@@ -27572,7 +27467,6 @@ nîçandî
 nîçkirin
 nîçkirî
 nîçîn
-nîşan
 nîşana
 nîşandan
 nîşandek
@@ -27686,11 +27580,9 @@ oksîjendar
 oksîtanya
 oksîtanyaya
 oksîtanyayê
-oksîtanî
 okyanos
 okyanûs
 okyanûsa
-ol
 olam
 olamgirî
 olan
@@ -27735,7 +27627,6 @@ orcane
 ordî
 ordîgeh
 oreorkirin
-org
 organ
 organîk
 organîzandin
@@ -27892,7 +27783,6 @@ palîndrom
 palûte
 pamflet
 pamîdor
-pan
 panama
 panatî
 pand
@@ -28177,7 +28067,6 @@ paçvevanîkirin
 paçîker
 paçîner
 paş
-paşa
 paşatî
 paşayane
 paşbar
@@ -28427,7 +28316,6 @@ perderakirin
 perdevanî
 perdexane
 perdî
-pere
 peredan
 peregende
 perehatin
@@ -29158,7 +29046,6 @@ piştre
 piştrrast
 piştstugir
 piştvanîkirin
-piştê
 piştî
 piştîber
 piştîhilgir
@@ -29231,7 +29118,6 @@ polîtîkî
 polîtîze
 pompe
 ponpeyî
-pop
 popbêjane
 popvan
 popvanî
@@ -30170,7 +30056,6 @@ qebûl
 qebûlbar
 qebûlbûn
 qebûlbûyî
-qebûlkirin
 qebûlkirî
 qed
 qeda
@@ -30619,7 +30504,6 @@ qeza
 qezakirin
 qezakirî
 qezemok
-qezenc
 qezenç
 qezete
 qezî
@@ -31636,7 +31520,6 @@ resimandî
 resimîn
 resmen
 resmiyet
-resmî
 resmîkirin
 resmîkirî
 resmîtî
@@ -31677,7 +31560,6 @@ revîze
 revîzekirin
 revîzekirî
 rew
-rewa
 rewabar
 rewabûn
 rewabûyî
@@ -31977,7 +31859,6 @@ rivînkirin
 riwandî
 riwangeh
 riwayet
-riwek
 riweknasî
 riwekxane
 riya
@@ -32045,7 +31926,6 @@ robotkirin
 robotkirî
 robîn
 rocin
-rock
 rodî
 rodîn
 roermond
@@ -32084,7 +31964,6 @@ rojgar
 rojgul
 rojhat
 rojhelatê
-rojhilat
 rojhilata
 rojhilatin
 rojhilatê
@@ -32129,7 +32008,6 @@ rolkirin
 rolên
 rom
 romajî
-roman
 romana
 romancî
 romankirin
@@ -32217,7 +32095,6 @@ rukiga
 rukîgayî
 runahî
 rundik
-rusî
 rutbe
 ruwandayî
 ruwandî
@@ -32561,7 +32438,6 @@ rûşûştîbûn
 rûşûştîkirin
 rûşûştîtî
 s
-sa
 saarlouis
 sabat
 sabiqe
@@ -32599,7 +32475,6 @@ sadiqkirin
 sadiqkirî
 sadiqî
 sadîstane
-saet
 saetane
 saetfiroşî
 saetsazxane
@@ -32840,7 +32715,6 @@ secde
 secere
 sed
 seda
-sedam
 sedan
 sedaqet
 sede
@@ -33254,7 +33128,6 @@ sererayî
 sererd
 sererrayî
 serest
-seretayî
 serevraz
 serevrazbûyî
 serevrazkirin
@@ -33875,7 +33748,6 @@ sindif
 sindis
 sindisane
 sindoq
-sine
 sinet
 sinetbûn
 sinetbûyî
@@ -34025,7 +33897,6 @@ siyadî
 siyanet
 siyanetdar
 siyanetgirî
-siyaset
 siyasetkarane
 siyasetkerane
 siyasetkirin
@@ -34100,7 +33971,6 @@ solekirin
 solfej
 solix
 solmîzasyon
-solo
 solyask
 solçêker
 somalya
@@ -34160,7 +34030,6 @@ soskun
 sosret
 sosretane
 sosretgirtî
-sosyal
 sosyalbûn
 sosyalbûyî
 sosyaldemokrasî
@@ -34187,14 +34056,12 @@ sovanî
 sovyet
 soxî
 soxîn
-soz
 sozdan
 sozdar
 sozdarbûn
 sozdarkirin
 sozdarî
 spanya
-spanî
 spart
 sparte
 spartek
@@ -34283,7 +34150,6 @@ standin
 stare
 starexwaz
 stargeh
-start
 startkirin
 startkirî
 stasyon
@@ -34414,7 +34280,6 @@ supageh
 supayî
 superhêz
 supremasîst
-sur
 suran
 surand
 surandin
@@ -34646,7 +34511,6 @@ sû
 sûbûn
 sûc
 sûcbûn
-sûcdar
 sûcdarbûn
 sûcdarkirin
 sûcdarî
@@ -34708,7 +34572,6 @@ sûîqest
 sûîstîmalbûn
 sûîstîmalkirin
 sûşî
-t
 ta
 taat
 tab
@@ -34878,7 +34741,6 @@ tarîtî
 tarîx
 tarîxandin
 tarîxvanî
-tarîxî
 tarîxîtî
 tarûmar
 tarûmarbûyî
@@ -34966,9 +34828,7 @@ taywan
 taywanî
 tayêt
 tayî
-tayîn
 tayîndan
-tayînkirin
 taze
 tazebûyî
 tazekirin
@@ -35239,12 +35099,10 @@ telûgûyî
 tem
 temabûn
 temakirin
-temam
 temambûyî
 temamen
 temamkirin
 temamkirî
-temamî
 temar
 temartin
 temartîbûn
@@ -35298,7 +35156,6 @@ temrîndan
 temrînkirin
 temrînkirî
 temsî
-temsîl
 temsîlkar
 temsîlkarbûn
 temsîlkarkirin
@@ -35813,9 +35670,7 @@ texlîd
 texlîdkirin
 texm
 texme
-texmîn
 texmînen
-texmînkirin
 texmînkirî
 texrîbat
 texrîbkar
@@ -35909,7 +35764,6 @@ teşrîf
 teşrîh
 teşrîn
 teşt
-teşwîq
 teşwîqbûn
 teşwîqkirin
 teşxele
@@ -35919,7 +35773,6 @@ teşxîskirî
 teşî
 teşîlûr
 the
-ti
 tianjin
 tib
 tibaq
@@ -36213,7 +36066,6 @@ tomik
 ton
 tonga
 tongî
-top
 topane
 topavêtin
 topbaran
@@ -36418,7 +36270,6 @@ têkiland
 têkilandin
 têkilbûn
 têkilbûyî
-têkildar
 têkildarbûn
 têkildarkirin
 têkiliya
@@ -36454,7 +36305,6 @@ têlkirî
 têlîcan
 têm
 tên
-têne
 tênegehiştin
 tênkirin
 tênkirî
@@ -36635,7 +36485,6 @@ tûşkirî
 tûşî
 tûşîbûn
 tûşîhevbûn
-udine
 udmurtî
 uf
 ufuq
@@ -37149,7 +36998,6 @@ wazhênan
 waşevanî
 waşington
 we
-web
 webal
 webtv
 wecgirtin
@@ -37186,7 +37034,6 @@ wek
 wekalet
 wekaletname
 weke
-wekhev
 wekhevandin
 wekhevbûn
 wekhevgirtin
@@ -37385,7 +37232,6 @@ wesle
 wesme
 wesselam
 wesseling
-west
 westan
 westand
 westandin
@@ -37575,7 +37421,6 @@ wîçînîkirin
 wîşî
 wîşîgirtin
 wûrzburg
-x
 xa
 xacê
 xafik
@@ -38225,7 +38070,6 @@ xizmane
 xizmatî
 xizmbûn
 xizmbûyî
-xizmet
 xizmetbar
 xizmetdan
 xizmetguzar
@@ -38300,7 +38144,6 @@ xortkirî
 xorto
 xosayî
 xox
-xoy
 xoybûn
 xoyê
 xozan
@@ -38520,7 +38363,6 @@ xwelîmor
 xwelîser
 xwelîserane
 xwemale
-xwemalî
 xwemalîbûn
 xwemalîbûyî
 xwemalîkirin
@@ -38666,7 +38508,6 @@ xwiyaker
 xwişk
 xwişîn
 xwurnûf
-xwê
 xwêdan
 xwêdandan
 xwêdank
@@ -38830,7 +38671,6 @@ yane
 yanzde
 yanzdeh
 yanze
-yanî
 yaq
 yar
 yarane
@@ -38958,7 +38798,6 @@ yoga
 yol
 yonne
 yonneyê
-york
 yorubayî
 yugoslav
 yê
@@ -38996,7 +38835,6 @@ zahir
 zahirî
 zakolan
 zakîre
-zal
 zalbûn
 zalgeh
 zalim
@@ -39159,7 +38997,6 @@ zegir
 zehf
 zehfî
 zehifkirin
-zehmet
 zehmetbirin
 zehmetbûn
 zehmetbûyî
@@ -39930,7 +39767,6 @@ zûxav
 çante
 çantedar
 çantezî
-çap
 çapand
 çapandin
 çapbûn
@@ -40902,8 +40738,6 @@ zûxav
 êk
 êkbûyî
 êkin
-êl
-êla
 êlakirin
 êlang
 êlax
@@ -40988,7 +40822,6 @@ zûxav
 êşî
 êşîn
 ëerebistan
-î
 îadebûyî
 îadekirin
 îadekirî
@@ -41035,7 +40868,6 @@ zûxav
 îdarebûn
 îdarekirin
 îdarexane
-îdarî
 îddianame
 îdea
 îdeal
@@ -41101,7 +40933,6 @@ zûxav
 îlahe
 îlahiyet
 îlahî
-îlan
 îlanbûyî
 îlandan
 îlanker
@@ -41113,7 +40944,6 @@ zûxav
 îlawebûn
 îlawebûyî
 îlawekirin
-île
 îlegal
 îlelebed
 îlet
@@ -41131,7 +40961,6 @@ zûxav
 îmakirin
 îmal
 îmalkirin
-îmam
 îman
 îmankirin
 îmar
@@ -41863,7 +41692,6 @@ zûxav
 şerxwazî
 şerê
 şerên
-şerî
 şerîl
 şerît
 şerûd
@@ -42049,7 +41877,6 @@ zûxav
 şirnax
 şirnex
 şirnexê
-şirove
 şirovebar
 şirovedar
 şirovekar

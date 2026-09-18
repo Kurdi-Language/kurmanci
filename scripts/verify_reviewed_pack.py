@@ -140,6 +140,13 @@ def compute_kuwiki_entry_id(source_id: str, source_revision: str, display: str, 
     return hasher.hexdigest()
 
 
+def normalize_text(text: str) -> str:
+    """The repository's canonical rule: control characters, U+200B and U+FEFF removed, NFC, lower case."""
+    import unicodedata
+    clean = "".join(ch for ch in text if not unicodedata.category(ch).startswith("C") and ch not in "\u200b\ufeff")
+    return unicodedata.normalize("NFC", clean).lower()
+
+
 def derive_selection(candidate_root: Path) -> Dict[str, Any]:
     hun_dec_path = candidate_root / "data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl"
     seed_bin_path = candidate_root / "data/build/packs/seed/lexicon.bin"
@@ -154,19 +161,30 @@ def derive_selection(candidate_root: Path) -> Dict[str, Any]:
     rev_manifest = load_pack_manifest(rev_manifest_path)
     target_to_norm, conflict_groups = load_target_mappings(candidate_root)
 
-    hun_approved_decs = [d for d in hun_decisions if d["review_status"] == "approved"]
-    hun_non_approved_decs = [d for d in hun_decisions if d["review_status"] != "approved"]
+    # Both approval statuses produce a reviewed-pack entry; a metadata change contributes its
+    # replacement normalized form (the same rule the pack selector applies).
+    APPROVING = ("approved", "approved_with_metadata_change")
+    hun_approved_decs = [d for d in hun_decisions if d["review_status"] in APPROVING]
+    hun_non_approved_decs = [d for d in hun_decisions if d["review_status"] not in APPROVING]
+
+    def hun_expected_norm(d):
+        if d["review_status"] == "approved_with_metadata_change":
+            repl = d.get("replacement_metadata") or {}
+            if not repl.get("normalized"):
+                raise ValueError(f"approved_with_metadata_change decision for target {d['target_id']} missing replacement_metadata.normalized")
+            return normalize_text(repl["normalized"])
+        return target_to_norm[d["target_id"]]
 
     external_additions_map = {k: v for k, v in rev_entries_map.items() if k not in seed_entries}
     external_additions = set(external_additions_map.keys())
 
     unresolved_target_ids = set(conflict_groups.get(SE_GROUP_ID, [])) | {SE_TARGET_ID}
     expected_hun_additions = {
-        target_to_norm[d["target_id"]]
+        hun_expected_norm(d)
         for d in hun_approved_decs
         if d["target_id"] in target_to_norm
         and d["target_id"] not in unresolved_target_ids
-        and target_to_norm[d["target_id"]] not in seed_entries
+        and hun_expected_norm(d) not in seed_entries
     }
 
     ku_cands = []
@@ -266,7 +284,11 @@ def validate_policy_invariants(derived: Dict[str, Any], candidate_root: Path):
         raise AssertionError(f"Total Hunspell decisions ({len(hun_decisions)}) != approved ({len(hun_approved_decs)}) + non-approved ({len(hun_non_approved_decs)})")
 
     # Check manifest selection count matches computed additions count
-    manifest_ext_approved = rev_manifest.get("external_approved_selected_count", 0) - rev_manifest.get("external_discarded_by_collision_count", 0)
+    manifest_ext_approved = (
+        rev_manifest.get("external_approved_selected_count", 0)
+        + rev_manifest.get("external_metadata_replacement_selected_count", 0)
+        - rev_manifest.get("external_discarded_by_collision_count", 0)
+    )
     if manifest_ext_approved != len(ext_additions):
         raise AssertionError(f"Computed external additions count ({len(ext_additions)}) != manifest count ({manifest_ext_approved})")
 
@@ -402,7 +424,7 @@ def run_self_tests(candidate_root: Path):
         # Self-Test 4: Replace an entry while count remains unchanged
         f4 = create_fixture_root(tmp_parent, 4)
         d4 = derive_selection(f4)
-        d4["rev_manifest"]["external_approved_selected_count"] = len(d4["external_additions"]) + d4["rev_manifest"].get("external_discarded_by_collision_count", 0)
+        d4["rev_manifest"]["external_approved_selected_count"] = len(d4["external_additions"]) + d4["rev_manifest"].get("external_discarded_by_collision_count", 0) - d4["rev_manifest"].get("external_metadata_replacement_selected_count", 0)
         d4["external_additions"].remove("şeq")
         d4["external_additions_map"].pop("şeq", None)
         d4["external_additions"].add("bêabrûkirî")
@@ -419,7 +441,7 @@ def run_self_tests(candidate_root: Path):
         d5 = derive_selection(f5)
         d5["external_additions"].add("sê")
         d5["external_additions_map"]["sê"] = {"kurdish-hunspell-kmr"}
-        d5["rev_manifest"]["external_approved_selected_count"] = len(d5["external_additions"]) + d5["rev_manifest"].get("external_discarded_by_collision_count", 0)
+        d5["rev_manifest"]["external_approved_selected_count"] = len(d5["external_additions"]) + d5["rev_manifest"].get("external_discarded_by_collision_count", 0) - d5["rev_manifest"].get("external_metadata_replacement_selected_count", 0)
         try:
             validate_policy_invariants(d5, f5)
             raise RuntimeError("Self-test 5 failed: expected unselected sê error!")
@@ -432,7 +454,7 @@ def run_self_tests(candidate_root: Path):
         d6 = derive_selection(f6)
         d6["external_additions"].add("test_cross_word")
         d6["external_additions_map"]["test_cross_word"] = {"kuwiki-batch-001"}
-        d6["rev_manifest"]["external_approved_selected_count"] = len(d6["external_additions"]) + d6["rev_manifest"].get("external_discarded_by_collision_count", 0)
+        d6["rev_manifest"]["external_approved_selected_count"] = len(d6["external_additions"]) + d6["rev_manifest"].get("external_discarded_by_collision_count", 0) - d6["rev_manifest"].get("external_metadata_replacement_selected_count", 0)
         d6["ku_non_approved_norms"].add(("test_cross_word", "dummy_tid", "rejected_from_default_pack", "kuwiki-batch-002"))
         validate_policy_invariants(d6, f6)
         print("✅ Self-test 6A passed (cross-source rejection allowed when selected from approved source)")

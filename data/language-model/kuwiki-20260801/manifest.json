@@ -28,29 +28,29 @@
     "source_url": "https://dumps.wikimedia.org/kuwiki/20260801/",
     "redistribution_determination": "pending-review"
   },
-  "vocabulary_fingerprint": "2b44b3d538fed0843fc00a331606b494e65bb080be8f3967c736ad5fef1378f4",
-  "vocabulary_size": 42420,
-  "unigram_count": 14379,
-  "bigram_count": 47584,
-  "trigram_count": 58627,
+  "vocabulary_fingerprint": "62963ced1ddafd782045aa2e968bf5baf92e70be1d6fd34fc31706ca2bdb8bbd",
+  "vocabulary_size": 42247,
+  "unigram_count": 14206,
+  "bigram_count": 44820,
+  "trigram_count": 55140,
   "bigram_min_count": 2,
   "trigram_min_count": 3,
   "files": [
     {
       "path": "bigrams.tsv",
-      "sha256": "063f48f2d9188b4a99735c10773c9e861b42d01f01c076b56a430c3e84a569f3"
+      "sha256": "9a091761f8ab16e449bb6b4b9869fefabf49eb47f0c6f9023d9418689f042ab1"
     },
     {
       "path": "trigrams.tsv",
-      "sha256": "6559087017321a9796b5f3477b89f0a675bbd9dffe605dabdba61eb68f436503"
+      "sha256": "dece936cc49ba0a0ad96569afac2e8c81728a733f54d676a0e09682b4a6f1751"
     },
     {
       "path": "unigrams.tsv",
-      "sha256": "c3840abecad4712b1aa4977aa334215b90a9e7331af9a40fa8113fe7b6346d94"
+      "sha256": "0afa23d69c08411ea2a65f3b05151fb5adf41159df78d91875b694a5396c6505"
     },
     {
       "path": "vocabulary.txt",
-      "sha256": "2b44b3d538fed0843fc00a331606b494e65bb080be8f3967c736ad5fef1378f4"
+      "sha256": "62963ced1ddafd782045aa2e968bf5baf92e70be1d6fd34fc31706ca2bdb8bbd"
     }
   ]
 }
