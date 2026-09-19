@@ -52,6 +52,19 @@ struct Normalization {
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+struct Reference {
+    claim: String,
+    supports: String,
+    work: String,
+    edition: String,
+    location: String,
+    source_statement: String,
+    selected_by: String,
+    selected_on: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Orthography {
     schema_version: String,
     locale_tag: String,
@@ -62,6 +75,7 @@ struct Orthography {
     review_notes: Vec<String>,
     alphabet: Vec<String>,
     alphabet_basis: String,
+    references: Vec<Reference>,
     distinct_letters: Vec<DistinctLetter>,
     distinct_letters_note: String,
     casing: Casing,
@@ -179,6 +193,69 @@ fn orthography_contract_is_the_alphabet_policy() {
     assert_eq!(o.language_name.native, "Kurmancî");
     assert!(!o.language_name.english.is_empty() && !o.alphabet_basis.is_empty());
     assert!(!o.distinct_letters_note.is_empty() && !o.not_covered_by_this_contract.is_empty());
+    // The reviewed contract cites its references, selected and approved by the project owner
+    // on 2026-09-19: one for the alphabet inventory and one for the casing rule, each with
+    // work, edition, location, the claim it supports, what the source itself states, and who
+    // selected it when. The alphabet itself is still exactly the policy's.
+    let claims: BTreeSet<&str> = o.references.iter().map(|r| r.claim.as_str()).collect();
+    assert!(
+        claims.contains("alphabet") && claims.contains("casing"),
+        "{:?}",
+        claims
+    );
+    for r in &o.references {
+        for (name, v) in [
+            ("supports", &r.supports),
+            ("work", &r.work),
+            ("edition", &r.edition),
+            ("location", &r.location),
+            ("source_statement", &r.source_statement),
+            ("selected_by", &r.selected_by),
+            ("selected_on", &r.selected_on),
+        ] {
+            assert!(!v.trim().is_empty(), "reference {} lacks {}", r.claim, name);
+        }
+    }
+    let alphabet_ref = o.references.iter().find(|r| r.claim == "alphabet").unwrap();
+    assert!(
+        alphabet_ref.work.contains("Grammaire kurde"),
+        "{}",
+        alphabet_ref.work
+    );
+    assert!(
+        alphabet_ref.location.contains("p. 3"),
+        "{}",
+        alphabet_ref.location
+    );
+    // The source's own qualification is recorded (31 core characters, 33 with two optional
+    // ones) without changing the project alphabet, which stays exactly the 31-letter policy.
+    assert!(
+        alphabet_ref.source_statement.contains("31")
+            && alphabet_ref.source_statement.contains("33"),
+        "{}",
+        alphabet_ref.source_statement
+    );
+    assert!(alphabet_ref.source_statement.contains("not added"));
+    let casing_ref = o.references.iter().find(|r| r.claim == "casing").unwrap();
+    assert!(
+        casing_ref.work.contains("Unicode Standard, Version 18.0.0"),
+        "{}",
+        casing_ref.work
+    );
+    assert!(casing_ref.location.contains("3.13") && casing_ref.location.contains("5.18"));
+    assert!(casing_ref.location.contains("UnicodeData.txt"));
+    assert!(casing_ref.supports.to_lowercase().contains("dotless i"));
+    for r in &o.references {
+        assert_eq!(r.selected_by, "ferhatguneri");
+        assert_eq!(r.selected_on, "2026-09-19");
+    }
+    assert_eq!(o.review_status, "human-reviewed");
+    assert_eq!(o.reviewed_by.as_deref(), Some("ferhatguneri"));
+    // The digits/symbols scope note excludes the held characters explicitly and decides nothing.
+    assert!(o
+        .not_covered_by_this_contract
+        .iter()
+        .any(|n| n.contains("excluding the held word-punctuation characters")));
     assert_review_metadata(
         &o.review_status,
         &o.reviewed_by,
@@ -282,8 +359,32 @@ fn keyboard_requirements_demand_exactly_the_alphabet_and_prescribe_no_mechanism(
         "encoding",
         "locale-tag",
         "non-lexical-layers",
+        "word-punctuation-lookup",
     ] {
         assert!(ids.contains(id), "missing requirement {}", id);
+    }
+    // Decision 2f (project owner, 2026-09-19): the lookup guidance for tokens with a hyphen or
+    // an apostrophe keeps encoding full-token lookup first, punctuation-aware fallback and
+    // deduplication, and does not admit the held characters linguistically.
+    {
+        let lookup = r
+            .requirements
+            .iter()
+            .find(|q| q.id == "word-punctuation-lookup")
+            .unwrap();
+        let text = lookup.statement.to_lowercase();
+        let first = text.find("full token").expect("full-token lookup");
+        let fallback = text
+            .find("punctuation-aware")
+            .expect("punctuation-aware fallback");
+        assert!(text.contains("first"), "{}", lookup.statement);
+        assert!(first < fallback, "full token must come before the fallback");
+        assert!(text.contains("deduplicat"), "{}", lookup.statement);
+        assert!(
+            text.contains("held for linguist review"),
+            "{}",
+            lookup.statement
+        );
     }
     for q in &r.requirements {
         assert!(!q.statement.is_empty(), "{}", q.id);

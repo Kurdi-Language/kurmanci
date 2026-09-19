@@ -97,18 +97,33 @@ fn hunspell_review_pool_excludes_out_of_alphabet_entries_and_keeps_evidence() {
     assert_eq!(pool.len(), summary.hunspell_only_entries_count);
     assert_eq!(excluded.len(), summary.alphabet_policy_excluded_count);
 
-    // The ordinary review pool is clean; hyphen/apostrophe forms stay in it.
+    // The ordinary review pool is clean of both policies: no out-of-alphabet form, and since
+    // the word-punctuation policy (2026-09-19) no hyphen/apostrophe form either; those are
+    // held for a linguist in their own queue, with the code point in the reason codes.
     let offenders: Vec<&str> = pool
         .iter()
         .filter(|r| !out_of_alphabet_chars(&r.normalized).is_empty())
         .map(|r| r.normalized.as_str())
         .collect();
     assert!(offenders.is_empty(), "{:?}", offenders);
-    assert!(pool.iter().any(|r| r
+    assert!(!pool.iter().any(|r| r
         .normalized
         .chars()
         .any(|c| WORD_INTERNAL_PUNCTUATION.contains(&c))));
     assert!(pool.iter().all(|r| r.suggested_action == "retain"));
+    let held = read_queue(&qdir.join("punctuation-policy-needs-linguist.jsonl"));
+    assert_eq!(held.len(), summary.punctuation_policy_needs_linguist_count);
+    assert!(!held.is_empty());
+    for r in &held {
+        assert!(r
+            .normalized
+            .chars()
+            .any(|c| WORD_INTERNAL_PUNCTUATION.contains(&c)));
+        assert!(out_of_alphabet_chars(&r.normalized).is_empty());
+        assert_eq!(r.suggested_action, "needs_linguist");
+        assert!(r.reason_codes.iter().any(|c| c == "WORD_PUNCTUATION"));
+        assert!(r.reason_codes.iter().any(|c| c.contains("U+")));
+    }
 
     // Every excluded record is outside the alphabet, says why, and is not assigned.
     for r in &excluded {

@@ -74,6 +74,10 @@ pub struct HunspellQueueAudit {
     pub policy_excluded_by_character: BTreeMap<String, usize>,
     /// Hyphen/apostrophe forms in the review pool (left to a separate policy; informational).
     pub review_pool_word_internal_punctuation_forms: usize,
+    /// Records held for linguist review in `punctuation-policy-needs-linguist.jsonl`
+    /// (word-punctuation policy, 2026-09-19).
+    #[serde(default)]
+    pub punctuation_policy_held_records: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -167,6 +171,7 @@ pub fn audit_alphabet<P: AsRef<Path>>(root: P) -> Result<AlphabetAuditReport, St
             policy_excluded_records: 0,
             policy_excluded_by_character: BTreeMap::new(),
             review_pool_word_internal_punctuation_forms: 0,
+            punctuation_policy_held_records: 0,
         };
         for name in names {
             for rec in read_jsonl::<EntryQueueRecord>(&queues_dir.join(&name))? {
@@ -181,6 +186,8 @@ pub fn audit_alphabet<P: AsRef<Path>>(root: P) -> Result<AlphabetAuditReport, St
                     {
                         audit.review_pool_word_internal_punctuation_forms += 1;
                     }
+                } else if name == crate::alphabet::PUNCTUATION_HELD_QUEUE_FILE {
+                    audit.punctuation_policy_held_records += 1;
                 } else if name == "alphabet-policy-excluded.jsonl" {
                     audit.policy_excluded_records += 1;
                     for c in out_of_alphabet_chars(&rec.normalized) {
@@ -318,7 +325,7 @@ pub fn audit_alphabet<P: AsRef<Path>>(root: P) -> Result<AlphabetAuditReport, St
         schema_version: ALPHABET_AUDIT_SCHEMA_VERSION.to_string(),
         alphabet: KURMANCI_ALPHABET.iter().collect(),
         word_internal_punctuation_exempt: WORD_INTERNAL_PUNCTUATION.iter().collect(),
-        policy: "Default-pack alphabet policy (explicit human project policy, 2026-09-17): a lexical form containing characters outside the approved 31-letter Kurmancî alphabet is ineligible for the default/reviewed pack; such forms are excluded before ordinary review, and an authoritative decision that admits one is a contradiction the resolver refuses. Source records and the experimental-full evidence reservoir keep their evidence. This report is diagnostic only; nothing it lists is a keyboard requirement.".to_string(),
+        policy: "Default-pack alphabet policy (explicit human project policy, 2026-09-17): a lexical form containing characters outside the approved 31-letter Kurmancî alphabet is ineligible for the default/reviewed pack; such forms are excluded before ordinary review, and an authoritative decision that admits one is a contradiction the resolver refuses. Source records and the experimental-full evidence reservoir keep their evidence. Word-punctuation policy (2026-09-19): a form containing a hyphen or an apostrophe is held for linguist review (punctuation-policy-needs-linguist.jsonl) and is not approved into the default pack until then; possible duplicates that differ only by that punctuation are flagged, never merged. This report is diagnostic only; nothing it lists is a keyboard requirement.".to_string(),
         invalid_approvals,
         hunspell_queues,
         kuwiki_batches,

@@ -498,3 +498,76 @@ pub fn apply_default_pack_alphabet_policy(
         violations.join("\n")
     ))
 }
+
+/// Word-punctuation policy at authoritative resolution (project owner, 2026-09-19), fail
+/// closed over the merged candidates of every source: a candidate that would enter the default
+/// vocabulary whose normalized form contains held punctuation (`-`, U+0027, U+2019) is a
+/// contradiction between a decision and the policy (the form is held for a linguist), and two
+/// such candidates that are identical once the held punctuation is removed are possible
+/// duplicates that must not both be admitted. Nothing is merged, removed or reinterpreted:
+/// resolution fails naming the forms, their sources and decisions, and the decision artifacts
+/// must be corrected by a human.
+pub fn apply_default_pack_word_punctuation_policy(
+    pack_id: &str,
+    candidates: &[SelectedCandidate],
+) -> Result<(), String> {
+    let mut violations: Vec<String> = Vec::new();
+    let mut by_stripped: std::collections::BTreeMap<String, Vec<&SelectedCandidate>> =
+        std::collections::BTreeMap::new();
+    for c in candidates {
+        let default_producing = matches!(
+            c.population,
+            EntryPopulation::ManualSeed
+                | EntryPopulation::SeedMetadataChange
+                | EntryPopulation::ExternalApproved
+                | EntryPopulation::ExternalApprovedMetadataChange
+        );
+        let gated = match pack_id {
+            "seed" | "reviewed" => true,
+            _ => default_producing,
+        };
+        if !gated {
+            continue;
+        }
+        if let Err(held) = crate::alphabet::word_punctuation_hold(&c.normalized) {
+            violations.push(format!(
+                "token: {:?}\n  source: {}\n  decision: {}\n  reason: {} held for linguist review by the word-punctuation policy ({})",
+                c.display,
+                c.source_id,
+                c.status,
+                crate::alphabet::describe_out_of_alphabet(&held),
+                crate::alphabet::WORD_PUNCTUATION_POLICY_DATE
+            ));
+        }
+        by_stripped
+            .entry(crate::alphabet::punctuation_stripped_form(&c.normalized))
+            .or_default()
+            .push(c);
+    }
+    for (stripped, group) in &by_stripped {
+        let mut forms: Vec<&str> = group.iter().map(|c| c.normalized.as_str()).collect();
+        forms.sort_unstable();
+        forms.dedup();
+        if forms.len() > 1 {
+            violations.push(format!(
+                "possible duplicate lexical words both admitted to the default vocabulary (identical once held punctuation is removed: {:?}): {}; human resolution required, never merged automatically",
+                stripped,
+                group
+                    .iter()
+                    .map(|c| format!("{:?} ({}, {})", c.display, c.source_id, c.status))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+    }
+    if violations.is_empty() {
+        return Ok(());
+    }
+    violations.sort();
+    Err(format!(
+        "production lexical eligibility violation ({} in pack '{}'): an authoritative decision admits a form held by the word-punctuation policy or a punctuation-only duplicate; correct the decision artifact (see docs/lexicon-review.md)\n{}",
+        violations.len(),
+        pack_id,
+        violations.join("\n")
+    ))
+}

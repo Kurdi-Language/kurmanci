@@ -387,10 +387,11 @@ fn audit_reports_provenance_and_changes_nothing() {
         "ordinary review pool must be clean"
     );
     assert!(h.policy_excluded_records > 0);
-    assert!(
-        h.review_pool_word_internal_punctuation_forms > 0,
-        "hyphen/apostrophe stay reviewable"
+    assert_eq!(
+        h.review_pool_word_internal_punctuation_forms, 0,
+        "hyphen/apostrophe forms are held for linguist review since 2026-09-19, not in the pool"
     );
+    assert!(h.punctuation_policy_held_records > 0);
     // Every Kuwiki batch is inventoried with the decision each outside candidate carries,
     // and the corrected records carry the policy rejection with its date.
     assert_eq!(report.kuwiki_batches.len(), 2);
@@ -456,24 +457,36 @@ fn validator_and_resolver_agree_with_the_single_eligibility_policy() {
         "ıspanak",
     ] {
         let policy = default_pack_eligibility(form);
+        let hold = data_builder_lib::alphabet::word_punctuation_hold(form);
         let validator = validate_entry(&entry(form), 1);
-        let gate = apply_default_pack_alphabet_policy(
-            "reviewed",
-            &[cand(
-                form,
-                "any-source",
-                EntryPopulation::ExternalApproved,
-                "approved",
-            )],
-        );
+        let candidates = [cand(
+            form,
+            "any-source",
+            EntryPopulation::ExternalApproved,
+            "approved",
+        )];
+        let gate = apply_default_pack_alphabet_policy("reviewed", &candidates);
+        let punctuation_gate =
+            data_builder_lib::pack::selection::apply_default_pack_word_punctuation_policy(
+                "reviewed",
+                &candidates,
+            );
+        // The validator applies both policies (alphabet, word punctuation), exactly as the
+        // resolver applies its two gates: one shared rule each, nothing re-implemented.
         assert_eq!(
-            policy.is_ok(),
+            policy.is_ok() && hold.is_ok(),
             validator.is_ok(),
             "validator disagrees on {:?}: {:?}",
             form,
             validator
         );
         assert_eq!(policy.is_ok(), gate.is_ok(), "gate disagrees on {:?}", form);
+        assert_eq!(
+            hold.is_ok(),
+            punctuation_gate.is_ok(),
+            "punctuation gate disagrees on {:?}",
+            form
+        );
         if let Err(outside) = &policy {
             let described = data_builder_lib::alphabet::describe_out_of_alphabet(outside);
             assert!(

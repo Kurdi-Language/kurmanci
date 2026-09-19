@@ -22,6 +22,7 @@ const T_ROJ: &str = "11111111111111111111111111111111111111111111111111111111111
 const T_SEV: &str = "2222222222222222222222222222222222222222222222222222222222222222";
 const T_BAS: &str = "3333333333333333333333333333333333333333333333333333333333333333";
 const T_HEVAL: &str = "4444444444444444444444444444444444444444444444444444444444444444";
+const T_BINAV: &str = "cafe0000cafe0000cafe0000cafe0000cafe0000cafe0000cafe0000cafe0002";
 const T_UNKNOWN: &str = "9999999999999999999999999999999999999999999999999999999999999999";
 const G_CONFLICT: &str = "5555555555555555555555555555555555555555555555555555555555555555";
 
@@ -78,6 +79,23 @@ fn fixture() -> tempfile::TempDir {
     fs::write(
         qdir.join("alphabet-policy-excluded.jsonl"),
         excluded.to_string() + "\n",
+    )
+    .unwrap();
+    // The authoritative generator's classification of a form held by the word-punctuation
+    // policy (2026-09-19): it lives in punctuation-policy-needs-linguist.jsonl with the held
+    // code point and a possible-duplicate flag in its reason codes.
+    let mut held = queue_record(T_BINAV, "bin-av", "bin-av");
+    held["rule_id"] = serde_json::json!("PUNCTUATION_POLICY_V1");
+    held["reason_codes"] = serde_json::json!([
+        "WORD_PUNCTUATION",
+        "'-' (U+002D)",
+        "POSSIBLE_DUPLICATE_OF:binav"
+    ]);
+    held["suggested_action"] = serde_json::json!("needs_linguist");
+    held["queue_categories"] = serde_json::json!(["punctuation-policy-needs-linguist"]);
+    fs::write(
+        qdir.join("punctuation-policy-needs-linguist.jsonl"),
+        held.to_string() + "\n",
     )
     .unwrap();
     let group = serde_json::json!({
@@ -484,6 +502,77 @@ fn prepare_export_passes_metadata_change_on_excluded_target_through_unchanged() 
     );
 }
 
+/// A plain approval of an entry the authoritative generator holds under the word-punctuation
+/// policy is converted to `needs_linguist` with the reviewer's choice preserved; the
+/// classification comes from the held queue artifact only, and a metadata change on such a
+/// target passes through to the Rust checks untouched.
+#[test]
+fn prepare_export_converts_a_plain_approval_of_a_held_form_to_needs_linguist() {
+    let tmp = fixture();
+    let root = tmp.path();
+    let mut change = decision(
+        T_BINAV,
+        "approved_with_metadata_change",
+        "corrected spelling",
+    );
+    change["replacement_metadata"] = serde_json::json!({
+        "display": "binav", "normalized": "binav", "flags": "", "morphology": [], "part_of_speech": "noun"
+    });
+    let exp = export(vec![
+        decision(T_BINAV, "approved", "looks fine"),
+        change.clone(),
+        decision(T_SEV, "approved", "Human-approved lexical entry"),
+    ]);
+    let export_path = root.join("export.json");
+    fs::write(&export_path, exp.to_string()).unwrap();
+    let prepared = root.join("prepared.json");
+    let audit = root.join("audit.json");
+    let out = Command::new("python3")
+        .arg(ws_root().join("scripts/review-desk/prepare_export.py"))
+        .arg(&export_path)
+        .arg(&prepared)
+        .arg("--audit-json")
+        .arg(&audit)
+        .arg("--root")
+        .arg(root)
+        .output()
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let p: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&prepared).unwrap()).unwrap();
+    let d = p["decisions"].as_array().unwrap();
+    assert_eq!(d.len(), 3);
+    assert_eq!(d[0]["review_status"], "needs_linguist");
+    let notes = d[0]["review_notes"].as_str().unwrap();
+    assert!(
+        notes.contains("word-punctuation policy") && notes.contains("U+002D"),
+        "{notes}"
+    );
+    assert!(notes.contains("approved (tester, 2026-09-17)"), "{notes}");
+    assert!(d[0]["evidence"].as_array().unwrap().iter().any(|e| e
+        .as_str()
+        .unwrap()
+        .contains("review-desk-original:status=approved;reviewer=tester;date=2026-09-17")
+        && e.as_str()
+            .unwrap()
+            .contains("policy=word-punctuation-2026-09-19")));
+    // metadata change on the held target: untouched, the Rust resolver judges the replacement
+    assert_eq!(d[1]["review_status"], "approved_with_metadata_change");
+    assert_eq!(d[1]["replacement_metadata"]["normalized"], "binav");
+    assert_eq!(d[1]["review_notes"], "corrected spelling");
+    // ordinary approval untouched
+    assert_eq!(d[2]["review_status"], "approved");
+    let a: serde_json::Value = serde_json::from_str(&fs::read_to_string(&audit).unwrap()).unwrap();
+    assert_eq!(a["counts"]["policy_held_for_linguist"], 1);
+    assert_eq!(a["counts"]["policy_rejected"], 0);
+    assert_eq!(a["rewritten"][0]["prepared_status"], "needs_linguist");
+    assert_eq!(a["rewritten"][0]["held_characters"], "'-' (U+002D)");
+}
+
 /// Review Desk tooling consumes the policy-clean pool produced by the authoritative Rust
 /// review infrastructure and defines no alphabet of its own: the scripts carry no alphabet
 /// or word-internal-punctuation table and no character-eligibility function.
@@ -592,6 +681,24 @@ fn queue_builder_consumes_the_clean_pool_and_refuses_artifact_overlap() {
     assert!(!ok);
     assert!(
         err.contains("both hunspell-only.jsonl and alphabet-policy-excluded.jsonl"),
+        "{}",
+        err
+    );
+
+    // The same for a target the generator holds under the word-punctuation policy.
+    let mut pool = fs::read_to_string(qdir.join("hunspell-only.jsonl"))
+        .unwrap()
+        .lines()
+        .filter(|l| !l.contains(T_HEVAL))
+        .collect::<Vec<_>>()
+        .join("\n");
+    pool.push('\n');
+    pool.push_str(&(queue_record(T_BINAV, "bin-av", "bin-av").to_string() + "\n"));
+    fs::write(qdir.join("hunspell-only.jsonl"), pool).unwrap();
+    let (ok, err, _) = run(root);
+    assert!(!ok);
+    assert!(
+        err.contains("both hunspell-only.jsonl and punctuation-policy-needs-linguist.jsonl"),
         "{}",
         err
     );

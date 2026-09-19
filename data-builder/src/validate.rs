@@ -33,7 +33,8 @@ pub struct SourceLexiconEntry {
 /// production lexical eligibility policy, `crate::alphabet::default_pack_eligibility`, and
 /// is not re-implemented here. A source record that is technically valid but ineligible
 /// (a space, a digit, a foreign letter) is therefore rejected here exactly as the pack
-/// resolver rejects it; hyphen and apostrophes are left to their own policy by both.
+/// resolver rejects it; a form with held word punctuation (`-`, U+0027, U+2019) is rejected
+/// under the word-punctuation policy (`crate::alphabet::word_punctuation_hold`) by both.
 pub fn validate_entry(entry: &SourceLexiconEntry, line_num: usize) -> Result<(), String> {
     if entry.word.trim().is_empty() {
         return Err(format!("Line {}: 'word' field is empty", line_num));
@@ -73,6 +74,15 @@ pub fn validate_entry(entry: &SourceLexiconEntry, line_num: usize) -> Result<(),
             line_num,
             entry.word,
             crate::alphabet::describe_out_of_alphabet(&outside)
+        ));
+    }
+    if let Err(held) = crate::alphabet::word_punctuation_hold(&entry.normalized) {
+        return Err(format!(
+            "Line {}: word '{}' is not eligible for the default vocabulary: {} held for linguist review by the word-punctuation policy ({})",
+            line_num,
+            entry.word,
+            crate::alphabet::describe_out_of_alphabet(&held),
+            crate::alphabet::WORD_PUNCTUATION_POLICY_DATE
         ));
     }
 

@@ -7,7 +7,10 @@ now classifies as outside the 31-letter Kurmancî alphabet. The Rust resolver re
 an approval (fail closed), so this step rewrites exactly those records, mechanically and
 transparently, to `rejected_from_default_pack` with a note that names the policy, the
 offending characters and the reviewer's original decision. Every other record is passed
-through unchanged. Pending entries are not in the export and stay pending.
+through unchanged. Pending entries are not in the export and stay pending. The same step
+converts a plain `approved` decision on an entry the generator holds for linguist review under
+the word-punctuation policy (punctuation-policy-needs-linguist.jsonl, 2026-09-19) to
+`needs_linguist`, preserving the reviewer's choice in the note and an evidence entry.
 
 The policy is not defined here. An entry is "outside the alphabet" exactly when the
 authoritative review-queue generator (data-builder, `default_pack_eligibility`) put it in
@@ -44,26 +47,35 @@ if "--root" in sys.argv:
 # metadata change is judged on its replacement form by the Rust resolver.
 MECHANICALLY_CONVERTED = {"approved"}
 EXCLUDED_QUEUE = "alphabet-policy-excluded.jsonl"
+# Entries the authoritative generator holds for linguist review under the word-punctuation
+# policy (project owner, 2026-09-19); a plain approval of one is converted to needs_linguist.
+HELD_QUEUE = "punctuation-policy-needs-linguist.jsonl"
 
 
 def load_queue_classification(source_id):
-    """target_id -> (display, normalized, outside_characters or None), from the authoritative
-    review-queue artifacts; `outside_characters` is set only for entries the generator wrote
-    to alphabet-policy-excluded.jsonl (its reason codes carry the code points)."""
+    """target_id -> (display, normalized, outside_characters or None, held_characters or None),
+    from the authoritative review-queue artifacts: `outside_characters` is set only for entries
+    the generator wrote to alphabet-policy-excluded.jsonl, `held_characters` only for entries it
+    wrote to punctuation-policy-needs-linguist.jsonl (their reason codes carry the code points).
+    No character rule is evaluated here."""
     by_target = {}
     qdir = ROOT / "data/review-queues" / source_id
     for path in sorted(qdir.glob("*.jsonl")):
         if path.name == "metadata-conflict-groups.jsonl":
             continue
         excluded_file = path.name == EXCLUDED_QUEUE
+        held_file = path.name == HELD_QUEUE
         for line in path.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 rec = json.loads(line)
-                display, normalized, outside = by_target.get(rec["target_id"], (rec["display"], rec["normalized"], None))
+                display, normalized, outside, held = by_target.get(rec["target_id"], (rec["display"], rec["normalized"], None, None))
                 if excluded_file:
                     codes = [c for c in rec.get("reason_codes", []) if "U+" in c]
                     outside = codes[0] if codes else "characters outside the alphabet (see alphabet-policy-excluded.jsonl)"
-                by_target[rec["target_id"]] = (display, normalized, outside)
+                if held_file:
+                    codes = [c for c in rec.get("reason_codes", []) if "U+" in c]
+                    held = codes[0] if codes else "hyphen or apostrophe (see punctuation-policy-needs-linguist.jsonl)"
+                by_target[rec["target_id"]] = (display, normalized, outside, held)
     return by_target
 
 
@@ -85,7 +97,7 @@ def main():
     if not (len(today) == 10 and today[4] == "-" and today[7] == "-"):
         raise SystemExit("ERROR: export lacks a valid exported_at date")
 
-    counts = {"passed_through": 0, "policy_rejected": 0, "unknown_target": 0}
+    counts = {"passed_through": 0, "policy_rejected": 0, "policy_held_for_linguist": 0, "unknown_target": 0}
     by_status = {}
     rewritten = []
     audit_rows = []
@@ -98,10 +110,40 @@ def main():
             counts["unknown_target"] += 1
             out_decisions.append(rec)
             continue
-        display, normalized, bad = known
+        display, normalized, bad, held = known
         # approved_with_metadata_change passes through untouched: its replacement form is
         # classified by the authoritative Rust validation/resolution, which fails closed.
-        if status in MECHANICALLY_CONVERTED and bad:
+        if status in MECHANICALLY_CONVERTED and held and not bad:
+            new = dict(rec)
+            new["review_status"] = "needs_linguist"
+            new["review_date"] = today
+            new["review_notes"] = (
+                f"Held for linguist review under the explicit word-punctuation policy "
+                f"(project owner, 2026-09-19): the review infrastructure classifies this entry as "
+                f"containing held word punctuation ({held}); such a form is not approved into the "
+                f"reviewed/default pack until a linguist has reviewed it. Mechanical policy application, "
+                f"not a new lexical judgement. Reviewer's decision on the Review Desk: {status} "
+                f"({rec.get('reviewer_id')}, {rec.get('review_date')}); source evidence retained."
+            )
+            new["evidence"] = list(rec.get("evidence") or []) + [
+                f"review-desk-original:status={status};reviewer={rec.get('reviewer_id')};date={rec.get('review_date')};queue={exp.get('queue_id')};policy=word-punctuation-2026-09-19"
+            ]
+            counts["policy_held_for_linguist"] += 1
+            rewritten.append((display, normalized, status, rec.get("reviewer_id"), rec.get("review_date"), f"held: {held}"))
+            audit_rows.append({
+                "target_id": rec.get("target_id"),
+                "display": display,
+                "normalized": normalized,
+                "review_desk_status": status,
+                "review_desk_reviewer": rec.get("reviewer_id"),
+                "review_desk_date": rec.get("review_date"),
+                "review_desk_notes": rec.get("review_notes"),
+                "prepared_status": "needs_linguist",
+                "policy": "word-punctuation policy (project owner, 2026-09-19)",
+                "held_characters": held,
+            })
+            out_decisions.append(new)
+        elif status in MECHANICALLY_CONVERTED and bad:
             new = dict(rec)
             new["review_status"] = "rejected_from_default_pack"
             new["review_date"] = today
@@ -136,7 +178,7 @@ def main():
 
     prepared = dict(exp)
     prepared["decisions"] = out_decisions
-    prepared["prepared_by"] = "scripts/review-desk/prepare_export.py (alphabet policy applied from alphabet-policy-excluded.jsonl)"
+    prepared["prepared_by"] = "scripts/review-desk/prepare_export.py (alphabet policy from alphabet-policy-excluded.jsonl; word-punctuation policy from punctuation-policy-needs-linguist.jsonl)"
     out_path.write_text(json.dumps(prepared, ensure_ascii=False, indent=1), encoding="utf-8")
 
     lines = [
@@ -147,6 +189,7 @@ def main():
         f"- by status as exported: {json.dumps(by_status, ensure_ascii=False)}",
         f"- passed through unchanged: {counts['passed_through']}",
         f"- approved but classified outside the alphabet by the review infrastructure, rewritten to rejected_from_default_pack: {counts['policy_rejected']}",
+        f"- approved but held by the word-punctuation policy (review infrastructure), rewritten to needs_linguist: {counts['policy_held_for_linguist']}",
         f"- unknown target ids (passed through for the merge script to refuse): {counts['unknown_target']}",
         "",
     ]

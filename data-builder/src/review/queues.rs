@@ -59,6 +59,11 @@ pub struct ReviewQueueSummary {
     /// never placed in the ordinary review pool (`hunspell-only.jsonl`).
     #[serde(default)]
     pub alphabet_policy_excluded_count: usize,
+    /// Imported entries held for linguist review by the word-punctuation policy
+    /// (`crate::alphabet`, 2026-09-19): kept in `punctuation-policy-needs-linguist.jsonl`,
+    /// never placed in the ordinary review pool.
+    #[serde(default)]
+    pub punctuation_policy_needs_linguist_count: usize,
 }
 
 /// Member record evidence inside a metadata conflict group queue item.
@@ -587,6 +592,23 @@ pub fn generate_review_queues<P: AsRef<Path>>(
     }
 
     // 2. Standard Queues for Imported Records
+    // Word-punctuation policy: forms identical once held punctuation is removed are possible
+    // duplicates of each other (import entries and seed words alike); flagged, never merged.
+    let mut by_stripped_form: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for item in &imported_records {
+        by_stripped_form
+            .entry(crate::alphabet::punctuation_stripped_form(&item.normalized))
+            .or_default()
+            .insert(item.normalized.clone());
+    }
+    for w in &seed_words {
+        by_stripped_form
+            .entry(crate::alphabet::punctuation_stripped_form(w))
+            .or_default()
+            .insert(w.clone());
+    }
+    let mut punctuation_held_records: Vec<EntryQueueRecord> = Vec::new();
+
     for item in &imported_records {
         let entry_id = compute_entry_id(
             source_id,
@@ -602,6 +624,9 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         // for ordinary vocabulary review; its outcome is already determined. Every queue
         // record of such an entry carries the reason so no consumer can miss it.
         let policy_outside = crate::alphabet::default_pack_eligibility(&item.normalized).err();
+        // Word-punctuation policy (2026-09-19): a form with held punctuation waits for a
+        // linguist. The alphabet exclusion takes precedence when both apply.
+        let punctuation_held = crate::alphabet::word_punctuation_hold(&item.normalized).err();
 
         let make_record = |rule_id: &str,
                            reason: &str,
@@ -613,6 +638,12 @@ pub fn generate_review_queues<P: AsRef<Path>>(
             if policy_outside.is_some() && reason != crate::alphabet::OUT_OF_ALPHABET_REASON_CODE {
                 reason_codes.push(crate::alphabet::OUT_OF_ALPHABET_REASON_CODE.to_string());
                 suggested_action = crate::alphabet::EXCLUDED_BY_ALPHABET_POLICY_ACTION.to_string();
+            } else if policy_outside.is_none()
+                && punctuation_held.is_some()
+                && reason != crate::alphabet::WORD_PUNCTUATION_REASON_CODE
+            {
+                reason_codes.push(crate::alphabet::WORD_PUNCTUATION_REASON_CODE.to_string());
+                suggested_action = crate::alphabet::HELD_FOR_LINGUIST_ACTION.to_string();
             }
             EntryQueueRecord {
                 schema_version: REVIEW_QUEUE_SCHEMA_VERSION.to_string(),
@@ -766,6 +797,26 @@ pub fn generate_review_queues<P: AsRef<Path>>(
             rec.reason_codes
                 .push(crate::alphabet::describe_out_of_alphabet(outside));
             alphabet_policy_excluded_records.push(rec);
+        } else if let Some(held) = &punctuation_held {
+            let mut rec = make_record(
+                "PUNCTUATION_POLICY_V1",
+                crate::alphabet::WORD_PUNCTUATION_REASON_CODE,
+                crate::alphabet::HELD_FOR_LINGUIST_ACTION,
+                "punctuation-policy-needs-linguist",
+            );
+            rec.reason_codes
+                .push(crate::alphabet::describe_out_of_alphabet(held));
+            let stripped = crate::alphabet::punctuation_stripped_form(&item.normalized);
+            if let Some(forms) = by_stripped_form.get(&stripped) {
+                for other in forms.iter().filter(|f| *f != &item.normalized) {
+                    rec.reason_codes.push(format!(
+                        "{}{}",
+                        crate::alphabet::POSSIBLE_DUPLICATE_REASON_PREFIX,
+                        other
+                    ));
+                }
+            }
+            punctuation_held_records.push(rec);
         } else if !seed_words.contains(&item.normalized) {
             hunspell_only_records.push(make_record(
                 "HUNSPELL_ONLY_V1",
@@ -886,6 +937,10 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         "alphabet-policy-excluded.jsonl",
         alphabet_policy_excluded_records,
     )?;
+    let punctuation_held_count = write_entry_queue(
+        crate::alphabet::PUNCTUATION_HELD_QUEUE_FILE,
+        punctuation_held_records,
+    )?;
 
     let summary = ReviewQueueSummary {
         source_id: source_id.to_string(),
@@ -904,6 +959,7 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         multiword_entries_count: mw_count,
         hunspell_only_entries_count: hun_only_count,
         alphabet_policy_excluded_count: policy_excluded_count,
+        punctuation_policy_needs_linguist_count: punctuation_held_count,
     };
 
     // Mandatory Audit Summary Count Cross-Check
@@ -954,9 +1010,10 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         - **Metadata Conflict Groups**: {}\n\
         - **Suspicious Entries**: {}\n\
         - **Hunspell-Only Entries**: {}\n\
-        - **Excluded from ordinary review by the alphabet policy**: {} (kept as source evidence in `alphabet-policy-excluded.jsonl`; see docs/lexicon-review.md)\n\n\
+        - **Excluded from ordinary review by the alphabet policy**: {} (kept as source evidence in `alphabet-policy-excluded.jsonl`; see docs/lexicon-review.md)\n\
+        - **Held for linguist review by the word-punctuation policy**: {} (hyphen or apostrophe forms, `punctuation-policy-needs-linguist.jsonl`, with possible-duplicate flags; see docs/lexicon-review.md)\n\n\
         > **IMPORTANT**: Never edit generated review queues in `data/review-queues/`. Only edit `decisions.jsonl`. The queue generator is allowed to replace `review-queues/`. It is never allowed to rewrite `review-decisions/`. If a queue appears incorrect, fix the importer or audit—not the generated queue.\n",
-        source_id, source_id, source_revision, summary.total_imported_records, summary.metadata_conflict_groups_count, summary.suspicious_entries_count, summary.hunspell_only_entries_count, summary.alphabet_policy_excluded_count
+        source_id, source_id, source_revision, summary.total_imported_records, summary.metadata_conflict_groups_count, summary.suspicious_entries_count, summary.hunspell_only_entries_count, summary.alphabet_policy_excluded_count, summary.punctuation_policy_needs_linguist_count
     );
     fs::write(stage_queues_dir.join("README.md"), readme)
         .map_err(|e| format!("Write README.md failed: {}", e))?;
@@ -979,6 +1036,7 @@ pub fn generate_review_queues<P: AsRef<Path>>(
         "multiword-entries.jsonl",
         "hunspell-only.jsonl",
         "alphabet-policy-excluded.jsonl",
+        "punctuation-policy-needs-linguist.jsonl",
         "summary.json",
         "README.md",
     ];

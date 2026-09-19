@@ -2,7 +2,7 @@
 
 Two small, vendor-neutral data files describe what a platform keyboard must be able to type
 for the project's Kurmancî target. They are contracts, not a keyboard application and not a
-layout proposal. Both carry `review_status = draft-pending-human-review`: the machine-checkable
+layout proposal. Both carry `review_status = human-reviewed` (project owner, 2026-09-19): the machine-checkable
 parts are verified by `data-builder/tests/ku_latn_contracts_test.rs`; the linguistic choices
 belong to Kurmancî speakers and the review process. The contracts introduce no new
 linguistic decision: the orthography contract codifies the project's existing human-approved
@@ -13,15 +13,15 @@ linguistic decision: the orthography contract codifies the project's existing hu
 | Section | Content | Basis |
 |---|---|---|
 | `locale_tag` | `ku-Latn` (BCP 47: language `ku`, script `Latn`), the tag the language pack and the engine use | project contract |
-| `alphabet` | the 31 letters `a b c ç d e ê f g h i î j k l m n o p q r s ş t u û v w x y z` | the project's default-pack alphabet policy (`data-builder/src/alphabet.rs`, `docs/lexicon-review.md`); the reference orthography to cite is a review question |
+| `alphabet` | the 31 letters `a b c ç d e ê f g h i î j k l m n o p q r s ş t u û v w x y z` | the project's default-pack alphabet policy (`data-builder/src/alphabet.rs`, `docs/lexicon-review.md`); cited in `references`: Bedir Khan & Lescot, *Grammaire kurde (dialecte kurmandji)*, Paris 1970, Part I §2, p. 3 (alphabet; the source lists 31 core characters and states 33 with two optional ones, which the project does not add) and The Unicode Standard, Version 18.0.0, §3.13 and §5.18 with `UnicodeData.txt` (casing), both selected and approved by the project owner on 2026-09-19 |
 | `distinct_letters` | `ç ê î ş û` with base letter, uppercase form, code point and combining-mark decomposition; distinct Kurmancî alphabet letters, not interchangeable representations of `c e i s u` (the decomposition is an encoding property, the letter identity is orthographic) | Unicode; the engine's normalization recomposes decomposed input |
 | `casing` | 31 lower/upper pairs, rule `unicode-default`: `i` pairs only with `I`; no other locale's dotted or dotless i rules | Unicode default casing, verified by the test |
 | `normalization` | the engine's rule: control characters, U+200B and U+FEFF removed, NFC, lowercase; decomposed input accepted | engine contract (`docs/integration.md`) |
-| `not_covered_by_this_contract` | word-internal hyphen and apostrophes (separate tokenization policy); digits, punctuation, symbols (host layers); characters observed in source data (the generated alphabet audit) | scope statement |
+| `not_covered_by_this_contract` | word-internal hyphen and apostrophes (held for linguist review by the word-punctuation policy of 2026-09-19, `docs/lexicon-review.md`); digits, punctuation, symbols (host layers); characters observed in source data (the generated alphabet audit) | scope statement |
 
 ## `data/keyboard/ku-Latn-keyboard-requirements.json` (`ku-latn-keyboard-requirements-v1`)
 
-Seven requirements, each with an id and a statement:
+Eight requirements, each with an id and a statement:
 
 1. `letters-typeable`: all 31 letters, lower and upper case, directly or conveniently
    typeable, including `ç ê î ş û`.
@@ -38,7 +38,15 @@ Seven requirements, each with an id and a statement:
 5. `encoding`: precomposed or decomposed output accepted; NFC preferred.
 6. `locale-tag`: `ku-Latn` everywhere.
 7. `non-lexical-layers`: digits, punctuation and symbols follow the host; nothing outside the
-   31 letters is a lexical requirement.
+   31 letters is a lexical requirement. This decides nothing about the held word-punctuation
+   characters (`-`, U+0027, U+2019), which stay pending linguist review.
+8. `word-punctuation-lookup`: when the token at the cursor contains a hyphen or an apostrophe,
+   the host queries the engine with the full token first, then with punctuation-aware
+   fallbacks (the token split at those characters), and deduplicates the suggestions it gets
+   back. The engine answers only for the exact string it is given. Lexical entries containing
+   these characters are held for linguist review and are not in the default pack, so a
+   full-token hit is not expected until a linguist admits such a form; nothing here admits
+   hyphens or apostrophes linguistically.
 
 `layout_arrangement` is `intentionally-unspecified`, an explicit project decision recorded in
 the file (project owner, 2026-09-17): the project does not prescribe a universal physical key
@@ -66,7 +74,8 @@ correction and ranking evaluation and is not bundled with the orthography contra
 `ku_latn_contracts_test.rs` fails the build if:
 
 - either file has an unknown or missing field (strict schema), or a draft carries reviewer
-  attribution (a reviewed contract must carry it);
+  attribution (a reviewed contract must carry it), or the orthography contract lacks its
+  alphabet and casing references;
 - the alphabet is not exactly the project's 31-letter policy in order, a distinct letter or
   its base is not in it, its uppercase form or code point disagrees with Unicode, or its
   decomposition does not recompose to the letter under the engine's normalization;
@@ -99,10 +108,25 @@ correction and ranking evaluation and is not bundled with the orthography contra
   an evidence reservoir and is only counted in the test output; the generated alphabet audit
   (`data-builder audit-alphabet`) lists its findings with provenance.
 
-## Decisions required from human review
+## Decisions taken by human review (2026-09-19)
 
-1. Which reference orthography document to cite for the alphabet and casing.
-2. Word-internal hyphen and apostrophes: a separate tokenization policy.
+1. Reference orthography: the alphabet inventory cites Bedir Khan & Lescot, *Grammaire kurde
+   (dialecte kurmandji)*, Paris 1970, Part I §2, p. 3, recording the source's own
+   qualification (31 core characters, 33 if two optional characters are added; the project's
+   alphabet stays exactly the 31-letter policy); the casing rule cites The Unicode Standard,
+   Version 18.0.0 (§3.13 Default Case Algorithms, §5.18 Case Mappings, `UnicodeData.txt` for
+   the simple case mappings), with no Turkish-specific dotted or dotless i tailoring. Both were
+   selected and approved by the project owner on 2026-09-19 and are recorded in the orthography
+   contract's `references` with `selected_by` and `selected_on`; the test checks their presence.
+2. Word-internal hyphen and apostrophes: the word-punctuation policy (`docs/lexicon-review.md`)
+   holds such forms for linguist review, keeps them out of the default pack, flags
+   punctuation-only variants as possible duplicates for human resolution, and gives hosts the
+   lookup guidance in the `word-punctuation-lookup` requirement (full token first, then
+   punctuation-aware splits, deduplicated). Which apostrophe code point is canonical stays
+   undecided until that review.
+
+Still open for a linguist: the held forms themselves (see the requirements file's open
+questions).
 
 Further platform verification (the real iPhone, Samsung's settings list and long-press
 details) is welcome as interoperability evidence but is not a prerequisite: no universal
