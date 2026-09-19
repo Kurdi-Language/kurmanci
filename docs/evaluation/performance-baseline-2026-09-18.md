@@ -41,7 +41,8 @@ memory figure is the counting allocator's live-heap delta, and the structure att
 model explains approximately 100 % of it; iPhone and emulator numbers are end-to-end SDK-path
 timings and whole-process memory. The emulator rows are reference data: the arm64 image on an arm64 host avoids
 cross-ISA emulation, but its process baseline, JNI behaviour and scheduling are not a
-phone's. No physical Android device has been measured yet. The 16 KB-page alignment of the
+phone's. At the 2026-09-18 baseline, no physical Android device had been measured yet; see
+the 2026-09-19 addendum below. The 16 KB-page alignment of the
 Android library (#71) landed after the emulator rows were recorded and does not change them.
 
 ## Memory
@@ -162,6 +163,34 @@ assertion).
   determinism job verifies a different bundle, without the optional platform artifacts. The
   licensing determination is a human decision outside this document.
 
+## Addendum, 2026-09-19: first physical Android device
+
+A Samsung `SM-S948B` (Qualcomm SM8850, Android 16, 4 KB pages, 12 GB class RAM), reached
+through Samsung's Remote Test Lab and Remote Debug Bridge, ran the same harness on the same
+packs (reports and a provenance sidecar under `device-benchmarks/`). JNI path from the
+instrumentation host, like the emulator rows; RSS is the whole process.
+
+| Operation (input) | Pack | iPhone 14 Pro | Samsung SM-S948B | Emulator |
+|---|---|---|---|---|
+| load, median ms | reviewed | 6.7 | 10.2 | 23.7 |
+| load, median ms | experimental-full | 68.4 | 102.5 | 118.7 |
+| known word (welat), p50 µs | reviewed | 0.5 | 4.4 | 2.4 |
+| suggest (rojbas), p50 µs | reviewed | 25.7 | 53.5 | 45.6 |
+| correct (spaz), p50 µs | reviewed | 19.5 | 45.2 | 37.8 |
+| complete (ro), p50 µs | reviewed | 60.5 | 122.8 | 115.5 |
+| predict (ez), p50 µs | reviewed | 2.4 | 17.2 | 14.5 |
+| suggest (rojbas), p50 µs | experimental-full | 125.6 | 192.8 | 188.2 |
+| correct (spaz), p50 µs | experimental-full | 121.8 | 203.1 | 193.3 |
+| complete (ro), p50 µs | experimental-full | 368.3 | 618.2 | 601.0 |
+| predict (ez), p50 µs | experimental-full | 2.5 | 16.9 | 14.6 |
+| RSS after load, whole process | reviewed / experimental-full | 42.2 / 74.2 MB | 150.8 / 186.2 MB | 142.7 / 175.8 MB |
+
+Every Samsung call was sub-millisecond at p50 on both packs; the p95 / p50 ratio across its
+twelve operation rows lies between 1.03 and 1.29, and RSS after 300 rounds stayed within
+1.3 MB of RSS after load. The Samsung and emulator columns are the same JNI path and land
+close together; the iPhone column is the Swift SDK path. The gap "no physical Android device"
+in the section above is closed; "no low-end device" remains.
+
 ## Reproduction
 
 ```bash
@@ -182,8 +211,8 @@ The bench operation set is fixed by `bench/src/main.rs`; the device operation se
 
 ## Gaps
 
-- No physical Android device: the Samsung rows wait for a device run (Remote Test Lab or a
-  local phone); the emulator rows stand in as reference until then.
+- Physical Android: one device so far (Samsung `SM-S948B`, see the addendum); the emulator
+  rows remain as reference.
 - No empty-host measurement on the phone, so device RSS cannot be split between host and
   engine; the M4 attribution is the engine-only reference.
 - No low-end device: the iPhone 14 Pro and the emulator on an M4 are both fast hosts; a
