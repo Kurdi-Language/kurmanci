@@ -1,0 +1,15 @@
+{
+  "originHash" : "d2de8ab85c0d7654190162b184cc3e854978ec9cb208fbdd5341d8c05ae23595",
+  "pins" : [
+    {
+      "identity" : "kurmanci-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Kurdi-Language/kurmanci-swift.git",
+      "state" : {
+        "revision" : "5fb0aeac4a258269c1c12399de300e6a8f062cdd",
+        "version" : "0.1.0"
+      }
+    }
+  ],
+  "version" : 3
+}

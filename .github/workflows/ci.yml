@@ -201,6 +201,9 @@ jobs:
       - name: Validate Android 16 KB ELF Verifier (fixtures for llvm-readelf and GNU readelf layouts)
         run: bash scripts/android/test-verify-elf-page-alignment.sh
 
+      - name: Validate Android SDK Version Resolution (gradle.properties authoritative, no hidden fallback)
+        run: bash scripts/android/test-kurmanci-version.sh
+
       - name: Run Data-Builder Compiler (First Pass)
         run: cargo run -p kurmanci-data-builder -- build
 

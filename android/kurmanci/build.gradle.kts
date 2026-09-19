@@ -6,7 +6,7 @@ plugins {
 }
 
 val kurmanciMavenGroup = project.findProperty("kurmanciMavenGroup")?.toString() ?: "io.github.ferhatguneri"
-val kurmanciVersion = project.findProperty("kurmanciVersion")?.toString() ?: "0.1.0"
+val kurmanciVersion = project.findProperty("kurmanciVersion")?.toString() ?: "0.1.1"
 val centralRelease = (project.findProperty("centralRelease")?.toString() ?: "false").toBoolean()
 
 android {

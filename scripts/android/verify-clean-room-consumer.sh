@@ -14,8 +14,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 DEFAULT_GROUP="$(grep '^kurmanciMavenGroup=' "$REPO_ROOT/android/gradle.properties" 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n' || echo 'io.github.ferhatguneri')"
-DEFAULT_VERSION="$(grep '^kurmanciVersion=' "$REPO_ROOT/android/gradle.properties" 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n' || echo '0.1.0')"
-VERSION="${VERSION:-$DEFAULT_VERSION}"
+# shellcheck source=scripts/android/kurmanci-version.sh
+source "$SCRIPT_DIR/kurmanci-version.sh"
+VERSION="$(resolve_kurmanci_version "$REPO_ROOT")"
 GROUP_ID="${GROUP_ID:-$DEFAULT_GROUP}"
 GROUP_PATH="${GROUP_ID//./\/}"
 MAVEN_DIR="$REPO_ROOT/dist/android/maven/$GROUP_PATH/kurmanci-android/$VERSION"

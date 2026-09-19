@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		110000012C12345600000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000002 /* AppDelegate.swift */; };
+		110000012C12345600000034 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000035 /* SceneDelegate.swift */; };
 		110000012C12345600000003 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000004 /* ViewController.swift */; };
 		110000012C12345600000005 /* KurmanciConsumerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000006 /* KurmanciConsumerTests.swift */; };
 		110000012C12345600000007 /* Kurmanci in Frameworks */ = {isa = PBXBuildFile; productRef = 110000012C12345600000008 /* Kurmanci */; };
@@ -28,6 +29,7 @@
 
 /* Begin PBXFileReference section */
 		110000012C12345600000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		110000012C12345600000035 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		110000012C12345600000004 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		110000012C12345600000006 /* KurmanciConsumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KurmanciConsumerTests.swift; sourceTree = "<group>"; };
 		110000012C1234560000000D /* KurmanciConsumer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KurmanciConsumer.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -81,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				110000012C12345600000002 /* AppDelegate.swift */,
+				110000012C12345600000035 /* SceneDelegate.swift */,
 				110000012C12345600000004 /* ViewController.swift */,
 			);
 			path = KurmanciConsumer;
@@ -196,6 +199,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				110000012C12345600000001 /* AppDelegate.swift in Sources */,
+				110000012C12345600000034 /* SceneDelegate.swift in Sources */,
 				110000012C12345600000003 /* ViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -238,7 +242,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_IDENTITY = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -252,7 +256,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_IDENTITY = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -263,6 +267,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -272,6 +278,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -282,6 +290,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KurmanciConsumer.app/KurmanciConsumer";
@@ -293,6 +302,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = org.kurmanci.consumerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KurmanciConsumer.app/KurmanciConsumer";

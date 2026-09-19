@@ -1,6 +1,6 @@
 [package]
 name = "kurmanci-engine"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Kurmancî Language Platform Contributors"]
 description = "Early-stage offline Kurmancî spelling, completion, and correction engine."

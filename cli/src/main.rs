@@ -11,7 +11,7 @@ use std::time::Instant;
 #[command(
     name = "kurmanci",
     author = "Kurmancî Language Platform Contributors",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Offline Kurmancî Language Engine CLI: query any compiled language pack"
 )]
 struct Cli {

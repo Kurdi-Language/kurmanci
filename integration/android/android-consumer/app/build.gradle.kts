@@ -4,7 +4,7 @@ plugins {
 }
 
 val kurmanciGroup = project.findProperty("kurmanciMavenGroup")?.toString() ?: "io.github.ferhatguneri"
-val kurmanciVersion = project.findProperty("kurmanciVersion")?.toString() ?: "0.1.0"
+val kurmanciVersion = project.findProperty("kurmanciVersion")?.toString() ?: "0.1.1"
 
 android {
     namespace = "org.kurmanci.consumer"

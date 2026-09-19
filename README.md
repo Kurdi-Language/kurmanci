@@ -75,7 +75,7 @@ On-device measurements (iPhone, Android): see [docs/device-benchmark.md](docs/de
 Deterministic release bundle (refuses unless the production state verifies; see [docs/RELEASE_PROVENANCE.md](docs/RELEASE_PROVENANCE.md)) and its read-only check:
 ```bash
 cargo run -p kurmanci-data-builder -- build-release-bundle                       # → dist/release/kurmanci-ku-Latn-<version>/
-cargo run -p kurmanci-data-builder -- verify-release-bundle dist/release/kurmanci-ku-Latn-0.1.0
+cargo run -p kurmanci-data-builder -- verify-release-bundle dist/release/kurmanci-ku-Latn-0.1.1
 scripts/release/verify-clean-checkout-determinism.sh                            # two clean clones → byte-identical bundle
 ```
 
@@ -137,7 +137,7 @@ For API documentation, see [`docs/architecture.md`](docs/architecture.md).
 ### Swift Package Manager
 Add the remote package dependency to your `Package.swift` or Xcode project:
 ```swift
-.package(url: "https://github.com/Kurdi-Language/kurmanci-swift", from: "0.1.0")
+.package(url: "https://github.com/Kurdi-Language/kurmanci-swift", from: "0.1.1")
 ```
 
 ### Swift Usage Example
@@ -163,7 +163,7 @@ For Apple integration details, see [`swift/README.md`](swift/README.md).
 Add `mavenCentral()` to your repositories and add the dependency:
 ```kotlin
 dependencies {
-    implementation("io.github.ferhatguneri:kurmanci-android:0.1.0")
+    implementation("io.github.ferhatguneri:kurmanci-android:0.1.1")
 }
 ```
 
