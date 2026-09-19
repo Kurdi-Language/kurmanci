@@ -1,0 +1,48 @@
+{
+ "schema_version": "performance-baseline-provenance-v1",
+ "purpose": "Provenance of the three kurmanci-bench reports in this directory. The reports themselves record only pack path, byte count, entry count, build profile and 'host: macos aarch64'; everything below was recorded separately at measurement time and is not taken from the reports.",
+ "measured_on": "2026-09-18",
+ "source_commit": "5ed81d98c1ade0bca0aa17e38a95caf883f0bd89",
+ "source_commit_note": "main after #71; the bench binary and the packs were built from this commit's tree (working tree also held untracked files that do not enter the build: android/kurmanci/src/main/jniLibs/ and keyboard-inspect.sh)",
+ "machine": {
+  "model_identifier": "Mac16,12",
+  "chip": "Apple M4",
+  "ram_bytes": 25769803776,
+  "ram": "24 GiB",
+  "os": "macOS 27.0 (26A428)"
+ },
+ "toolchain": {
+  "rustc": "1.85.0 (4d91de4e4 2025-02-17)",
+  "cargo": "1.85.0 (d73d2caf9 2024-12-31)",
+  "profile": "release",
+  "allocator": "kurmanci-bench counting global allocator (adds a small constant cost to every allocation; engine_heap_bytes is its live-heap delta after load)"
+ },
+ "command": "cargo run --release -p kurmanci-bench -- data/build/packs/<pack>/lexicon.bin --json   (defaults: --iterations 500, --loads 5, --probe-words ez li di ji ku bo bi; the report's 'reloads: 4' are the loads after the first)",
+ "packs": {
+  "seed": {
+   "lexicon_sha256": "4e186130f1d00893f12d3cb7684945fe55c4414a1b31f910571c84ce5a12a8f1",
+   "bytes": 3109,
+   "entries": 33
+  },
+  "reviewed": {
+   "lexicon_sha256": "485b9d70d25b6708af8e0b3f63f924cab23c0eab8110a5e9a3b6b25e88d34508",
+   "bytes": 1138440,
+   "entries": 2144
+  },
+  "experimental-full": {
+   "lexicon_sha256": "65764b14928a0fde3eff31c085a37322d8d5ee6815279d81ae9e171e950d04f7",
+   "bytes": 6860008,
+   "entries": 42249
+  }
+ },
+ "reports": {
+  "m4-release-seed-20260918.json": "ad5c53def8061ff02e7fe7424e98ee822c588d4da6ec6b0881c3430796b7edfc",
+  "m4-release-reviewed-20260918.json": "29fc9dd4ee44f90dccccd3e128f693835f75743db3fad8b5047e1e17595c5038",
+  "m4-release-experimental-full-20260918.json": "3ffb92674ccd1f1db4f7bb88490de289c5056f4b1971c398576b9a2fc3403c0d"
+ },
+ "language_model": {
+  "id": "kuwiki-20260801",
+  "manifest_sha256": "8feb29d20f9d1d0fe519bb0c96f58bb7506e6ae02d5c06adc9232b9aa00ec8d2",
+  "redistribution_determination": "pending-review"
+ }
+}
