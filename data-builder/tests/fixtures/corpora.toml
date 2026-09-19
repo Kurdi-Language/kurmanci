@@ -1,0 +1,23 @@
+# Test-only corpus registry. Installed into an isolated temporary root by
+# data-builder/tests/common/mod.rs and scripts/corpus/verify-pipeline-on-test-fixture.sh
+# together with synthetic-corpus.txt (whose SHA-256 is pinned below and re-checked on
+# install). Never a production registry: nothing here reaches data/source-registry, the
+# packs, the language model, review data or release provenance. The text is bytes for
+# exercising deterministic corpus code and makes no linguistic claim.
+[[corpora]]
+corpus_id = "test-corpus"
+corpus_name = "Test corpus (synthetic fixture bytes)"
+language = "ku-Latn"
+license = "Apache-2.0"
+license_spdx = "Apache-2.0"
+license_url = "https://www.apache.org/licenses/LICENSE-2.0"
+url = "https://example.invalid/test-corpus"
+version = "1"
+description = "Synthetic fixture for exercising the corpus pipeline in tests; not linguistic evidence."
+attribution = "test fixture"
+notes = "test-only"
+document_format = "one-document-per-line"
+
+[[corpora.files]]
+path = "data/original/test-corpus/corpus.txt"
+sha256 = "4cd51043cfba9861da5bb45f50828bc1d80a81746779c7b6a6a4ca5d07f624d5"

@@ -226,7 +226,13 @@ enum Commands {
         corpus_id: String,
     },
     /// Generates a deterministic ranked 1,000-entry human review batch from existing review queue and frequencies
-    GenerateVocabularyReviewBatch,
+    GenerateVocabularyReviewBatch {
+        /// Join no corpus frequencies (for environments without a tracked corpus, such as CI);
+        /// the summary records this explicitly. Without the flag data/build/frequencies.jsonl is
+        /// required.
+        #[arg(long)]
+        no_corpus_frequencies: bool,
+    },
     /// Generates a deterministic human vocabulary review batch from kuwiki OOV review queue
     BuildKuwikiReviewBatch {
         #[arg(short, long, default_value = "kuwiki")]
@@ -1208,10 +1214,19 @@ fn main() {
                 }
             }
         }
-        Commands::GenerateVocabularyReviewBatch => {
+        Commands::GenerateVocabularyReviewBatch {
+            no_corpus_frequencies,
+        } => {
             println!("=== Kurmancî Bulk Vocabulary Review Batch Generator ===");
             let root = PathBuf::from(".");
-            match data_builder_lib::review::generate_vocabulary_review_batch(&root) {
+            let input = if no_corpus_frequencies {
+                data_builder_lib::review::vocabulary_batch::CorpusFrequencyInput::None
+            } else {
+                data_builder_lib::review::vocabulary_batch::CorpusFrequencyInput::FromBuild
+            };
+            match data_builder_lib::review::vocabulary_batch::generate_vocabulary_review_batch_with(
+                &root, input,
+            ) {
                 Ok(summary) => {
                     println!("⚡ VOCABULARY REVIEW BATCH GENERATED SUCCESSFULLY!");
                     println!("  Total Pool Candidates: {}", summary.total_pool_candidates);

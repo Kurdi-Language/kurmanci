@@ -1,24 +1,6 @@
 # Kurmancî Language Platform — Corpus Registry
 # Contains registered, licensed text corpora for frequency analysis.
 
-[[corpora]]
-corpus_id = "opensubtitles-kmr"
-corpus_name = "OpenSubtitles Kurmanji Dialogue Corpus"
-language = "ku-Latn"
-license = "CC BY-SA 4.0"
-license_spdx = "CC-BY-SA-4.0"
-license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
-url = "https://raw.githubusercontent.com/Kurdi-Language/kurmanci/main/data/original/opensubtitles-kmr/corpus.txt"
-version = "1.0.0"
-description = "OpenSubtitles Kurmanji dialogue text corpus for frequency modeling."
-attribution = "OpenSubtitles project contributors and Kurdi-Language maintainers"
-notes = "Preserved line-delimited Kurmancî text corpus for building document and token frequency tables."
-document_format = "one-document-per-line"
-
-[[corpora.files]]
-path = "data/original/opensubtitles-kmr/corpus.txt"
-sha256 = "a6cc3eed32feac79fb90c75e8daa42a15d46cd6460830d13b3112803af79b814"
-
 # Kurmancî Wikipedia (kuwiki). External corpus: neither the 43 MB dump nor the 63 MB
 # extracted documents file is tracked in git. `acquire-corpus kuwiki` downloads the dump,
 # verifies the upstream SHA-1 and the pinned SHA-256, and re-extracts documents.jsonl
@@ -47,6 +29,12 @@ path = "data/original/kuwiki/kuwiki-20260801-pages-articles.xml.bz2"
 sha1 = "bf2d7b130c0a927e83d5ea30629151d4099d6ac0"
 sha256 = "158b726695cb55fb46eadf06ac2c966b0e146cad1b714be43e72716926f186cf"
 extractor = "wikimedia-xml"
+
+[corpora.redistribution]
+determination = "allowed"
+determined_by = "project owner (ferhatguneri)"
+determined_on = "2026-09-19"
+basis = "The Kurmancî project is intended for unrestricted broad reuse, including commercial use. Project-owned code and data are made available under permissive terms; third-party materials remain subject to their recorded upstream licences, attribution requirements, and any applicable ShareAlike obligations. The project adds no additional restriction on reuse. Applies to the language model derived from this corpus (n-gram statistics, no article text) under CC BY-SA 4.0 with attribution."
 
 [[corpora.files]]
 path = "data/imported/kuwiki/documents.jsonl"

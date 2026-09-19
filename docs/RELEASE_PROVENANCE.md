@@ -86,8 +86,16 @@ artifacts. The bundle embeds that report.
 redistribution record per subject, copied verbatim from the registries and the model:
 
 - sources declare `redistribution` in `data/source-registry/sources.toml`;
-- the language model records `redistribution_determination` in its manifest; for the
-  current Kuwiki model it is `pending-review`, and it stays visible.
+- corpora may declare a `[corpora.redistribution]` table (`determination`, `determined_by`,
+  `determined_on`, `basis`) in `data/source-registry/corpora.toml`; the language model copies
+  it into its manifest as `redistribution_determination` with the determiner, date and basis,
+  and records `pending-review` when the registry has none. For the current Kuwiki model the
+  determination is `allowed`, made by the project owner on 2026-09-19 under the project's
+  licensing stance (recorded in `NOTICE`): unrestricted broad reuse including commercial use,
+  with third-party materials remaining subject to their recorded upstream licences,
+  attribution requirements and any applicable ShareAlike obligations. The bundle's corpus
+  records carry each registered corpus's determination for information; the release gate is
+  the language model's and the sources' determinations, which are what the bundle ships.
 
 A bundle is labelled `release_kind = "production"` only when every determination is
 `allowed` and the tracked tree was clean when it was built; otherwise it is `"evaluation"`

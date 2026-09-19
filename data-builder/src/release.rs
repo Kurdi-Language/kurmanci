@@ -346,6 +346,10 @@ pub struct CorpusRecord {
     pub acquisition: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source_artifact_sha256: Option<String>,
+    /// The registry's human determination for derivatives of this corpus (`pending-review`
+    /// when none is recorded). Informational: the release gate is the language model's and
+    /// the sources' determinations, which are what the bundle ships.
+    pub redistribution_determination: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -803,6 +807,7 @@ pub fn build_release_bundle_from_state<P: AsRef<Path>, Q: AsRef<Path>>(
             url: c.url.clone(),
             acquisition: c.acquisition.clone(),
             source_artifact_sha256: c.source_artifact.as_ref().map(|a| a.sha256.clone()),
+            redistribution_determination: c.redistribution_determination().to_string(),
         })
         .collect();
     add_file(

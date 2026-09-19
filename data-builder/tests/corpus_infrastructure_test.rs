@@ -1,5 +1,7 @@
 //! Integration tests for Corpus Infrastructure & Deterministic Partitioning.
 
+mod common;
+
 use data_builder_lib::corpus::importer::{CanonicalDocumentRecord, CanonicalImportManifest};
 use data_builder_lib::corpus::partition::PartitionDocumentRecord;
 use data_builder_lib::corpus::registry::CorpusRegistry;
@@ -10,18 +12,9 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
-use std::path::PathBuf;
 use std::sync::Mutex;
 
 static TEST_LOCK: Mutex<()> = Mutex::new(());
-
-fn get_workspace_root() -> PathBuf {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    manifest_dir
-        .parent()
-        .expect("Workspace root exists")
-        .to_path_buf()
-}
 
 #[test]
 fn test_format_sensitive_registry_validation() {
@@ -73,7 +66,8 @@ text_field = "text"
 #[test]
 fn test_canonical_import_and_atomic_staging() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
     let reports = import_all_corpora(&root).expect("import_all_corpora failed");
     assert!(!reports.is_empty());
@@ -112,7 +106,8 @@ fn test_canonical_import_and_atomic_staging() {
 #[test]
 fn test_inventory_audit_and_partitioning() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
     let _ = import_all_corpora(&root).expect("import_all_corpora failed");
 
@@ -145,7 +140,8 @@ fn test_inventory_audit_and_partitioning() {
 #[test]
 fn test_two_level_non_leakage_assertions() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
     let _ = import_all_corpora(&root).expect("Import failed");
     let _ = partition_corpora(&root).expect("Partitioning failed");
@@ -195,7 +191,8 @@ fn test_two_level_non_leakage_assertions() {
 #[test]
 fn test_exact_report_manifest_integrity() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
     let _ = import_all_corpora(&root).expect("Import failed");
     let _ = generate_corpus_inventory(&root).expect("Inventory failed");
@@ -306,7 +303,8 @@ fn test_exact_report_manifest_integrity() {
 #[test]
 fn test_multi_file_same_basename_doc_id_uniqueness() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let imported_dir = root.join("data/imported-canonical");
 
     let _ = import_all_corpora(&root).expect("Import failed");
@@ -340,13 +338,14 @@ fn test_multi_file_same_basename_doc_id_uniqueness() {
 #[test]
 fn test_tampered_canonical_document_checksum_rejection() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let imported_dir = root.join("data/imported-canonical");
 
     let _ = import_all_corpora(&root).expect("Import failed");
 
     // Tamper with one byte in documents.jsonl
-    let doc_path = imported_dir.join("opensubtitles-kmr/documents.jsonl");
+    let doc_path = imported_dir.join("test-corpus/documents.jsonl");
     assert!(doc_path.exists());
     let mut content = fs::read_to_string(&doc_path).unwrap();
     content.push_str("\n{\"tampered\": true}");
@@ -381,7 +380,8 @@ fn test_tampered_canonical_document_checksum_rejection() {
 #[test]
 fn test_importer_lock_race_prevention() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let lock_path = root.join("data/test_race.lock");
 
     if lock_path.exists() {
@@ -427,15 +427,16 @@ fn test_unsafe_registry_relative_paths() {
     }
 
     assert_eq!(
-        validate_registry_relative_path("data/original/opensubtitles-kmr/corpus.txt").unwrap(),
-        "data/original/opensubtitles-kmr/corpus.txt"
+        validate_registry_relative_path("data/original/test-corpus/corpus.txt").unwrap(),
+        "data/original/test-corpus/corpus.txt"
     );
 }
 
 #[test]
 fn test_unexpected_snapshot_contents_fails() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let imported_dir = root.join("data/imported-canonical");
 
     let _ = import_all_corpora(&root).expect("Import failed");
@@ -461,7 +462,9 @@ fn test_failed_installation_and_failed_rollback_error_reporting() {
     use std::os::unix::fs::PermissionsExt;
 
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_all_corpora(&root).expect("Import failed");
 
     let backup_dir = root.join("data/reports/corpus-inventory.tmp_backup");
 
@@ -496,7 +499,10 @@ fn test_failed_installation_and_failed_rollback_error_reporting() {
 #[test]
 fn test_reviewed_lexicon_audit_validation() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    // Isolated root: the audit's corpus input is the test fixture, and the reviewed lexicon it
+    // mutates is the root's own copy, never the repository's file.
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let lexicon_path = root.join("data/reviewed/lexicon.jsonl");
     let backup_lexicon_path = root.join("data/reviewed/lexicon.jsonl.tmp_test_backup");
 

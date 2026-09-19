@@ -2,35 +2,19 @@
 //! Sentence Segmentation, Binary Pack v3 with Lexicon Indices, Engine predict_next API,
 //! and 2-Pass Pipeline Determinism.
 
+mod common;
+
 use data_builder_lib::{
-    build_corpus_bigrams, build_corpus_frequencies, compile_binary_pack,
+    build_corpus_bigrams, build_corpus_frequencies, build_corpus_trigrams, compile_binary_pack,
     compile_binary_pack_with_root, import_corpus, join_frequencies_to_lexicon,
     run_next_word_evaluation, split_into_sentences, SourceLexiconEntry,
 };
 use kurmanci_engine::Engine;
 use std::fs;
-use std::path::PathBuf;
 
 use std::sync::Mutex;
 
 static TEST_LOCK: Mutex<()> = Mutex::new(());
-
-fn get_workspace_root() -> PathBuf {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    if manifest_dir
-        .join("data/source-registry/corpora.toml")
-        .exists()
-    {
-        manifest_dir
-    } else if manifest_dir
-        .join("../data/source-registry/corpora.toml")
-        .exists()
-    {
-        manifest_dir.join("..")
-    } else {
-        PathBuf::from(".")
-    }
-}
 
 #[test]
 fn test_sentence_segmentation_rules() {
@@ -125,8 +109,9 @@ fn test_binary_pack_v3_lexicon_indices_and_engine_prediction() {
 #[test]
 fn test_bigram_build_and_evaluation_pipeline_determinism() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
     let _ = build_corpus_frequencies(&root).expect("Frequency build failed");
 
     let source_path = root.join("data/reviewed/lexicon.jsonl");
@@ -159,6 +144,10 @@ fn test_bigram_build_and_evaluation_pipeline_determinism() {
     assert_eq!(stats1.records.len(), stats2.records.len());
     assert_eq!(bigrams_bytes1, bigrams_bytes2);
     assert_eq!(summary1, summary2);
+
+    // The next-word evaluation covers trigram cases too, so build the trigram table of this
+    // root as well before compiling (the isolated root has no stale tables to fall back on).
+    let _ = build_corpus_trigrams(&root).expect("Trigram build failed");
 
     // Pass 1: Compile v3 Binary Pack
     let pack1 = compile_binary_pack_with_root(&root, &entries).expect("Pack compile 1 failed");
@@ -194,8 +183,9 @@ fn test_bigram_build_and_evaluation_pipeline_determinism() {
 #[test]
 fn test_corrupted_corpus_checksum_rejection() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let corpus_file = root.join("data/imported/opensubtitles-kmr/corpus.txt");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let corpus_file = root.join("data/imported/test-corpus/corpus.txt");
     if corpus_file.exists() {
         let original = fs::read(&corpus_file).unwrap();
         let mut corrupted = original.clone();
@@ -213,8 +203,9 @@ fn test_corrupted_corpus_checksum_rejection() {
 #[test]
 fn test_dynamic_pruning_config_and_report_alignment() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
 
     let config_path = root.join("data-builder/config/ngrams.toml");
     let original_config = fs::read_to_string(&config_path).expect("Failed to read ngrams.toml");

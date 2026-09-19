@@ -1,5 +1,7 @@
 //! Integration tests for corpus frequency pipeline, tokenization, import, report generation, and determinism.
 
+mod common;
+
 use data_builder_lib::corpus::{build_corpus_frequencies, import_corpus, tokenize_text};
 use sha2::{Digest, Sha256};
 use std::fs;
@@ -66,15 +68,16 @@ static PIPELINE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 #[test]
 fn test_corpus_import_and_frequency_build_pipeline() {
     let _lock = PIPELINE_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
     // 1. Import corpus
-    let summary = import_corpus("opensubtitles-kmr", &root)
-        .expect("Corpus import must succeed for registered opensubtitles-kmr");
-    assert_eq!(summary.corpus_id, "opensubtitles-kmr");
+    let summary = import_corpus(common::TEST_CORPUS_ID, &root)
+        .expect("Corpus import must succeed for registered test-corpus");
+    assert_eq!(summary.corpus_id, common::TEST_CORPUS_ID);
     assert!(summary.checksum_verification_passed);
 
-    let imported_file = root.join("data/imported/opensubtitles-kmr/corpus.txt");
+    let imported_file = root.join("data/imported/test-corpus/corpus.txt");
     assert!(imported_file.exists(), "Imported corpus file must exist");
 
     // 2. Build frequencies (Pass 1)
@@ -159,10 +162,11 @@ fn test_corpus_import_and_frequency_build_pipeline() {
 #[test]
 fn test_provenance_ignores_unregistered_and_stale_files() {
     let _lock = PIPELINE_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
     // Ensure corpus is imported
-    import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
 
     // 1. Create an unregistered corpus directory
     let unregistered_dir = root.join("data/imported/unregistered-corpus");
@@ -171,7 +175,7 @@ fn test_provenance_ignores_unregistered_and_stale_files() {
     fs::write(&unregistered_file, "unregistered_token_text_12345").unwrap();
 
     // 2. Create an undeclared stale file inside registered corpus folder
-    let stale_file = root.join("data/imported/opensubtitles-kmr/stale_file.txt");
+    let stale_file = root.join("data/imported/test-corpus/stale_file.txt");
     fs::write(&stale_file, "stale_token_text_67890").unwrap();
 
     // 3. Run build_corpus_frequencies
@@ -204,9 +208,10 @@ fn test_provenance_ignores_unregistered_and_stale_files() {
 #[test]
 fn test_length_distribution_median_length_calculation() {
     let _lock = PIPELINE_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
 
-    import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
     build_corpus_frequencies(&root).expect("Build frequencies failed");
 
     let report_path = root.join("data/reports/frequencies/length-distribution.json");

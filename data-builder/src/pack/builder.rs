@@ -390,7 +390,7 @@ pub fn assemble_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<Assem
             Attribution: {}\n\
             Corpus Source: {}\n\
             Statistics: vocabulary-restricted unigram frequencies and bigram/trigram counts from the TRAIN partition of this corpus only ({} documents, document set SHA-256 {}); no corpus text is included.\n\
-            Redistribution Determination: {} (statistical derivatives of the corpus; licensing review outstanding).\n",
+            Redistribution Determination: {} (statistical derivatives of the corpus; {}).\n",
             language_model_source_id(&m.model_id),
             m.licensing.corpus_name,
             m.corpus_id,
@@ -403,7 +403,14 @@ pub fn assemble_pack<P: AsRef<Path>>(pack_id: &str, root_dir: P) -> Result<Assem
             m.licensing.source_url,
             m.train_document_count,
             m.train_document_set_sha256,
-            m.licensing.redistribution_determination
+            m.licensing.redistribution_determination,
+            match (
+                m.licensing.redistribution_determined_by.as_deref(),
+                m.licensing.redistribution_determined_on.as_deref(),
+            ) {
+                (Some(by), Some(on)) => format!("determined by {} on {}", by, on),
+                _ => "licensing review outstanding".to_string(),
+            }
         ));
         language_model_provenance = Some(provenance);
         (

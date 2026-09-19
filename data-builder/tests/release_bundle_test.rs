@@ -376,21 +376,42 @@ fn workspace_bundle_is_complete_self_verifying_byte_identical_and_tamper_evident
     assert!(!reviewed.source_provenance.is_empty());
     let lm = p.language_model.as_ref().unwrap();
     assert_eq!(lm.model_id, "kuwiki-20260801");
-    assert_eq!(lm.licensing.redistribution_determination, "pending-review");
-    assert_eq!(lm.files.len(), 6);
-    assert_eq!(p.release_kind, "evaluation");
-    let notice = p.evaluation_notice.as_deref().unwrap();
-    assert!(
-        notice.contains("language-model:kuwiki-20260801 = pending-review"),
-        "{}",
-        notice
-    );
+    // The determination is the registry's human record (project owner, 2026-09-19), copied
+    // verbatim with its basis; the code decides nothing.
+    assert_eq!(lm.licensing.redistribution_determination, "allowed");
     assert_eq!(
-        notice.contains("uncommitted or untracked files"),
-        p.source.worktree_dirty,
-        "{}",
-        notice
+        lm.licensing.redistribution_determined_on.as_deref(),
+        Some("2026-09-19")
     );
+    assert!(lm
+        .licensing
+        .redistribution_basis
+        .as_deref()
+        .unwrap_or("")
+        .contains("unrestricted broad reuse"));
+    assert_eq!(lm.files.len(), 6);
+    assert!(p
+        .licensing
+        .redistribution
+        .iter()
+        .all(|r| r.determination == "allowed"));
+    for c in &p.corpora {
+        assert_eq!(c.redistribution_determination, "allowed", "{}", c.corpus_id);
+    }
+    // With every determination allowed, only a dirty tree keeps the bundle an evaluation release.
+    if p.source.worktree_dirty {
+        assert_eq!(p.release_kind, "evaluation");
+        let notice = p.evaluation_notice.as_deref().unwrap();
+        assert!(
+            notice.contains("uncommitted or untracked files"),
+            "{}",
+            notice
+        );
+        assert!(!notice.contains("pending-review"), "{}", notice);
+    } else {
+        assert_eq!(p.release_kind, "production");
+        assert!(p.evaluation_notice.is_none());
+    }
     assert!(p
         .licensing
         .spdx_identifiers
@@ -556,14 +577,19 @@ fn workspace_bundle_is_complete_self_verifying_byte_identical_and_tamper_evident
     );
     copy_tree(&dir_a, &sb);
     rewrite_json(&sb, "provenance.json", |v| {
-        // Clean tree claimed, but the language model is pending-review: not production.
+        // Clean tree and production claimed, but one recorded redistribution determination
+        // is pending-review: the label does not follow from the records.
         v["source"]["worktree_dirty"] = serde_json::json!(false);
         v["release_kind"] = serde_json::json!("production");
+        v["licensing"]["redistribution"][0]["determination"] = serde_json::json!("pending-review");
     });
     let err = verify_release_bundle(&sb).unwrap_err();
     assert!(err.contains("does not follow"), "{}", err);
     copy_tree(&dir_a, &sb);
     rewrite_json(&sb, "provenance.json", |v| {
+        // An evaluation release must carry its notice, whatever made it one.
+        v["source"]["worktree_dirty"] = serde_json::json!(true);
+        v["release_kind"] = serde_json::json!("evaluation");
         v.as_object_mut().unwrap().remove("evaluation_notice");
     });
     let err = verify_release_bundle(&sb).unwrap_err();

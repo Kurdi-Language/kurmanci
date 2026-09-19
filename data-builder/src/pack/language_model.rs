@@ -43,7 +43,7 @@ use crate::corpus::ngrams::{split_into_sentences, BigramRecord, NgramConfig, Tri
 use crate::corpus::partition::{
     PartitionBuildManifest, PartitionDocumentRecord, PARTITION_POLICY_VERSION,
 };
-use crate::corpus::registry::CorpusRegistry;
+use crate::corpus::registry::{CorpusRegistry, CorpusRegistryEntry};
 use crate::corpus::tokenizer::tokenize_text;
 use crate::corpus::train_ngrams::{
     compute_bigram_records, compute_trigram_records, probability_millionths,
@@ -107,7 +107,17 @@ pub struct LanguageModelLicensing {
     pub license_url: String,
     pub attribution: String,
     pub source_url: String,
+    /// `allowed`, `not-allowed` or `pending-review`, copied from the corpus registry's
+    /// `[corpora.redistribution]` table; `pending-review` when the registry records none.
     pub redistribution_determination: String,
+    /// Who made the determination, when, and in their own words; present exactly when the
+    /// registry records a determination.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub redistribution_determined_by: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub redistribution_determined_on: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub redistribution_basis: Option<String>,
 }
 
 /// Corpus-scoped intermediate provenance written to
@@ -808,15 +818,7 @@ pub fn build_language_model<P: AsRef<Path>>(
         train_trigrams_sha256,
         build_manifest_sha256,
         ngram_config_sha256,
-        licensing: LanguageModelLicensing {
-            corpus_name: corpus.corpus_name.clone(),
-            license: corpus.license.clone(),
-            license_spdx: corpus.license_spdx.clone(),
-            license_url: corpus.license_url.clone(),
-            attribution: corpus.attribution.clone(),
-            source_url: corpus.url.clone(),
-            redistribution_determination: REDISTRIBUTION_PENDING_REVIEW.to_string(),
-        },
+        licensing: licensing_from_registry(corpus),
         vocabulary_fingerprint: String::new(),
         vocabulary_size: 0,
         unigram_count: 0,
@@ -827,6 +829,129 @@ pub fn build_language_model<P: AsRef<Path>>(
         files: Vec::new(),
     };
     write_language_model(root, manifest, &content)
+}
+
+/// The licensing block a model manifest must carry for a registered corpus: every field is
+/// copied from the corpus registry, and the redistribution determination is the registry's
+/// human record (`[corpora.redistribution]`) or `pending-review` when it has none. This is
+/// the single definition: the builder writes it and `load_language_model` re-derives it from
+/// the current registry and refuses a manifest that differs, so a hand-edited manifest can
+/// never carry a determination the registry does not.
+pub fn licensing_from_registry(corpus: &CorpusRegistryEntry) -> LanguageModelLicensing {
+    LanguageModelLicensing {
+        corpus_name: corpus.corpus_name.clone(),
+        license: corpus.license.clone(),
+        license_spdx: corpus.license_spdx.clone(),
+        license_url: corpus.license_url.clone(),
+        attribution: corpus.attribution.clone(),
+        source_url: corpus.url.clone(),
+        redistribution_determination: corpus.redistribution_determination().to_string(),
+        redistribution_determined_by: corpus
+            .redistribution
+            .as_ref()
+            .map(|r| r.determined_by.clone()),
+        redistribution_determined_on: corpus
+            .redistribution
+            .as_ref()
+            .map(|r| r.determined_on.clone()),
+        redistribution_basis: corpus.redistribution.as_ref().map(|r| r.basis.clone()),
+    }
+}
+
+/// Fail-closed binding of a committed model's licensing block to the current corpus registry:
+/// the registry (`data/source-registry/corpora.toml`) is the authoritative human record and
+/// the manifest only copies it, so every copied field, the determination and its determiner,
+/// date and basis included, must equal what the registry says now. A manifest that was
+/// edited by hand (even with its own hashes recomputed) is refused, naming each field that
+/// differs; nothing is inferred, upgraded or downgraded.
+pub fn verify_licensing_against_registry(
+    root: &Path,
+    manifest: &LanguageModelManifest,
+) -> Result<(), String> {
+    let registry_path = root.join("data/source-registry/corpora.toml");
+    if !registry_path.is_file() {
+        return Err(format!(
+            "Language model '{}': cannot bind its licensing block to the corpus registry, {:?} is missing",
+            manifest.model_id, registry_path
+        ));
+    }
+    let registry = CorpusRegistry::load_from_file(&registry_path).map_err(|e| {
+        format!(
+            "Language model '{}': cannot bind its licensing block to the corpus registry: {}",
+            manifest.model_id, e
+        )
+    })?;
+    let corpus = registry.find_corpus(&manifest.corpus_id).ok_or_else(|| {
+        format!(
+            "Language model '{}': its corpus '{}' is not registered in corpora.toml, so its licensing block cannot be verified",
+            manifest.model_id, manifest.corpus_id
+        )
+    })?;
+    let expected = licensing_from_registry(corpus);
+    let actual = &manifest.licensing;
+    let mut differing: Vec<String> = Vec::new();
+    let mut check = |name: &str, a: String, e: String| {
+        if a != e {
+            differing.push(format!("  {}: manifest {:?}, registry {:?}", name, a, e));
+        }
+    };
+    let opt = |v: &Option<String>| v.clone().unwrap_or_else(|| "<absent>".to_string());
+    check(
+        "corpus_name",
+        actual.corpus_name.clone(),
+        expected.corpus_name.clone(),
+    );
+    check("license", actual.license.clone(), expected.license.clone());
+    check(
+        "license_spdx",
+        actual.license_spdx.clone(),
+        expected.license_spdx.clone(),
+    );
+    check(
+        "license_url",
+        actual.license_url.clone(),
+        expected.license_url.clone(),
+    );
+    check(
+        "attribution",
+        actual.attribution.clone(),
+        expected.attribution.clone(),
+    );
+    check(
+        "source_url",
+        actual.source_url.clone(),
+        expected.source_url.clone(),
+    );
+    check(
+        "redistribution_determination",
+        actual.redistribution_determination.clone(),
+        expected.redistribution_determination.clone(),
+    );
+    check(
+        "redistribution_determined_by",
+        opt(&actual.redistribution_determined_by),
+        opt(&expected.redistribution_determined_by),
+    );
+    check(
+        "redistribution_determined_on",
+        opt(&actual.redistribution_determined_on),
+        opt(&expected.redistribution_determined_on),
+    );
+    check(
+        "redistribution_basis",
+        opt(&actual.redistribution_basis),
+        opt(&expected.redistribution_basis),
+    );
+    if differing.is_empty() {
+        Ok(())
+    } else {
+        Err(format!(
+            "Language model '{}': its licensing block does not match the corpus registry for '{}' (the registry is the human record; the manifest must be regenerated by build-language-model, never edited):\n{}",
+            manifest.model_id,
+            manifest.corpus_id,
+            differing.join("\n")
+        ))
+    }
 }
 
 /// SHA-256 of the committed model manifest (what pack manifests pin).
@@ -902,6 +1027,10 @@ pub fn load_language_model<P: AsRef<Path>>(
             model_id, manifest.licensing.license_spdx
         ));
     }
+
+    // The licensing block is bound to the current corpus registry, fail closed (the registry
+    // is the human record; a hand-edited manifest never passes even with recomputed hashes).
+    verify_licensing_against_registry(root, &manifest)?;
 
     // artifacts.sha256 must list exactly the manifest plus the manifest's files, all matching.
     let art_path = dir.join(ARTIFACTS_FILE);

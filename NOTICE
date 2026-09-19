@@ -7,3 +7,8 @@ This product includes software and linguistic tools developed as part of the Kur
 Third-Party Linguistic Resources Notice:
 Source code in this repository is licensed under the Apache License 2.0.
 Third-party linguistic datasets, lexicons, and corpora integrated by the data-builder compiler carry their respective upstream open licenses (e.g. CC BY-SA 4.0, CC BY 4.0) as recorded in data/source-registry/sources.toml and data/licenses/.
+
+Licensing stance (project owner, 2026-09-19):
+The Kurmancî project is intended for unrestricted broad reuse, including commercial use. Project-owned code and data are made available under permissive terms; third-party materials remain subject to their recorded upstream licences, attribution requirements, and any applicable ShareAlike obligations. The project adds no additional restriction on reuse.
+
+Redistribution determinations are recorded per source in data/source-registry/sources.toml and per corpus in data/source-registry/corpora.toml ([corpora.redistribution]); the language model derived from the Kurmancî Wikipedia corpus records the corpus determination in its manifest. The tooling copies these determinations and makes no legal determination of its own.
