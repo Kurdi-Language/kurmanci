@@ -174,8 +174,163 @@ notes = "Test"
     )
     .unwrap();
 
+    write_corpora_registry(dir, "");
     prepare_review_environment(dir);
     write_policy(dir, seed_profile, seed_model);
+}
+
+/// The corpus registry the model licensing block is bound to. `redistribution` is the
+/// `[corpora.redistribution]` table text, or "" for a registry without a determination.
+fn write_corpora_registry(dir: &Path, redistribution: &str) {
+    let reg_dir = dir.join("data/source-registry");
+    fs::create_dir_all(&reg_dir).unwrap();
+    fs::write(
+        reg_dir.join("corpora.toml"),
+        format!(
+            r#"[[corpora]]
+corpus_id = "test-corpus"
+corpus_name = "Test Corpus"
+language = "ku-Latn"
+license = "CC BY-SA 4.0"
+license_spdx = "CC-BY-SA-4.0"
+license_url = "https://creativecommons.org/licenses/by-sa/4.0/"
+url = "https://example.org/corpus"
+version = "1"
+description = "test"
+attribution = "Test contributors"
+notes = "test"
+{}
+"#,
+            redistribution
+        ),
+    )
+    .unwrap();
+}
+
+const ALLOWED_TABLE: &str = r#"[corpora.redistribution]
+determination = "allowed"
+determined_by = "project owner (test)"
+determined_on = "2026-09-19"
+basis = "Test basis: broad reuse; upstream obligations remain."
+"#;
+
+/// Writes the model with an edited licensing block; `write_language_model` recomputes
+/// `manifest.json` and `artifacts.sha256`, so this is exactly a hand edit with fresh hashes.
+fn write_model_with_licensing(
+    dir: &Path,
+    model_id: &str,
+    edit: impl FnOnce(&mut LanguageModelLicensing),
+) {
+    let mut manifest = test_manifest(model_id);
+    edit(&mut manifest.licensing);
+    let content = LanguageModelContent {
+        vocabulary: vec!["baş".into(), "bext".into(), "ez".into(), "nenas".into()],
+        unigrams: vec![(
+            0,
+            FrequencyMetadata {
+                token_count: 40,
+                document_count: 20,
+                zipf_milli: 7000,
+            },
+        )],
+        bigrams: vec![(2, 0, 10, 10, 1_000_000)],
+        trigrams: vec![(2, 0, 1, 4, 4, 1_000_000)],
+    };
+    write_language_model(dir, manifest, &content).unwrap();
+}
+
+fn allowed_licensing(l: &mut LanguageModelLicensing) {
+    l.redistribution_determination = "allowed".into();
+    l.redistribution_determined_by = Some("project owner (test)".into());
+    l.redistribution_determined_on = Some("2026-09-19".into());
+    l.redistribution_basis = Some("Test basis: broad reuse; upstream obligations remain.".into());
+}
+
+/// The corpus registry is the human record of the redistribution determination and the model
+/// manifest only copies it: a manifest edited by hand, hashes recomputed, is refused on load
+/// whenever any copied field differs from the registry, in either direction, and a generated,
+/// untouched model passes. A release can therefore never become `production` from a
+/// manifest-only licensing edit.
+#[test]
+fn test_loader_binds_licensing_to_the_registry_and_refuses_manifest_only_edits() {
+    let temp = tempfile::tempdir().unwrap();
+    prepare_fixture(temp.path(), "prediction", Some("test-model"));
+
+    // Registry without a determination (pending-review); manifest claims allowed.
+    write_model_with_licensing(temp.path(), "test-model", allowed_licensing);
+    let err = load_language_model(temp.path(), "test-model").unwrap_err();
+    assert!(err.contains("redistribution_determination"), "{err}");
+    assert!(
+        err.contains("manifest \"allowed\", registry \"pending-review\""),
+        "{err}"
+    );
+    assert!(err.contains("redistribution_determined_on"), "{err}");
+
+    // Registry allowed; manifest still pending-review (a stale or downgraded copy).
+    write_corpora_registry(temp.path(), ALLOWED_TABLE);
+    write_model(temp.path(), "test-model");
+    let err = load_language_model(temp.path(), "test-model").unwrap_err();
+    assert!(
+        err.contains("manifest \"pending-review\", registry \"allowed\""),
+        "{err}"
+    );
+
+    // Registry allowed; manifest allowed but with a different determiner, date or basis.
+    for (field, edit) in [
+        (
+            "redistribution_determined_by",
+            Box::new(|l: &mut LanguageModelLicensing| {
+                allowed_licensing(l);
+                l.redistribution_determined_by = Some("someone else".into());
+            }) as Box<dyn FnOnce(&mut LanguageModelLicensing)>,
+        ),
+        (
+            "redistribution_determined_on",
+            Box::new(|l: &mut LanguageModelLicensing| {
+                allowed_licensing(l);
+                l.redistribution_determined_on = Some("2026-09-18".into());
+            }),
+        ),
+        (
+            "redistribution_basis",
+            Box::new(|l: &mut LanguageModelLicensing| {
+                allowed_licensing(l);
+                l.redistribution_basis = Some("a different reading".into());
+            }),
+        ),
+        (
+            "attribution",
+            Box::new(|l: &mut LanguageModelLicensing| {
+                allowed_licensing(l);
+                l.attribution = "Someone".into();
+            }),
+        ),
+    ] {
+        write_model_with_licensing(temp.path(), "test-model", edit);
+        let err = load_language_model(temp.path(), "test-model").unwrap_err();
+        assert!(err.contains(field), "{field}: {err}");
+    }
+
+    // Untouched generated copy of the registry's record: passes.
+    write_model_with_licensing(temp.path(), "test-model", allowed_licensing);
+    let model = load_language_model(temp.path(), "test-model").unwrap();
+    assert_eq!(
+        model.manifest.licensing.redistribution_determination,
+        "allowed"
+    );
+    assert_eq!(
+        model
+            .manifest
+            .licensing
+            .redistribution_determined_on
+            .as_deref(),
+        Some("2026-09-19")
+    );
+
+    // No registry at all: fail closed rather than trust the manifest.
+    fs::remove_file(temp.path().join("data/source-registry/corpora.toml")).unwrap();
+    let err = load_language_model(temp.path(), "test-model").unwrap_err();
+    assert!(err.contains("corpus registry"), "{err}");
 }
 
 fn test_manifest(model_id: &str) -> LanguageModelManifest {
@@ -206,6 +361,9 @@ fn test_manifest(model_id: &str) -> LanguageModelManifest {
             attribution: "Test contributors".into(),
             source_url: "https://example.org/corpus".into(),
             redistribution_determination: "pending-review".into(),
+            redistribution_determined_by: None,
+            redistribution_determined_on: None,
+            redistribution_basis: None,
         },
         vocabulary_fingerprint: String::new(),
         vocabulary_size: 0,

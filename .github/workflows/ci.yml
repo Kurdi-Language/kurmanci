@@ -160,56 +160,11 @@ jobs:
           python3 scripts/verify_reviewed_pack.py --self-test
 
 
-      - name: Run Corpus Ingestion Pipeline (First Pass)
-
-        run: |
-          cargo run -p kurmanci-data-builder -- import-all-corpora
-          cargo run -p kurmanci-data-builder -- inventory-corpora
-          cargo run -p kurmanci-data-builder -- audit-corpora
-          cargo run -p kurmanci-data-builder -- partition-corpora
-
-      - name: Record Corpus Ingestion First Pass Checksums
-        run: |
-          mkdir -p /tmp/ci-check/c31_pass1
-          find data/imported-canonical data/build/corpus-partitions data/reports/corpus-inventory data/reports/corpus-quality data/reports/corpus-partitions -type f -exec sha256sum {} + | sort > /tmp/ci-check/c31_pass1/checksums.txt
-
-      - name: Run Corpus Ingestion Pipeline (Second Pass - Determinism Verification)
-        run: |
-          cargo run -p kurmanci-data-builder -- import-all-corpora
-          cargo run -p kurmanci-data-builder -- inventory-corpora
-          cargo run -p kurmanci-data-builder -- audit-corpora
-          cargo run -p kurmanci-data-builder -- partition-corpora
-
-      - name: Verify Corpus Ingestion Determinism
-        run: |
-          mkdir -p /tmp/ci-check/c31_pass2
-          find data/imported-canonical data/build/corpus-partitions data/reports/corpus-inventory data/reports/corpus-quality data/reports/corpus-partitions -type f -exec sha256sum {} + | sort > /tmp/ci-check/c31_pass2/checksums.txt
-          diff /tmp/ci-check/c31_pass1/checksums.txt /tmp/ci-check/c31_pass2/checksums.txt
-          echo "Corpus ingestion build determinism verification passed."
-
-      - name: Run Frequency Builder (First Pass)
-        run: cargo run -p kurmanci-data-builder -- build-frequencies
-
-      - name: Record Frequency Build Pass 1 Checksums
-        run: |
-          mkdir -p /tmp/ci-check/freq1
-          sha256sum data/build/frequencies.jsonl > /tmp/ci-check/freq1/frequencies.sha256
-          sha256sum data/reports/frequencies/* > /tmp/ci-check/freq1/reports.sha256
-
-      - name: Run Frequency Builder (Second Pass - Determinism Verification)
-        run: cargo run -p kurmanci-data-builder -- build-frequencies
-
-      - name: Verify Frequency Build Determinism
-        run: |
-          mkdir -p /tmp/ci-check/freq2
-          sha256sum data/build/frequencies.jsonl > /tmp/ci-check/freq2/frequencies.sha256
-          sha256sum data/reports/frequencies/* > /tmp/ci-check/freq2/reports.sha256
-          diff /tmp/ci-check/freq1/frequencies.sha256 /tmp/ci-check/freq2/frequencies.sha256
-          diff /tmp/ci-check/freq1/reports.sha256 /tmp/ci-check/freq2/reports.sha256
-          echo "Frequency build determinism verification passed."
+      - name: Verify Corpus Pipeline Determinism on the Test Fixture (isolated root; no production corpus)
+        run: bash scripts/corpus/verify-pipeline-on-test-fixture.sh
 
       - name: Generate Vocabulary Review Batch (First Pass)
-        run: cargo run -p kurmanci-data-builder -- generate-vocabulary-review-batch
+        run: cargo run -p kurmanci-data-builder -- generate-vocabulary-review-batch --no-corpus-frequencies
 
       - name: Verify Committed Vocabulary Review Batch Reproducibility
         run: |
@@ -225,7 +180,7 @@ jobs:
           sha256sum data/reports/vocabulary-review/* > /tmp/ci-check/vocab_review1/checksums.sha256
 
       - name: Generate Vocabulary Review Batch (Second Pass - Determinism Verification)
-        run: cargo run -p kurmanci-data-builder -- generate-vocabulary-review-batch
+        run: cargo run -p kurmanci-data-builder -- generate-vocabulary-review-batch --no-corpus-frequencies
 
       - name: Verify Vocabulary Review Batch Determinism
         run: |
@@ -233,33 +188,6 @@ jobs:
           sha256sum data/reports/vocabulary-review/* > /tmp/ci-check/vocab_review2/checksums.sha256
           diff /tmp/ci-check/vocab_review1/checksums.sha256 /tmp/ci-check/vocab_review2/checksums.sha256
           echo "Vocabulary review batch determinism verification passed."
-
-      - name: Run N-Gram Builder (First Pass)
-        run: cargo run -p kurmanci-data-builder -- build-ngrams
-
-      - name: Record N-Gram Build Pass 1 Checksums
-        run: |
-          mkdir -p /tmp/ci-check/ngram1
-          sha256sum data/build/bigrams.jsonl > /tmp/ci-check/ngram1/bigrams.sha256
-          sha256sum data/build/trigrams.jsonl > /tmp/ci-check/ngram1/trigrams.sha256
-          sha256sum data/reports/ngrams/* > /tmp/ci-check/ngram1/bigram_reports.sha256
-          sha256sum data/reports/trigrams/* > /tmp/ci-check/ngram1/trigram_reports.sha256
-
-      - name: Run N-Gram Builder (Second Pass - Determinism Verification)
-        run: cargo run -p kurmanci-data-builder -- build-ngrams
-
-      - name: Verify N-Gram Build Determinism
-        run: |
-          mkdir -p /tmp/ci-check/ngram2
-          sha256sum data/build/bigrams.jsonl > /tmp/ci-check/ngram2/bigrams.sha256
-          sha256sum data/build/trigrams.jsonl > /tmp/ci-check/ngram2/trigrams.sha256
-          sha256sum data/reports/ngrams/* > /tmp/ci-check/ngram2/bigram_reports.sha256
-          sha256sum data/reports/trigrams/* > /tmp/ci-check/ngram2/trigram_reports.sha256
-          diff /tmp/ci-check/ngram1/bigrams.sha256 /tmp/ci-check/ngram2/bigrams.sha256
-          diff /tmp/ci-check/ngram1/trigrams.sha256 /tmp/ci-check/ngram2/trigrams.sha256
-          diff /tmp/ci-check/ngram1/bigram_reports.sha256 /tmp/ci-check/ngram2/bigram_reports.sha256
-          diff /tmp/ci-check/ngram1/trigram_reports.sha256 /tmp/ci-check/ngram2/trigram_reports.sha256
-          echo "N-gram build determinism verification passed."
 
       - name: Run Cargo Workspace Tests
         run: cargo test --workspace
@@ -314,24 +242,6 @@ jobs:
           sha256sum data/reports/ranking-evaluation/* > /tmp/ci-check/eval2/reports.sha256
           diff /tmp/ci-check/eval1/reports.sha256 /tmp/ci-check/eval2/reports.sha256
           echo "Ranking evaluation report determinism verification passed."
-
-      - name: Run Context Prediction Evaluation (First Pass)
-        run: cargo run -p kurmanci-data-builder -- evaluate-next-word
-
-      - name: Record Context Prediction Evaluation Pass 1 Checksums
-        run: |
-          mkdir -p /tmp/ci-check/nextword1
-          sha256sum data/reports/context-prediction-evaluation/* > /tmp/ci-check/nextword1/reports.sha256
-
-      - name: Run Context Prediction Evaluation (Second Pass - Determinism Verification)
-        run: cargo run -p kurmanci-data-builder -- evaluate-next-word
-
-      - name: Verify Context Prediction Evaluation Determinism
-        run: |
-          mkdir -p /tmp/ci-check/nextword2
-          sha256sum data/reports/context-prediction-evaluation/* > /tmp/ci-check/nextword2/reports.sha256
-          diff /tmp/ci-check/nextword1/reports.sha256 /tmp/ci-check/nextword2/reports.sha256
-          echo "Context prediction evaluation report determinism verification passed."
 
       - name: Test Generated Binary Pack Integration & Embed Example
         run: |

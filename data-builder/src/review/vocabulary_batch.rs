@@ -59,9 +59,29 @@ pub struct VocabularyReviewBatchSummary {
     pub batch_size: usize,
     pub clean_candidates_count: usize,
     pub corpus_matched_count: usize,
+    /// Where the corpus frequency evidence came from: `data/build/frequencies.jsonl`, or
+    /// `none` when the batch was generated with `CorpusFrequencyInput::None` (no tracked
+    /// corpus available, so `corpus_matched_count` is 0 by construction). Absent in summaries
+    /// written before this field existed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corpus_frequencies_source: Option<String>,
     pub output_tsv: String,
     pub output_jsonl: String,
 }
+
+/// Which corpus frequency evidence the generator joins.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CorpusFrequencyInput {
+    /// `data/build/frequencies.jsonl` is required (fail closed when missing).
+    FromBuild,
+    /// No corpus frequencies: nothing is joined and the summary records it explicitly. For
+    /// environments with no tracked corpus (CI); never a substitute for missing evidence
+    /// where a corpus exists.
+    None,
+}
+
+pub const CORPUS_FREQUENCIES_NONE: &str =
+    "none: generated without corpus frequency evidence (no tracked corpus in this environment); corpus_matched_count is 0 by construction";
 
 /// Real corpus frequency data loaded from `data/build/frequencies.jsonl`.
 #[derive(Debug, Clone, Deserialize)]
@@ -270,9 +290,18 @@ pub fn load_audit_flags<P: AsRef<Path>>(
     Ok(flags_map)
 }
 
-/// Generates the deterministic, ranked 1,000-entry human review batch from repository data.
+/// Generates the deterministic, ranked 1,000-entry human review batch from repository data,
+/// joining `data/build/frequencies.jsonl` (required).
 pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(
     root_dir: P,
+) -> Result<VocabularyReviewBatchSummary, String> {
+    generate_vocabulary_review_batch_with(root_dir, CorpusFrequencyInput::FromBuild)
+}
+
+/// As above, with the corpus frequency input made explicit.
+pub fn generate_vocabulary_review_batch_with<P: AsRef<Path>>(
+    root_dir: P,
+    corpus_frequencies: CorpusFrequencyInput,
 ) -> Result<VocabularyReviewBatchSummary, String> {
     let root = root_dir.as_ref();
 
@@ -287,7 +316,13 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(
     }
 
     let existing_decisions = load_existing_decision_target_ids(&decisions_path)?;
-    let frequencies = load_corpus_frequencies(&freq_path)?;
+    let (frequencies, corpus_frequencies_source) = match corpus_frequencies {
+        CorpusFrequencyInput::FromBuild => (
+            load_corpus_frequencies(&freq_path)?,
+            "data/build/frequencies.jsonl".to_string(),
+        ),
+        CorpusFrequencyInput::None => (BTreeMap::new(), CORPUS_FREQUENCIES_NONE.to_string()),
+    };
     let audit_flags_by_target = load_audit_flags(&queues_dir)?;
 
     let pool_file = File::open(&pool_path).map_err(|e| {
@@ -508,6 +543,7 @@ pub fn generate_vocabulary_review_batch<P: AsRef<Path>>(
         batch_size,
         clean_candidates_count,
         corpus_matched_count,
+        corpus_frequencies_source: Some(corpus_frequencies_source),
         output_tsv: "data/reports/vocabulary-review/top-1000.tsv".to_string(),
         output_jsonl: "data/reports/vocabulary-review/top-1000.jsonl".to_string(),
     };

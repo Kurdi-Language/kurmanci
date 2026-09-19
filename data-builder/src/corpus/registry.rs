@@ -36,6 +36,93 @@ pub const ACQUISITION_TRACKED: &str = "tracked";
 pub const ACQUISITION_EXTERNAL: &str = "external";
 pub const EXTRACTOR_WIKIMEDIA_XML: &str = "wikimedia-xml";
 
+pub const REDISTRIBUTION_ALLOWED: &str = "allowed";
+pub const REDISTRIBUTION_NOT_ALLOWED: &str = "not-allowed";
+pub const REDISTRIBUTION_PENDING_REVIEW: &str = "pending-review";
+pub const REDISTRIBUTION_DETERMINATIONS: [&str; 3] = [
+    REDISTRIBUTION_ALLOWED,
+    REDISTRIBUTION_NOT_ALLOWED,
+    REDISTRIBUTION_PENDING_REVIEW,
+];
+
+/// A human's redistribution determination for derivatives of a corpus (language models,
+/// frequency tables): who determined it, when, and on what basis. Recorded verbatim into the
+/// language model manifest and the release bundle; the code copies it and never decides it.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CorpusRedistribution {
+    /// `allowed`, `not-allowed` or `pending-review`.
+    pub determination: String,
+    pub determined_by: String,
+    /// ISO date (YYYY-MM-DD).
+    pub determined_on: String,
+    /// The determiner's own words.
+    pub basis: String,
+}
+
+impl CorpusRedistribution {
+    pub fn validate(&self, corpus_id: &str) -> Result<(), String> {
+        if !REDISTRIBUTION_DETERMINATIONS.contains(&self.determination.as_str()) {
+            return Err(format!(
+                "Corpus '{}': redistribution.determination must be one of {:?} (found '{}')",
+                corpus_id, REDISTRIBUTION_DETERMINATIONS, self.determination
+            ));
+        }
+        for (name, value) in [
+            ("determined_by", &self.determined_by),
+            ("determined_on", &self.determined_on),
+            ("basis", &self.basis),
+        ] {
+            if value.trim().is_empty() {
+                return Err(format!(
+                    "Corpus '{}': redistribution.{} must not be empty",
+                    corpus_id, name
+                ));
+            }
+        }
+        if !is_valid_gregorian_date(&self.determined_on) {
+            return Err(format!(
+                "Corpus '{}': redistribution.determined_on must be a valid Gregorian calendar date YYYY-MM-DD (found '{}')",
+                corpus_id, self.determined_on
+            ));
+        }
+        Ok(())
+    }
+}
+
+/// True exactly for `YYYY-MM-DD` strings that name a real proleptic Gregorian calendar day
+/// (four-digit year, month 1..=12, day within that month, February 29 only in leap years).
+/// No date is ever inferred or substituted.
+pub fn is_valid_gregorian_date(value: &str) -> bool {
+    let b = value.as_bytes();
+    if b.len() != 10 || b[4] != b'-' || b[7] != b'-' {
+        return false;
+    }
+    if !b
+        .iter()
+        .enumerate()
+        .all(|(i, c)| matches!(i, 4 | 7) || c.is_ascii_digit())
+    {
+        return false;
+    }
+    let year: u32 = value[0..4].parse().unwrap_or(0);
+    let month: u32 = value[5..7].parse().unwrap_or(0);
+    let day: u32 = value[8..10].parse().unwrap_or(0);
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    let days_in_month = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 => {
+            if leap {
+                29
+            } else {
+                28
+            }
+        }
+        _ => return false,
+    };
+    year >= 1 && day >= 1 && day <= days_in_month
+}
+
 /// Metadata entry for a registered text corpus in `corpora.toml`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CorpusRegistryEntry {
@@ -69,6 +156,10 @@ pub struct CorpusRegistryEntry {
     pub source_artifact: Option<CorpusSourceArtifact>,
     #[serde(default)]
     pub files: Vec<CorpusFile>,
+    /// Human redistribution determination for derivatives of this corpus. Absent means
+    /// `pending-review`; the code never fills it in.
+    #[serde(default)]
+    pub redistribution: Option<CorpusRedistribution>,
 }
 
 fn default_document_format() -> String {
@@ -186,7 +277,18 @@ impl CorpusRegistryEntry {
     }
 
     /// Validates format-sensitive schema rules and path safety for this corpus entry.
+    /// The recorded determination, or `pending-review` when none is recorded.
+    pub fn redistribution_determination(&self) -> &str {
+        self.redistribution
+            .as_ref()
+            .map(|r| r.determination.as_str())
+            .unwrap_or(REDISTRIBUTION_PENDING_REVIEW)
+    }
+
     pub fn validate_schema(&self) -> Result<(), String> {
+        if let Some(r) = &self.redistribution {
+            r.validate(&self.corpus_id)?;
+        }
         if self.license.trim().is_empty() {
             return Err(format!(
                 "Corpus '{}': license must not be empty",

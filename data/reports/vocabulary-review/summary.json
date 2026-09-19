@@ -8,6 +8,7 @@
   "batch_size": 1000,
   "clean_candidates_count": 1000,
   "corpus_matched_count": 0,
+  "corpus_frequencies_source": "none: generated without corpus frequency evidence (no tracked corpus in this environment); corpus_matched_count is 0 by construction",
   "output_tsv": "data/reports/vocabulary-review/top-1000.tsv",
   "output_jsonl": "data/reports/vocabulary-review/top-1000.jsonl"
 }

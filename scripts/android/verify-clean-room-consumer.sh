@@ -50,10 +50,14 @@ fi
 if command -v sha256sum >/dev/null 2>&1; then AAR_SHA="$(sha256sum "$AAR" | awk '{print $1}')"; else AAR_SHA="$(shasum -a 256 "$AAR" | awk '{print $1}')"; fi
 echo "AAR: $AAR"
 echo "     sha256 $AAR_SHA, $(wc -c < "$AAR" | tr -d ' ') bytes"
-ABIS="$(unzip -Z1 "$AAR" | grep -E '^jni/[^/]+/libkurmanci_jni\.so$' | cut -d/ -f2 | sort | paste -sd, -)"
+# List the archive once and grep the text: under `set -o pipefail`, `unzip | grep -q` can fail
+# spuriously when grep exits on the first match and unzip is still writing (SIGPIPE), which
+# reported a present library as missing.
+AAR_ENTRIES="$(unzip -Z1 "$AAR")"
+ABIS="$(printf '%s\n' "$AAR_ENTRIES" | grep -E '^jni/[^/]+/libkurmanci_jni\.so$' | cut -d/ -f2 | sort | paste -sd, -)"
 echo "     prebuilt native libraries: ${ABIS:-none}"
 for abi in arm64-v8a armeabi-v7a x86_64; do
-  if ! unzip -Z1 "$AAR" | grep -q "^jni/$abi/libkurmanci_jni\.so$"; then
+  if ! printf '%s\n' "$AAR_ENTRIES" | grep -q "^jni/$abi/libkurmanci_jni\.so$"; then
     echo "❌ AAR lacks jni/$abi/libkurmanci_jni.so" >&2
     exit 1
   fi

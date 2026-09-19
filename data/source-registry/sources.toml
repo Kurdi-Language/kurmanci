@@ -7,7 +7,7 @@ license_url = "https://www.apache.org/licenses/LICENSE-2.0"
 url = "https://github.com/Kurdi-Language/kurmanci"
 version = "0.1.0"
 redistribution = "allowed"
-notes = "Handcrafted canonical seed entries for initial validation and baseline engine testing."
+notes = "Handcrafted canonical seed entries for initial validation and baseline engine testing. Redistribution determination confirmed by the project owner on 2026-09-19 (see NOTICE)."
 
 [[sources.files]]
 path = "data/reviewed/lexicon.jsonl"
@@ -30,7 +30,7 @@ attribution_required = true
 share_alike_required = true
 disclosed_upstream_sources = ["FreeDict", "Wîkîferheng/Kurdish Wiktionary", "Wikidata"]
 retrieval_date = "2026-07-30"
-notes = "Original Hunspell Kurmancî dictionary and affix files preserved byte-for-byte from immutable commit 88131d6878ef7fa3ee114aa554adc385ff85b44c."
+notes = "Original Hunspell Kurmancî dictionary and affix files preserved byte-for-byte from immutable commit 88131d6878ef7fa3ee114aa554adc385ff85b44c. Redistribution determination confirmed by the project owner on 2026-09-19 (see NOTICE)."
 
 [[sources.files]]
 path = "data/original/kurdish-hunspell-kmr/kmr-Latn.dic"
@@ -72,7 +72,7 @@ attribution_required = true
 share_alike_required = true
 disclosed_upstream_sources = ["Kurmancî Wikipedia (version 20260801)"]
 retrieval_date = "2026-09-02"
-notes = "Reviewed lexical evidence batch of top 1,000 OOV candidates extracted from Kurmancî Wikipedia corpus (version 20260801)."
+notes = "Reviewed lexical evidence batch of top 1,000 OOV candidates extracted from Kurmancî Wikipedia corpus (version 20260801). Redistribution determination confirmed by the project owner on 2026-09-19 (see NOTICE)."
 
 [[sources.files]]
 path = "data/review-batches/kuwiki-batch-001/candidates.jsonl"
@@ -94,7 +94,7 @@ attribution_required = true
 share_alike_required = true
 disclosed_upstream_sources = ["Kurmancî Wikipedia (version 20260801)"]
 retrieval_date = "2026-09-10"
-notes = "Reviewed lexical evidence batch 002 of top 1,000 OOV candidates extracted from Kurmancî Wikipedia corpus (version 20260801)."
+notes = "Reviewed lexical evidence batch 002 of top 1,000 OOV candidates extracted from Kurmancî Wikipedia corpus (version 20260801). Redistribution determination confirmed by the project owner on 2026-09-19 (see NOTICE)."
 
 [[sources.files]]
 path = "data/review-batches/kuwiki-batch-002/candidates.jsonl"

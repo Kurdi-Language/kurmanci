@@ -772,7 +772,7 @@ fn test_held_out_source_without_doc_id_rejected() {
         review_notes: None,
         source: BenchmarkSourceInfo {
             kind: BenchmarkSourceKind::HeldOutCorpus,
-            source_id: Some("opensubtitles".to_string()),
+            source_id: Some("held-out-fixture".to_string()),
             source_document_id: None, // missing required doc id
             source_record: None,
         },

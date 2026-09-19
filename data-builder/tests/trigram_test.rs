@@ -1,5 +1,7 @@
 //! Integration tests for Deterministic Trigram Language Model & Pack v4.
 
+mod common;
+
 use data_builder_lib::corpus::ngrams::{
     build_corpus_bigrams, build_corpus_ngrams, build_corpus_trigrams, split_into_sentences,
     NgramConfig,
@@ -11,18 +13,9 @@ use kurmanci_engine::{Engine, PredictionSource};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
-use std::path::PathBuf;
 use std::sync::Mutex;
 
 static TEST_LOCK: Mutex<()> = Mutex::new(());
-
-fn get_workspace_root() -> PathBuf {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    manifest_dir
-        .parent()
-        .expect("Failed to find workspace root")
-        .to_path_buf()
-}
 
 #[test]
 fn test_sentence_isolated_trigram_extraction() {
@@ -37,8 +30,9 @@ fn test_sentence_isolated_trigram_extraction() {
 #[test]
 fn test_checked_trigram_probabilities_and_pruning() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
 
     let stats = build_corpus_trigrams(&root).expect("Trigram build failed");
     for rec in &stats.records {
@@ -52,8 +46,9 @@ fn test_checked_trigram_probabilities_and_pruning() {
 #[test]
 fn test_binary_pack_v4_trigram_indices_and_engine_prediction() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
     let _ = build_corpus_ngrams(&root).expect("Ngram build failed");
 
     let source_path = root.join("data/reviewed/lexicon.jsonl");
@@ -103,8 +98,9 @@ fn test_binary_pack_v4_trigram_indices_and_engine_prediction() {
 #[test]
 fn test_compiler_engine_v4_roundtrip() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
     let _ = build_corpus_ngrams(&root).expect("Ngram build failed");
 
     let source_path = root.join("data/reviewed/lexicon.jsonl");
@@ -129,8 +125,9 @@ fn test_compiler_engine_v4_roundtrip() {
 #[test]
 fn test_trigram_and_context_eval_determinism() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
     let _ = build_corpus_ngrams(&root).expect("Ngram build failed");
 
     let source_path = root.join("data/reviewed/lexicon.jsonl");
@@ -170,8 +167,9 @@ fn test_trigram_and_context_eval_determinism() {
 #[test]
 fn test_dynamic_trigram_pruning_config_and_report_alignment() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
 
     let config_path = root.join("data-builder/config/ngrams.toml");
     let original_config = fs::read_to_string(&config_path).expect("Failed to read ngrams.toml");
@@ -205,8 +203,9 @@ maximum_predictions_per_context = 6
 #[test]
 fn test_exact_trigram_reports_and_manifest_set() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let _ = import_corpus("opensubtitles-kmr", &root).expect("Corpus import failed");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let _ = import_corpus(common::TEST_CORPUS_ID, &root).expect("Corpus import failed");
     let _ = build_corpus_trigrams(&root).expect("Trigram build failed");
 
     let reports_dir = root.join("data/reports/trigrams");
@@ -307,8 +306,9 @@ fn test_exact_trigram_reports_and_manifest_set() {
 #[test]
 fn test_corrupted_trigram_corpus_checksum_rejection() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let corpus_file = root.join("data/imported/opensubtitles-kmr/corpus.txt");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let corpus_file = root.join("data/imported/test-corpus/corpus.txt");
     if corpus_file.exists() {
         let original = fs::read_to_string(&corpus_file).unwrap();
         fs::write(&corpus_file, format!("{}\nCorrupted line", original)).unwrap();
@@ -324,9 +324,10 @@ fn test_corrupted_trigram_corpus_checksum_rejection() {
 #[test]
 fn test_missing_registered_corpus_directory_fails() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
-    let imported_dir = root.join("data/imported/opensubtitles-kmr");
-    let backup_dir = root.join("data/imported/opensubtitles-kmr-backup");
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
+    let imported_dir = root.join("data/imported/test-corpus");
+    let backup_dir = root.join("data/imported/test-corpus-backup");
 
     if imported_dir.exists() {
         fs::rename(&imported_dir, &backup_dir).unwrap();
@@ -353,7 +354,8 @@ fn test_missing_registered_corpus_directory_fails() {
 #[test]
 fn test_exceeding_max_predictions_limit_fails() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let config_path = root.join("data-builder/config/ngrams.toml");
     let original = fs::read_to_string(&config_path).unwrap();
 
@@ -383,7 +385,8 @@ fn test_exceeding_max_predictions_limit_fails() {
 #[test]
 fn test_malformed_config_fails_load() {
     let _lock = TEST_LOCK.lock().unwrap();
-    let root = get_workspace_root();
+    let fixture = common::synthetic_corpus_root();
+    let root = fixture.path().to_path_buf();
     let config_path = root.join("data-builder/config/ngrams.toml");
     let original = fs::read_to_string(&config_path).unwrap();
 
