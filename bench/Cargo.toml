@@ -1,6 +1,6 @@
 [package]
 name = "kurmanci-bench"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Kurmancî Language Platform Contributors"]
 description = "Engineering benchmark for Kurmancî language packs: memory attribution, load and query latency."

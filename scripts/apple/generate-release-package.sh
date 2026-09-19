@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 CHECKSUM=""
 COMMIT=""
 URL=""

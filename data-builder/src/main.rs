@@ -16,7 +16,7 @@ use std::path::PathBuf;
 #[command(
     name = "kurmanci-data-builder",
     author = "Kurmancî Language Platform Contributors",
-    version = "0.1.0",
+    version = env!("CARGO_PKG_VERSION"),
     about = "Offline Kurmancî Language Data Compiler & Processing Crate"
 )]
 struct Cli {
