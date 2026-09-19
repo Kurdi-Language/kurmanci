@@ -22,8 +22,7 @@ dependencyResolutionManagement {
 }
 
 dependencies {
-    // Pending 0.1.0 release on Maven Central
-    implementation("io.github.ferhatguneri:kurmanci-android:0.1.0")
+    implementation("io.github.ferhatguneri:kurmanci-android:0.1.1")
 }
 ```
 

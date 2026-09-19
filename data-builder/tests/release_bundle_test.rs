@@ -7,6 +7,7 @@ use data_builder_lib::release::{
     install_directory_with, parse_c_abi_version, verify_release_bundle, RedistributionRecord,
     ReleaseOptions, C_HEADER_PATH,
 };
+use kurmanci_engine::compat::ENGINE_VERSION;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -646,11 +647,11 @@ fn workspace_bundle_is_complete_self_verifying_byte_identical_and_tamper_evident
     assert_eq!(replaced.sha256sums_sha256, a.sha256sums_sha256);
     assert!(!out_a
         .path()
-        .join(".kurmanci-ku-Latn-0.1.0.tmp-backup")
+        .join(format!(".kurmanci-ku-Latn-{ENGINE_VERSION}.tmp-backup"))
         .exists());
     assert!(!out_a
         .path()
-        .join(".kurmanci-ku-Latn-0.1.0.tmp-stage")
+        .join(format!(".kurmanci-ku-Latn-{ENGINE_VERSION}.tmp-stage"))
         .exists());
     verify_release_bundle(&dir_a).unwrap();
 

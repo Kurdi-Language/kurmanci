@@ -735,7 +735,7 @@ dependencies = [
 
 [[package]]
 name = "kurmanci-bench"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "kurmanci-engine",
@@ -746,7 +746,7 @@ dependencies = [
 
 [[package]]
 name = "kurmanci-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "kurmanci-engine",
@@ -758,7 +758,7 @@ dependencies = [
 
 [[package]]
 name = "kurmanci-data-builder"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bzip2",
  "clap",
@@ -779,7 +779,7 @@ dependencies = [
 
 [[package]]
 name = "kurmanci-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "criterion",
@@ -792,14 +792,14 @@ dependencies = [
 
 [[package]]
 name = "kurmanci-ffi"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "kurmanci-engine",
 ]
 
 [[package]]
 name = "kurmanci-jni"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "jni",
  "kurmanci-ffi",
