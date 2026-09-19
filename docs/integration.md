@@ -67,6 +67,12 @@ answer identically. Consequences, pinned by `engine/tests/concurrency_unicode_te
   NUL, C0/C1 controls) is the same word: applications do not need to strip them;
 - ordinary spaces and NBSP are not removed, so ` welat` and `welat` + NBSP are different
   inputs from `welat`; tokenize on whitespace before querying;
+- a token containing a hyphen or an apostrophe (`-`, U+0027, U+2019) is queried as given
+  first, then, if the host wants fallbacks, as its punctuation-aware splits, with the returned
+  suggestions deduplicated (the `word-punctuation-lookup` requirement of the ku-Latn keyboard
+  contract). The engine answers only for the string it is given; under the project's
+  word-punctuation policy such forms are held for linguist review and are not in the default
+  pack, so a full-token hit is not expected until a linguist admits one;
 - empty input is known-word false and yields empty completion, correction and prediction
   lists on every surface, including Kotlin; mixed ASCII and Kurmancî input is answered
   deterministically;

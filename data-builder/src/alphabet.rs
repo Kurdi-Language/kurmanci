@@ -34,10 +34,32 @@
 //!
 //! What the policy does not touch: undecided and experimental-only evidence stays in the
 //! experimental-full reservoir according to the existing pack policy (an out-of-alphabet
-//! source form is not an error); source records are never modified. Hyphen and apostrophes
-//! (`WORD_INTERNAL_PUNCTUATION`) are not letters; whether they may occur inside a word is a
-//! separate, still open human decision, so the policy neither accepts nor rejects a form on
-//! their account.
+//! source form is not an error); source records are never modified.
+//!
+//! # Word-punctuation policy (project owner, 2026-09-19)
+//!
+//! Hyphen and apostrophes (`WORD_INTERNAL_PUNCTUATION`: `-`, U+0027, U+2019) are not
+//! letters. By explicit human decision, a lexical form containing any of them is **not
+//! approved into the reviewed/default pack until a linguist has reviewed it**; which
+//! apostrophe code point is canonical stays undecided, so both are held alike. Mechanically:
+//!
+//! 1. Before ordinary review, `generate-review-queues` keeps such Hunspell entries out of the
+//!    ordinary pool and writes them to `punctuation-policy-needs-linguist.jsonl`
+//!    (`WORD_PUNCTUATION_REASON_CODE`, `HELD_FOR_LINGUIST_ACTION`), each record also naming
+//!    the characters and, as `POSSIBLE_DUPLICATE_OF:<form>` reason codes, every other import
+//!    or seed form that is identical once the punctuation is removed (a possible duplicate is
+//!    flagged for a human, never merged).
+//! 2. At authoritative resolution, fail closed: `pack::selection::apply_default_pack_word_punctuation_policy`
+//!    refuses an approved, metadata-change or seed candidate whose form contains held
+//!    punctuation, and refuses two default-vocabulary candidates that differ only by held
+//!    punctuation (both cannot be approved).
+//! 3. At the default-vocabulary boundary: `validate_entry` refuses such forms.
+//!
+//! Historical correction: the one Hunspell approval of such a form (`'azîm`, approved
+//! 2026-08-24) was set to `needs_linguist` on 2026-09-19 with the previous decision preserved
+//! in its note and evidence (see `docs/lexicon-review.md`). Nothing is decided linguistically
+//! here; a linguist's decision on any held form is recorded through the ordinary review
+//! artifacts.
 
 /// The 31 letters, in alphabetical order.
 pub const KURMANCI_ALPHABET: [char; 31] = [
@@ -45,9 +67,23 @@ pub const KURMANCI_ALPHABET: [char; 31] = [
     'q', 'r', 's', 'ş', 't', 'u', 'û', 'v', 'w', 'x', 'y', 'z',
 ];
 
-/// Non-letter characters whose place inside a word is still under human review; the alphabet
-/// policy neither accepts nor rejects them.
+/// Non-letter characters held for linguist review by the word-punctuation policy
+/// (2026-09-19): hyphen-minus, apostrophe U+0027 and right single quotation mark U+2019. The
+/// alphabet policy neither accepts nor rejects them; the word-punctuation policy holds them.
 pub const WORD_INTERNAL_PUNCTUATION: [char; 3] = ['-', '\'', '\u{2019}'];
+
+/// Date of the word-punctuation policy decision (project owner).
+pub const WORD_PUNCTUATION_POLICY_DATE: &str = "2026-09-19";
+/// Reason code carried by review-queue records of an entry held by the word-punctuation policy.
+pub const WORD_PUNCTUATION_REASON_CODE: &str = "WORD_PUNCTUATION";
+/// `suggested_action` of such records: the entry waits for a linguist, it is not reviewed on
+/// the ordinary desk.
+pub const HELD_FOR_LINGUIST_ACTION: &str = "needs_linguist";
+/// Queue file that carries the held entries.
+pub const PUNCTUATION_HELD_QUEUE_FILE: &str = "punctuation-policy-needs-linguist.jsonl";
+/// Prefix of the reason code that names a possible duplicate (a form identical once the held
+/// punctuation is removed). Flagged for a human; never merged automatically.
+pub const POSSIBLE_DUPLICATE_REASON_PREFIX: &str = "POSSIBLE_DUPLICATE_OF:";
 
 /// Reason code carried by review-queue records of an entry the policy excludes from
 /// ordinary review (`generate-review-queues`).
@@ -86,6 +122,39 @@ pub fn default_pack_eligibility(normalized: &str) -> Result<(), Vec<char>> {
     }
 }
 
+/// The distinct held punctuation characters of `normalized`, in code point order. Empty when
+/// the word-punctuation policy does not hold the form.
+pub fn word_punctuation_chars(normalized: &str) -> Vec<char> {
+    let mut out: Vec<char> = normalized
+        .chars()
+        .filter(|c| WORD_INTERNAL_PUNCTUATION.contains(c))
+        .collect();
+    out.sort_unstable();
+    out.dedup();
+    out
+}
+
+/// Word-punctuation hold: `Err(chars)` names the held characters of a form that must not enter
+/// the default vocabulary until a linguist has reviewed it.
+pub fn word_punctuation_hold(normalized: &str) -> Result<(), Vec<char>> {
+    let held = word_punctuation_chars(normalized);
+    if held.is_empty() {
+        Ok(())
+    } else {
+        Err(held)
+    }
+}
+
+/// `normalized` with every held punctuation character removed: the key under which forms that
+/// differ only by such punctuation are flagged as possible duplicates. A flag, not an identity:
+/// review identity stays the exact normalized form.
+pub fn punctuation_stripped_form(normalized: &str) -> String {
+    normalized
+        .chars()
+        .filter(|c| !WORD_INTERNAL_PUNCTUATION.contains(c))
+        .collect()
+}
+
 /// Human-readable description of the offending characters, e.g. `'é' (U+00E9), '2' (U+0032)`.
 pub fn describe_out_of_alphabet(chars: &[char]) -> String {
     chars
@@ -112,6 +181,24 @@ mod tests {
         for c in ['ḧ', 'ẍ', 'é', 'ü', 'ı', 'ğ', 'İ', 'A', '2', '²', '!', ' '] {
             assert!(!is_kurmanci_letter(c), "{}", c);
         }
+    }
+
+    #[test]
+    fn word_punctuation_policy_holds_hyphen_and_both_apostrophes() {
+        assert!(word_punctuation_hold("azîm").is_ok());
+        assert_eq!(word_punctuation_hold("'azîm"), Err(vec!['\'']));
+        assert_eq!(word_punctuation_hold("bin-av"), Err(vec!['-']));
+        assert_eq!(
+            word_punctuation_hold("be\u{2019}ecok"),
+            Err(vec!['\u{2019}'])
+        );
+        assert_eq!(word_punctuation_hold("a-b'c"), Err(vec!['\'', '-']));
+        assert_eq!(punctuation_stripped_form("'azîm"), "azîm");
+        assert_eq!(punctuation_stripped_form("bin-av"), "binav");
+        assert_eq!(punctuation_stripped_form("rojbaş"), "rojbaş");
+        // The alphabet policy still neither accepts nor rejects these characters on its own.
+        assert!(out_of_alphabet_chars("'azîm").is_empty());
+        assert!(out_of_alphabet_chars("bin-av").is_empty());
     }
 
     #[test]

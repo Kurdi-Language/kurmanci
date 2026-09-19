@@ -2,19 +2,49 @@
   "schema_version": "ku-latn-keyboard-requirements-v1",
   "locale_tag": "ku-Latn",
   "orthography_contract": "data/keyboard/ku-Latn-orthography.json",
-  "review_status": "draft-pending-human-review",
-  "reviewed_by": null,
-  "review_date": null,
+  "review_status": "human-reviewed",
+  "reviewed_by": "ferhatguneri",
+  "review_date": "2026-09-19",
   "review_notes": [
-    "Vendor-neutral capability requirements for a platform keyboard serving the ku-Latn target. They state what must be typeable, not how a vendor arranges its keys."
+    "Vendor-neutral capability requirements for a platform keyboard serving the ku-Latn target. They state what must be typeable, not how a vendor arranges its keys.",
+    "Human review of 2026-09-19 (project owner): the orthography reference questions are answered in the orthography contract's `references`; word-internal hyphen and apostrophe handling follows the word-punctuation policy (held for linguist review) with the host lookup guidance in `word-punctuation-lookup`."
   ],
   "requirements": [
     {
       "id": "letters-typeable",
       "statement": "All 31 letters of the alphabet, in lower and upper case, must be directly or conveniently typeable, including ç ê î ş û.",
       "letters": [
-        "a", "b", "c", "ç", "d", "e", "ê", "f", "g", "h", "i", "î", "j", "k", "l", "m",
-        "n", "o", "p", "q", "r", "s", "ş", "t", "u", "û", "v", "w", "x", "y", "z"
+        "a",
+        "b",
+        "c",
+        "ç",
+        "d",
+        "e",
+        "ê",
+        "f",
+        "g",
+        "h",
+        "i",
+        "î",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "ş",
+        "t",
+        "u",
+        "û",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z"
       ]
     },
     {
@@ -40,7 +70,11 @@
     },
     {
       "id": "non-lexical-layers",
-      "statement": "Digits, punctuation and symbol layers are not Kurmancî-specific and follow the host's conventions; nothing outside the 31 letters is a lexical requirement of this keyboard."
+      "statement": "Digits, punctuation and symbol layers are not Kurmancî-specific and follow the host's conventions; nothing outside the 31 letters is a lexical requirement of this keyboard. This does not decide the held word-punctuation characters ('-', U+0027, U+2019): they are pending linguist review under the word-punctuation policy and are handled by the word-punctuation-lookup guidance."
+    },
+    {
+      "id": "word-punctuation-lookup",
+      "statement": "When the token at the cursor contains a hyphen or an apostrophe ('-', U+0027, U+2019), the host queries the engine with the full token first, then with punctuation-aware fallbacks (the token split at those characters), and deduplicates the suggestions it returns. The engine answers only for the string it is given. Under the word-punctuation policy (project owner, 2026-09-19) lexical entries containing these characters are held for linguist review and are not in the default pack, so a full-token hit is not expected until a linguist admits such a form."
     }
   ],
   "layout_arrangement": {
@@ -81,7 +115,6 @@
   },
   "open_questions_for_human_review": [
     "Continue platform-specific implementation verification for interoperability evidence (real-iPhone confirmation of the Simulator observation is useful evidence); no universal physical arrangement is prescribed and none is to be chosen.",
-    "Word-internal hyphen and apostrophes: typeable as word characters, and what the host tokenizer does with them (separate tokenization policy).",
-    "Which reference orthography document should be cited by the orthography contract?"
+    "Linguist review of the forms held by the word-punctuation policy (which hyphen and apostrophe forms are lexical, in which positions, and which apostrophe code point is canonical) is pending; until then the host guidance in `word-punctuation-lookup` applies."
   ]
 }

@@ -77,6 +77,11 @@ for name in ["suspicious-entries", "rare-code-points", "short-and-long-forms", "
 # alphabet policy must not also be in the ordinary pool. This checks the artifacts against
 # each other; it does not re-evaluate any character.
 policy_excluded = set()
+held_for_linguist = set()
+held_path = ROOT / "data/review-queues/kurdish-hunspell-kmr/punctuation-policy-needs-linguist.jsonl"
+if held_path.exists():
+    for l in held_path.read_text(encoding="utf-8").splitlines():
+        if l.strip(): held_for_linguist.add(json.loads(l)["target_id"])
 excl_path = ROOT / "data/review-queues/kurdish-hunspell-kmr/alphabet-policy-excluded.jsonl"
 if excl_path.exists():
     for l in open(excl_path, encoding="utf-8"):
@@ -88,6 +93,9 @@ n_total = 0
 for l in open(ROOT / "data/review-queues/kurdish-hunspell-kmr/hunspell-only.jsonl", encoding="utf-8"):
     if not l.strip(): continue
     d = json.loads(l); n_total += 1
+    if d["target_id"] in held_for_linguist:
+        sys.stderr.write(f"ERROR: target {d['target_id']} ({d['display']!r}) is in both hunspell-only.jsonl and punctuation-policy-needs-linguist.jsonl; regenerate the review queues (generate-review-queues) before building a Review Desk queue\n")
+        sys.exit(1)
     if d["target_id"] in policy_excluded:
         sys.stderr.write(f"ERROR: target {d['target_id']} ({d['display']!r}) is in both hunspell-only.jsonl and alphabet-policy-excluded.jsonl; regenerate the review queues (generate-review-queues) before building a Review Desk queue\n")
         sys.exit(1)

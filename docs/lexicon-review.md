@@ -97,7 +97,7 @@ resolve to `çav`):
 | Alphabetic characters | must be one of the 31 letters; `ç ê î ş û` are distinct letters, their bases are not substitutes |
 | Digits | not eligible for a default lexical entry (`2012an`, `16ê`) |
 | Other symbols | not eligible unless a separate lexical policy whitelists them (`km²`) |
-| Hyphen `-`, apostrophes `'` `’` | **not decided by this policy**: word-internal punctuation is a separate, human-reviewed tokenization question and is left open (not treated as a violation) |
+| Hyphen `-`, apostrophes `'` `’` | **not decided by this policy** but held by the word-punctuation policy below (2026-09-19): such a form is not approved into the default pack until a linguist has reviewed it |
 
 Where the policy applies, in order:
 
@@ -111,8 +111,8 @@ Where the policy applies, in order:
    entry keeps its review identity, so an existing decision on it stays valid. The corpus
    technical filter (`classify_technical_noise` → `out_of_alphabet`, applied after the more
    specific reasons) does the same for Kuwiki and any other corpus: such tokens never become
-   `eligible_for_review` and never enter a review batch. Hyphen and apostrophe forms stay
-   reviewable.
+   `eligible_for_review` and never enter a review batch. Hyphen and apostrophe forms are
+   held for linguist review by the word-punctuation policy below.
 2. **At authoritative resolution, fail closed.** `pack::selection::apply_default_pack_alphabet_policy`
    runs in the pack resolver once after every source (Hunspell queue decisions, manual seed,
    every Kuwiki batch, any future source) has been merged, so it is source-independent. A
@@ -154,6 +154,70 @@ Tests (`tests/alphabet_policy_test.rs`, `tests/alphabet_policy_review_test.rs`,
 `tests/vocabulary_evidence_test.rs`) prove the rule, the two filters, the fail-closed
 resolution for a Kuwiki-, Hunspell- or future-source approval, the legitimacy of rejected and
 reservoir evidence, and that the repository resolves with zero contradictions.
+
+## Word-Punctuation Policy
+
+Explicit human project policy (project owner, 2026-09-19), encoded mechanically in
+`data-builder/src/alphabet.rs` next to the alphabet policy:
+
+> A lexical form containing a hyphen (`-`) or an apostrophe (`'` U+0027, `’` U+2019) is
+> **not approved into the reviewed/default pack until a linguist has reviewed it**. Which
+> apostrophe code point is canonical is undecided until that review, so both are held alike.
+> Forms that differ only by such punctuation are flagged as possible duplicates for human
+> resolution; they are never merged automatically, and never both approved.
+
+The decision record: answers 2a to 2f of the human review pack (`docs/human-review/README.md`).
+What the data held when it was taken: 74 apostrophe forms and 71 hyphen forms in the Hunspell
+review pool, none in the Kuwiki batches or the seed lexicon, one apostrophe form (`'azîm`)
+already approved.
+
+Where the policy applies, in order:
+
+1. **Before ordinary human review.** `generate-review-queues` keeps every Hunspell import
+   entry whose normalized form contains held punctuation out of the ordinary pool and writes
+   it to `punctuation-policy-needs-linguist.jsonl` with `rule_id = PUNCTUATION_POLICY_V1`,
+   reason codes `WORD_PUNCTUATION` plus the held code points, `suggested_action =
+   needs_linguist`, and one `POSSIBLE_DUPLICATE_OF:<form>` reason code for every other import
+   or seed form that is identical once the punctuation is removed (a flag for a human, never a
+   merge; review identity stays the exact normalized form). Every other queue record of such
+   an entry carries the same reason and action. The alphabet exclusion takes precedence when
+   both apply. The raw import is never modified and the entry keeps its review identity.
+2. **At authoritative resolution, fail closed.** `pack::selection::apply_default_pack_word_punctuation_policy`
+   runs after the alphabet gate over the merged candidates of every source: an approved,
+   metadata-change or seed candidate whose form contains held punctuation, or two
+   default-vocabulary candidates identical once the punctuation is removed, fail resolution
+   naming form, source and decision (`production lexical eligibility violation`), and
+   `build-pack`, `verify-production-state`, `rebuild-production` and the release bundle refuse
+   until the decision artifact is corrected explicitly.
+3. **Seed lexicon and replacements.** `validate_entry` refuses such forms at the
+   default-vocabulary boundary.
+4. **Review Desk exports.** `scripts/review-desk/prepare_export.py` converts a plain
+   `approved` decision on a held entry (classified only by the generated queue artifact) to
+   `needs_linguist`, preserving the reviewer's choice in the note and a
+   `review-desk-original:…;policy=word-punctuation-2026-09-19` evidence entry; a
+   metadata-change decision passes through and its replacement form is judged by the Rust
+   validator and resolver. `build_hunspell_queue.py` refuses to build a desk queue from a pool
+   that overlaps the held queue.
+
+What a linguist decides is recorded through the ordinary review artifacts: an ordinary
+`approved` decision on a held entry is still refused mechanically, so admitting such a form
+requires first amending this policy (a new dated human decision) or, per form, an
+`approved_with_metadata_change` whose replacement form satisfies the policies. Host
+tokenizers are told to query the full token first, then punctuation-aware splits, and to
+deduplicate the results (`data/keyboard/ku-Latn-keyboard-requirements.json`,
+`word-punctuation-lookup`); the engine answers only for the string it is given.
+
+How the existing data was corrected (2026-09-19): the one Hunspell approval of a held form,
+`'azîm` (approved by ferhatguneri on 2026-08-24), was set to `needs_linguist` in
+`data/review-decisions/kurdish-hunspell-kmr/decisions.jsonl`, transparently and mechanically:
+the note states the policy basis, the held character and the previous decision, and a
+`previous-decision:status=approved;reviewer=ferhatguneri;date=2026-08-24;policy=word-punctuation-2026-09-19`
+evidence entry preserves it; target id and other evidence are unchanged; git history records
+the previous state. Because a Hunspell `needs_linguist` record is excluded from the
+experimental-full reservoir under the existing pack policy, the language model was regenerated
+by `rebuild-production`. The Hunspell review queues were regenerated with the pre-review hold
+(145 import entries moved from the ordinary pool to `punctuation-policy-needs-linguist.jsonl`;
+the second Hunspell decision on such a form, `proto-samî`, was already `needs_linguist`).
 
 ### Character audit (diagnostic, generated)
 

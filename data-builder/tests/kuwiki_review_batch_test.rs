@@ -691,8 +691,8 @@ fn test_kuwiki_pack_promotion_and_set_invariants() {
     let exp_entries = resolve_authoritative_pack_lexicon("experimental-full", ws_root).unwrap();
 
     assert_eq!(seed_entries.len(), 33);
-    assert_eq!(reviewed_entries.len(), 2144); // 33 seed + 800 Hunspell (107 + Review Desk batch 001: 698 approved, 8 metadata change, less seed/collision overlap) + 721 Kuwiki batch 001 + 590 Kuwiki batch 002
-    assert_eq!(exp_entries.len(), 42249); // Hunspell reservoir after 93 rejections and 466 needs-linguist exclusions + 721 Kuwiki b1 app + 3 b1 exp + 590 b2 app + 2 b2 exp
+    assert_eq!(reviewed_entries.len(), 2143); // 33 seed + 799 Hunspell (107 + Review Desk batch 001: 698 approved, 8 metadata change, less seed/collision overlap, less 'azîm held by the word-punctuation policy on 2026-09-19) + 721 Kuwiki batch 001 + 590 Kuwiki batch 002
+    assert_eq!(exp_entries.len(), 42248); // Hunspell reservoir after 93 rejections and 467 needs-linguist exclusions ('azîm included since 2026-09-19) + 721 Kuwiki b1 app + 3 b1 exp + 590 b2 app + 2 b2 exp
 
     let seed_set: BTreeSet<String> = seed_entries.iter().map(|e| e.normalized.clone()).collect();
     let reviewed_set: BTreeSet<String> = reviewed_entries

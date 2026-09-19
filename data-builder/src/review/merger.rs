@@ -186,6 +186,7 @@ pub fn validate_review_decisions<P: AsRef<Path>>(
         "no-letter.jsonl",
         "parser-rejections.jsonl",
         "punctuation-only.jsonl",
+        "punctuation-policy-needs-linguist.jsonl",
         "README.md",
         "rare-code-points.jsonl",
         "short-and-long-forms.jsonl",
