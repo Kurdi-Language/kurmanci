@@ -1,0 +1,41 @@
+{
+ "schema_version": "device-benchmark-provenance-v1",
+ "purpose": "Provenance of the two Samsung reports in this directory beyond what the reports record (model, OS, ABI, pack identity).",
+ "measured_on": "2026-09-19",
+ "device": {
+  "vendor": "Samsung",
+  "model": "SM-S948B",
+  "marketing_name": "not reported by the device (ro.product.marketname empty); model code only",
+  "product": "m3qxser",
+  "soc": "Qualcomm SM8850 (ro.soc.model)",
+  "android": "16 (API 36)",
+  "build": "BP4A.251205.006.S948BXXS1AZC7",
+  "page_size_bytes": 4096,
+  "memtotal_kb": 11389628,
+  "abi": "arm64-v8a"
+ },
+ "access": "Samsung Remote Test Lab reserved device, connected to adb through Samsung's Remote Debug Bridge (rdb, Intel binary under Rosetta on an Apple M4 Mac); the phone's USB-debugging authorization was granted on the device by the owner",
+ "artifact_under_test": {
+  "aar": "dist/android/maven/io/github/ferhatguneri/kurmanci-android/0.1.0/kurmanci-android-0.1.0.aar",
+  "aar_sha256": "3f02e837d6b87e381a09fdfe5a555bfe8d85c769a0a4ebb11b6e41f3a922f69f",
+  "built_from": "the tree of main at 5ed81d98c1ade0bca0aa17e38a95caf883f0bd89 (#71; android/, ffi/, engine/, .cargo/ and the AAR build script are identical on main 2a7a92a3156c826ed04f5858d7a86609439ee318, the commit measured)",
+  "consumer_app": "integration/android/android-consumer, Debug, AGP 8.5.2 / Gradle 8.7"
+ },
+ "source_commit": "2a7a92a3156c826ed04f5858d7a86609439ee318",
+ "command": "scripts/android/device-benchmark.sh --pack data/build/packs/<pack>/lexicon.bin (200 iterations per operation, 5 cold loads, 300 stability rounds; JNI path from the instrumentation host)",
+ "packs": {
+  "reviewed": {
+   "lexicon_sha256": "485b9d70d25b6708af8e0b3f63f924cab23c0eab8110a5e9a3b6b25e88d34508",
+   "entries": 2144
+  },
+  "experimental-full": {
+   "lexicon_sha256": "65764b14928a0fde3eff31c085a37322d8d5ee6815279d81ae9e171e950d04f7",
+   "entries": 42249
+  }
+ },
+ "loader_observation": "nativeloader loaded lib/arm64-v8a/libkurmanci_jni.so directly from base.apk (ok); no 16kB AppCompat message, which on this 4 KB-page device would not apply in any case",
+ "reports": {
+  "android-samsung-SM-S948B-reviewed-20260919T160853Z.json": "37975ab4456d74b19e3da4951d51a83ab69fd7c7901ba75f00317703d13dd71c",
+  "android-samsung-SM-S948B-experimental-full-20260919T160906Z.json": "4acd589e5449bc2f3e9911779a7d0933b8fe1b7aaa236f5daa1814edd71b4fa5"
+ }
+}

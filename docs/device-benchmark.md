@@ -76,6 +76,8 @@ isolation and are the reference for component attribution.
 | iPhone 14 Pro (`iPhone15,2`) | iOS 26.7 (23H24) | experimental-full `65764b14…d04f7` (42,249 entries, 6.86 MB) | 68.4 | 74.2 MB | 0.5 / 125.6 / 121.8 / 368.3 / 2.5 | 300 rounds |
 | Android emulator, Pixel image `sdk_gphone16k_arm64` (16 KB pages) on an Apple M-series host | Android 17 (API 37) | reviewed `485b9d70…d34508` | 23.7 | 142.7 MB | 2.4 / 45.6 / 37.8 / 115.5 / 14.5 | 300 rounds |
 | Android emulator, Pixel image `sdk_gphone16k_arm64` (16 KB pages) on an Apple M-series host | Android 17 (API 37) | experimental-full `65764b14…d04f7` | 118.7 | 175.8 MB | 2.3 / 188.2 / 193.3 / 601.0 / 14.6 | 300 rounds |
+| Samsung `SM-S948B` (Qualcomm SM8850, 4 KB pages; Remote Test Lab device over Samsung's Remote Debug Bridge) | Android 16 (API 36), build BP4A.251205.006.S948BXXS1AZC7 | reviewed `485b9d70…d34508` | 10.2 | 150.8 MB | 4.4 / 53.5 / 45.2 / 122.8 / 17.2 | 300 rounds |
+| Samsung `SM-S948B` (same device) | Android 16 (API 36) | experimental-full `65764b14…d04f7` | 102.5 | 186.2 MB | 2.9 / 192.8 / 203.1 / 618.2 / 16.9 | 300 rounds |
 
 Measured 2026-09-18 with Xcode 27.0 over USB, phone unlocked, no other app in the
 foreground. Across the twelve operation rows of the two iPhone reports the p95 / p50 ratio lies
@@ -83,11 +85,17 @@ between 1.01 (suggest, reviewed: 25.7 → 26.0 µs) and 1.17 (known_hit, reviewe
 0.583 µs); the per-operation p50, p95 and max values are in the report files. RSS after the
 300 stability rounds remained within 0.2 MB of RSS after load (reviewed 42.16 → 42.22 MB,
 experimental-full 74.20 → 74.38 MB).
-The Android rows are emulator rows (`simulator: true` in the report), recorded as a reference
-until a physical Android or Samsung device is measured: the arm64 system image on an arm64
-host avoids cross-ISA emulation, but the rows remain emulator reference data whose process
-baseline (about 140 MB of instrumentation host), JNI behaviour and scheduling are not
-representative of a physical phone. On that 16 KB-page
+The Samsung rows (2026-09-19; `android-samsung-SM-S948B-*.json` and the provenance sidecar
+`android-samsung-SM-S948B-provenance-20260919.json`) are the first physical Android
+measurements: a Samsung Remote Test Lab device reached through Samsung's Remote Debug Bridge,
+the same JNI path from the instrumentation host as the emulator rows. Across their twelve
+operation rows the p95 / p50 ratio lies between 1.03 (suggest and correct, experimental-full)
+and 1.29 (known_miss, experimental-full: 2.9 → 3.7 µs); RSS after the 300 rounds is within
+1.3 MB of RSS after load (150.8 → 152.1 MB, 186.2 → 187.4 MB). RSS is the whole
+instrumentation process, not the engine. The Pixel rows are emulator rows (`simulator: true`
+in the report), kept as reference: the arm64 system image on an arm64 host avoids cross-ISA
+emulation, but its process baseline (about 140 MB of instrumentation host), JNI behaviour and
+scheduling are not a phone's. On that 16 KB-page
 image the system logged `16kB AppCompat: Library 'libkurmanci_jni.so' is not
 PAGE(16384)-aligned - falling back to extraction from apk` at the time of these rows: the AAR's
 native library was then linked with 4 KB segment alignment and ran through the platform's
