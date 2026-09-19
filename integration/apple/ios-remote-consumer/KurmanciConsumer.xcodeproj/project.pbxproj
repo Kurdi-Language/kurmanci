@@ -11,10 +11,12 @@
 		110000012C12345600000034 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000035 /* SceneDelegate.swift */; };
 		110000012C12345600000003 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000004 /* ViewController.swift */; };
 		110000012C12345600000005 /* KurmanciConsumerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000006 /* KurmanciConsumerTests.swift */; };
+		110000012C12345600000032 /* DeviceBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000033 /* DeviceBenchmarkTests.swift */; };
 		110000012C12345600000007 /* Kurmanci in Frameworks */ = {isa = PBXBuildFile; productRef = 110000012C12345600000008 /* Kurmanci */; };
 		110000012C12345600000009 /* Kurmanci in Frameworks */ = {isa = PBXBuildFile; productRef = 110000012C12345600000008 /* Kurmanci */; };
 		110000012C12345600000024 /* apple_consumer_test.bin in Resources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000025 /* apple_consumer_test.bin */; };
 		110000012C12345600000026 /* prediction_test.bin in Resources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000027 /* prediction_test.bin */; };
+		110000012C12345600000030 /* benchmark_pack.bin in Resources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000031 /* benchmark_pack.bin */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,10 +34,12 @@
 		110000012C12345600000035 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		110000012C12345600000004 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		110000012C12345600000006 /* KurmanciConsumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KurmanciConsumerTests.swift; sourceTree = "<group>"; };
+		110000012C12345600000033 /* DeviceBenchmarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceBenchmarkTests.swift; sourceTree = "<group>"; };
 		110000012C1234560000000D /* KurmanciConsumer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KurmanciConsumer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		110000012C1234560000000E /* KurmanciConsumerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KurmanciConsumerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		110000012C12345600000025 /* apple_consumer_test.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "apple_consumer_test.bin"; path = "../../fixtures/apple_consumer_test.bin"; sourceTree = "<group>"; };
 		110000012C12345600000027 /* prediction_test.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "prediction_test.bin"; path = "../../fixtures/prediction_test.bin"; sourceTree = "<group>"; };
+		110000012C12345600000031 /* benchmark_pack.bin */ = {isa = PBXFileReference; lastKnownFileType = file; name = "benchmark_pack.bin"; path = "../../fixtures/benchmark_pack.bin"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +68,7 @@
 			files = (
 				110000012C12345600000024 /* apple_consumer_test.bin in Resources */,
 				110000012C12345600000026 /* prediction_test.bin in Resources */,
+				110000012C12345600000030 /* benchmark_pack.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,8 +98,10 @@
 			isa = PBXGroup;
 			children = (
 				110000012C12345600000006 /* KurmanciConsumerTests.swift */,
+				110000012C12345600000033 /* DeviceBenchmarkTests.swift */,
 				110000012C12345600000025 /* apple_consumer_test.bin */,
 				110000012C12345600000027 /* prediction_test.bin */,
+				110000012C12345600000031 /* benchmark_pack.bin */,
 			);
 			path = KurmanciConsumerTests;
 			sourceTree = "<group>";
@@ -209,6 +216,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				110000012C12345600000005 /* KurmanciConsumerTests.swift in Sources */,
+				110000012C12345600000032 /* DeviceBenchmarkTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,6 +229,7 @@
 			files = (
 				110000012C12345600000024 /* apple_consumer_test.bin in Resources */,
 				110000012C12345600000026 /* prediction_test.bin in Resources */,
+				110000012C12345600000030 /* benchmark_pack.bin in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -347,7 +356,7 @@
 			repositoryURL = "https://github.com/Kurdi-Language/kurmanci-swift.git";
 			requirement = {
 				kind = exactVersion;
-				version = 0.1.0;
+				version = 0.1.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
