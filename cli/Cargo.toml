@@ -1,6 +1,6 @@
 [package]
 name = "kurmanci-cli"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Kurmancî Language Platform Contributors"]
 description = "Command-line access tool for Kurmancî core language engine."

@@ -9,7 +9,7 @@ and Kotlin wrappers, and the release compatibility manifest.
 
 | Identity | Where it lives | Current value |
 |---|---|---|
-| Engine version | `kurmanci_engine::ENGINE_VERSION` (crate version) | 0.1.0 |
+| Engine version | `kurmanci_engine::ENGINE_VERSION` (crate version) | 0.1.1 |
 | C ABI version | `kmr_abi_version_major()` / `kmr_abi_version_minor()` | 1.1 (1.0 plus the version getters, `kmr_status_name` and `kmr_probe_pack_bytes`) |
 | Pack schema version | bytes 4..8 of every pack; `PACK_SCHEMA_VERSION` | 4 |
 | Supported pack schemas | `SUPPORTED_PACK_SCHEMA_VERSIONS` | [4] |

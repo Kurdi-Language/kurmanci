@@ -1,6 +1,6 @@
 [package]
 name = "kurmanci-data-builder"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Kurmancî Language Platform Contributors"]
 description = "Language data compiler and reproducible binary builder for the Kurmancî platform."

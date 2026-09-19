@@ -34,7 +34,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/Kurdi-Language/kurmanci-swift",
-            exact: "0.1.0"
+            exact: "0.1.1"
         )
     ],
     targets: [
@@ -67,7 +67,7 @@ The monorepo provides one-command automated scripts under `scripts/apple/`:
 1. **`build-xcframework.sh`**:
    Cross-compiles `kurmanci-ffi` across Apple targets (`aarch64-apple-darwin`, `x86_64-apple-darwin`, `aarch64-apple-ios`, `aarch64-apple-ios-sim`, `x86_64-apple-ios`), creates universal static archives via `lipo`, and packages `dist/artifacts/KurmanciFFI.xcframework`.
    ```bash
-   ./scripts/apple/build-xcframework.sh --version 0.1.0
+   ./scripts/apple/build-xcframework.sh --version 0.1.1
    ```
 
 2. **`verify-xcframework.sh`**:
@@ -77,15 +77,15 @@ The monorepo provides one-command automated scripts under `scripts/apple/`:
    ```
 
 3. **`create-release-archive.sh`**:
-   Creates `dist/KurmanciFFI-v0.1.0.xcframework.zip`, computes SHA-256 / SwiftPM checksums, and outputs `release-manifest.json`.
+   Creates `dist/KurmanciFFI-v0.1.1.xcframework.zip`, computes SHA-256 / SwiftPM checksums, and outputs `release-manifest.json`.
    ```bash
-   ./scripts/apple/create-release-archive.sh --version 0.1.0
+   ./scripts/apple/create-release-archive.sh --version 0.1.1
    ```
 
 4. **`generate-release-package.sh`**:
    Generates `dist/swift-package/Package.swift` (remote URL distribution) and `dist/swift-package-local/Package.swift` (local binaryTarget path).
    ```bash
-   ./scripts/apple/generate-release-package.sh --version 0.1.0
+   ./scripts/apple/generate-release-package.sh --version 0.1.1
    ```
 
 5. **`test-consumers.sh`**:

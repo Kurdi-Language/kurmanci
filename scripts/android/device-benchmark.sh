@@ -26,9 +26,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 DEFAULT_GROUP="$(grep '^kurmanciMavenGroup=' "$REPO_ROOT/android/gradle.properties" 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n' || echo 'io.github.ferhatguneri')"
-DEFAULT_VERSION="$(grep '^kurmanciVersion=' "$REPO_ROOT/android/gradle.properties" 2>/dev/null | cut -d'=' -f2 | tr -d ' \r\n' || echo '0.1.0')"
 GROUP_ID="${GROUP_ID:-$DEFAULT_GROUP}"
-VERSION="${VERSION:-$DEFAULT_VERSION}"
+# shellcheck source=scripts/android/kurmanci-version.sh
+source "$SCRIPT_DIR/kurmanci-version.sh"
+VERSION="$(resolve_kurmanci_version "$REPO_ROOT")"
 
 command -v adb >/dev/null 2>&1 || { echo "❌ adb not found" >&2; exit 1; }
 adb devices | grep -q "device$" || { echo "❌ no Android device/emulator visible to adb" >&2; exit 1; }
