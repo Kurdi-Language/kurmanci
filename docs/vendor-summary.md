@@ -85,20 +85,20 @@ Said plainly: the reviewed vocabulary is small today and grows only through huma
 
 ## Measured cost on real hardware
 
-From `docs/evaluation/performance-baseline-2026-09-18.md` and its 2026-09-19 addendum; each report has a provenance sidecar naming the commit, device and pack hashes. Reviewed pack unless stated; p50 of 300 rounds.
+From `docs/evaluation/performance-baseline-2026-09-18.md` and its addenda of 2026-09-19 and 2026-09-20; each report has a provenance sidecar naming the commit, device, artifact and pack hashes. Reviewed pack unless stated; p50 of 300 rounds.
 
-| Measure | iPhone 14 Pro (iOS 26.7, Swift SDK) | Samsung Galaxy SM-S948B (Android 16, Kotlin SDK) |
-|---|---|---|
-| Load, median of 5 cold loads | 6.7 ms | 10.2 ms |
-| Resident memory of the test-host process after load | 42.2 MB | 150.8 MB |
-| known word | 0.5 µs | 4.4 µs |
-| suggest (`rojbas`) | 25.7 µs | 53.5 µs |
-| correct (`spaz`) | 19.5 µs | 45.2 µs |
-| complete (`ro`) | 60.5 µs | 122.8 µs |
-| predict next word (`ez`) | 2.4 µs | 17.2 µs |
-| experimental-full: load / suggest / complete | 68.4 ms / 125.6 µs / 368.3 µs | 102.5 ms / 192.8 µs / 618.2 µs |
+| Measure | iPhone 14 Pro (iOS 26.7, Swift SDK) | Samsung Galaxy SM-S948B, flagship (Android 16, Kotlin SDK) | Samsung Galaxy SM-A055F, low-end (MediaTek MT6769, 4 GB, Android 14, Kotlin SDK) |
+|---|---|---|---|
+| Load, median of 5 cold loads | 6.7 ms | 10.2 ms | 32.5 ms |
+| Resident memory of the test-host process after load | 42.2 MB | 150.8 MB | 76.8 MB |
+| known word | 0.5 µs | 4.4 µs | 14.2 µs |
+| suggest (`rojbas`) | 25.7 µs | 53.5 µs | 178.2 µs |
+| correct (`spaz`) | 19.5 µs | 45.2 µs | 164.7 µs |
+| complete (`ro`) | 60.5 µs | 122.8 µs | 528.3 µs |
+| predict next word (`ez`) | 2.4 µs | 17.2 µs | 78.4 µs |
+| experimental-full: load / suggest / complete | 68.4 ms / 125.6 µs / 368.3 µs | 102.5 ms / 192.8 µs / 618.2 µs | 314.0 ms / 902.4 µs / 2,393.8 µs |
 
-The resident-memory figures are whole test-host processes (an XCTest host on iOS, an instrumentation host on Android), not the engine alone; the engine's own heap, measured in-process on an Apple M4 under a counting allocator, is 2.4 MB for the reviewed pack and 14.2 MB for experimental-full (`docs/memory-attribution.md`). Memory is stable over 300 rounds of mixed queries on both devices. A low-end Android device has not yet been measured; the emulator and the flagship numbers above are the current evidence.
+The resident-memory figures are whole test-host processes (an XCTest host on iOS, an instrumentation host on Android), not the engine alone; the engine's own heap, measured in-process on an Apple M4 under a counting allocator, is 2.4 MB for the reviewed pack and 14.2 MB for experimental-full (`docs/memory-attribution.md`). The harness's 300-round stability check asserts identical query results, not memory; whole-process RSS after the rounds was within 1.3 MB of the after-load figure on the iPhone and the S948B, within 0.7 MB on the A05 reviewed run, and 16.9 MB lower on the A05 experimental-full run (119.0 → 102.1 MB), a decrease this benchmark cannot attribute. On the Galaxy A05, the lowest-end device measured, every reviewed-pack call stays under 1 ms at p50 and the largest experimental-full call (completion) is 2.4 ms; experimental-full loads in 314 ms there. The A05 column was measured with the published 0.1.1 SDK from Maven Central and the 0.1.1 bundle packs through the evaluation kit, so it is reproducible from the published artifacts alone; the iPhone and S948B columns predate the release and measured the same pack profiles built from earlier commits (2,144 and 42,249 entries), so cross-column ratios are approximate, not device-only.
 
 ## Licensing and provenance
 
@@ -119,7 +119,7 @@ The resident-memory figures are whole test-host processes (an XCTest host on iOS
 - Reviewed vocabulary of 2,143 words; growth by human review only.
 - 145 words with a hyphen or an apostrophe are held for linguist review; the canonical apostrophe code point is undecided; neither is in the default pack.
 - All review decisions so far carry one reviewer identity.
-- No low-end Android measurement yet.
+- One low-end Android device measured (Galaxy A05); no mid-range point between it and the flagship, and no production keyboard-extension workload measured.
 - Deferred by design until the data is broader: ranking changes, prediction smoothing, morphology, further corpora.
 
 ## How to evaluate it in an afternoon

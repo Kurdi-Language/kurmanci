@@ -82,6 +82,8 @@ isolation and are the reference for component attribution.
 | Android emulator, Pixel image `sdk_gphone16k_arm64` (16 KB pages) on an Apple M-series host | Android 17 (API 37) | experimental-full `65764b14…d04f7` | 118.7 | 175.8 MB | 2.3 / 188.2 / 193.3 / 601.0 / 14.6 | 300 rounds |
 | Samsung `SM-S948B` (Qualcomm SM8850, 4 KB pages; Remote Test Lab device over Samsung's Remote Debug Bridge) | Android 16 (API 36), build BP4A.251205.006.S948BXXS1AZC7 | reviewed `485b9d70…d34508` | 10.2 | 150.8 MB | 4.4 / 53.5 / 45.2 / 122.8 / 17.2 | 300 rounds |
 | Samsung `SM-S948B` (same device) | Android 16 (API 36) | experimental-full `65764b14…d04f7` | 102.5 | 186.2 MB | 2.9 / 192.8 / 203.1 / 618.2 / 16.9 | 300 rounds |
+| Samsung `SM-A055F` (Galaxy A05 class: MediaTek MT6769, 4 GB, 4 KB pages; Remote Test Lab device over the Remote Debug Bridge; published 0.1.1 AAR from Maven Central) | Android 14 (API 34), build UP1A.231005.007.A055FXXS8CYC3 | reviewed `8ad8bbf8…e399b` (2,143 entries, 1.14 MB; release 0.1.1 bundle) | 32.5 | 76.8 MB | 14.2 / 178.2 / 164.7 / 528.3 / 78.4 | 300 rounds |
+| Samsung `SM-A055F` (same device) | Android 14 (API 34) | experimental-full `6caf3b56…392a` (42,248 entries, 6.86 MB; release 0.1.1 bundle) | 314.0 | 119.0 MB | 14.5 / 902.4 / 999.1 / 2,393.8 / 79.6 | 300 rounds |
 
 Measured 2026-09-18 with Xcode 27.0 over USB, phone unlocked, no other app in the
 foreground. Across the twelve operation rows of the two iPhone reports the p95 / p50 ratio lies
@@ -115,3 +117,15 @@ before loading; the consumer test app now builds with AGP 8.5.2 on Gradle 8.7, i
 (`nativeloader: Load .../base.apk!/lib/arm64-v8a/libkurmanci_jni.so ... ok`) with no
 `16kB AppCompat` message. A consuming app needs the same (AGP 8.5.1 or newer, or
 `zipalign -P 16`). The rows above are kept as recorded.
+The Galaxy A05 rows (2026-09-20; `android-samsung-SM-A055F-*.json` and the sidecar
+`android-samsung-SM-A055F-provenance-20260920.json`) are the first low-end Android
+measurements and the first taken from the published artifacts: the vendor evaluation kit
+resolved `kurmanci-android:0.1.1` from Maven Central (`CONSUMER_MODE=public`) and took the
+packs from the verified `kurmanci-ku-Latn-0.1.1` bundle, so the packs' identities are the
+0.1.1 release's (reviewed 2,143 entries, experimental-full 42,248). Every reviewed-pack call
+is under 1 ms at p50; p95 / p50 ratios are wider than the flagship's (1.16 to 2.01 on the
+reviewed pack). The 300-round check asserts identical query results, not memory: on
+experimental-full the whole-process RSS was 102.1 MB after the rounds against 119.0 MB after
+load, so the after-load figure is the larger of two samples; the cause of the decrease cannot
+be attributed from this benchmark. The S948B rows measured earlier pack bytes (2,144 and
+42,249 entries) and an earlier AAR, so ratios between the two Samsung devices are approximate.
