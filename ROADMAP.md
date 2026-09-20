@@ -1,61 +1,53 @@
-# Kurmancî Language Platform Roadmap
+# Roadmap
 
-Production-grade offline language infrastructure for Kurmancî (`ku-Latn`).
+The project's purpose is vendor-neutral Kurmancî (`ku-Latn`) language infrastructure that
+Apple, Samsung, Google and other platform vendors can integrate into their own built-in
+keyboards: reviewed vocabulary, normalization, spell checking, correction, completion,
+diacritic-aware behaviour, deterministic ranking, next-word prediction, compact offline
+packs, a stable C ABI with Swift and Kotlin SDKs, and reproducible releases with provenance
+and licensing information. It is not a keyboard application. The two consumer test hosts
+under `integration/` are reference integration harnesses, not products.
 
-## Capabilities Overview
+## Delivered
 
-The platform currently provides:
-- **Rust Core Engine** (`kurmanci-engine`): Fast Trie autocomplete, weighted edit distance, diacritic-sensitive candidate ranking, and n-gram context prediction.
-- **Data Compiler & Pipeline** (`kurmanci-data-builder`): Reproducible binary language pack compilation (`lexicon.bin`, format v4), corpus ingestion, and deterministic partitioning.
-- **Lexicon & Evaluation Infrastructure**: Rule-driven review queue generation, human decision validation, multi-pack policy staging, and tri-pack evaluation comparison engine.
-- **Public Native Interfaces**: High-level thread-safe Rust API and panic-safe C99/C++11 ABI (`kurmanci-ffi`).
-- **Apple Integration**: SwiftPM package distribution and precompiled Apple XCFramework (`KurmanciFFI.xcframework`).
-- **Android Integration**: Idiomatic Kotlin SDK (`org.kurmanci.KurmanciEngine`), JNI native libraries, cross-compiled ABIs, AAR packaging, and Maven Central release (`io.github.ferhatguneri:kurmanci-android`).
+- Engine, C ABI 1.1, pack schema 4, language-model schema 1, fail-closed pack loading with a
+  deterministic corruption suite (`docs/PACK_COMPATIBILITY.md`, `docs/integration.md`).
+- Swift package over an XCFramework and an Android AAR, both published for release 0.1.1 and
+  verified by Rust-free clean-room consumers in CI; 16 KB page-size compliant native library.
+- Device evidence on an iPhone 14 Pro, a Samsung `SM-S948B`, a Samsung `SM-A055F` and an
+  emulator, with provenance sidecars (`docs/device-benchmark.md`,
+  `docs/evaluation/performance-baseline-2026-09-18.md`).
+- Deterministic release bundle with `SHA256SUMS` identity and full provenance, published as
+  GitHub release `v0.1.1`; a fail-closed publication procedure (`docs/RELEASE_PROVENANCE.md`).
+- Vendor summary and a Rust-free evaluation kit at the immutable tag `vendor-kit-0.1.1`
+  (`docs/vendor-summary.md`, `docs/vendor-evaluation-kit.md`).
+- Human-reviewed orthography and keyboard-requirement contracts with cited references
+  (`docs/ku-latn-keyboard.md`); the alphabet and word-punctuation policies
+  (`docs/lexicon-review.md`); licensing determinations recorded as data and enforced at load.
+- Runtime QA CLI (`kurmanci-cli`), the read-only `inspect-word` inspector,
+  `verify-production-state` and `rebuild-production`.
 
----
+## The bottleneck: reviewed vocabulary
 
-## Forward-Looking Product Priorities
+The reviewed pack is small and grows only through human review (`docs/lexicon-review.md`,
+`docs/human-review/README.md`). Tooling prepares queues, evidence and reports; it never
+approves, rejects or reinterprets a word. After each merged batch the mechanical pipeline is:
+validate decisions, rebuild the language model and the packs, run the 357-case diagnostic,
+the QA CLI and the promotion report (`scripts/review/promotion-report.sh`).
 
-### Language Data
-- Substantially expand the reviewed core vocabulary.
-- Integrate additional properly licensed lexical sources.
-- Improve corpus coverage and source/provenance evidence.
-- Improve handling of variants where supported by reviewed data.
+Open human items: Review Desk batches from the Hunspell reservoir; linguist review of the
+held hyphen and apostrophe forms and the canonical apostrophe decision; a second reviewer
+identity; the owner's decision whether `reviewed` becomes the default pack.
 
-### Evaluation & Benchmarks
-- Grow the human-reviewed benchmark toward 200–500 useful cases.
-- Expand typo, diacritic, completion, preservation, ranking, morphology, and keyboard-error coverage.
-- Use benchmark failures to drive ranking and correction improvements.
+## Deferred until the data is broader
 
-### Core Engine
-- Correction, autocomplete, and ranking improvements driven by evaluation.
-- Morphology and diacritic handling improvements.
-- Performance and memory footprint optimization.
+Ranking changes, prediction smoothing and backoff refinement, morphology from reviewed rules,
+further corpora (only with clear redistribution rights), and further memory or latency work.
+Each is taken up only on measured evidence after the reviewed vocabulary has grown; the
+measurement tools exist so that the before and after can be compared.
 
-### Public APIs
-- Preserve stable Rust API and C ABI contracts.
-- Evolve APIs only where concrete integration requirements justify it.
+## Out of scope
 
-### Apple Integration
-- Maintain SwiftPM and XCFramework distribution.
-- Develop reference iOS keyboard integration.
-
-### Android Integration
-- Maintain Kotlin SDK, JNI bindings, and Maven Central distribution.
-- Develop reference Android keyboard/IME integration.
-
-### Platform Integrations
-- System spell-check and text-service integration.
-
-### Performance
-- Real-device latency and memory measurement across supported mobile ABIs.
-- Production hardening and load efficiency.
-
-### Future Platform Integrations
-- WebAssembly client bindings where appropriate.
-
----
-
-## Contributing & Feedback
-
-Suggestions and technical proposals are welcome via [GitHub Issues](https://github.com/Kurdi-Language/kurmanci/issues).
+A standalone consumer keyboard, cloud inference, general NLP tooling, operating-system
+localization, personalization in the core engine, and mixed-language vocabulary in the
+Kurmancî lexicon.
