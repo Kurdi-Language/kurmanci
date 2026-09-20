@@ -140,6 +140,17 @@ pub struct NgramBuildStats {
     pub trigram_stats: TrigramBuildStats,
 }
 
+/// The token sequences of a document exactly as the language-model builder consumes them:
+/// `split_into_sentences` followed by `tokenize_text` on each sentence, nothing else. Every
+/// consumer that must see the trained context sequences (the model builder, the held-out
+/// prediction coverage measurement) goes through this one function.
+pub fn sentence_token_sequences(text: &str) -> Vec<Vec<String>> {
+    split_into_sentences(text)
+        .iter()
+        .map(|sentence| tokenize_text(sentence))
+        .collect()
+}
+
 /// Splits input document text into sentences using Unicode punctuation rules.
 pub fn split_into_sentences(text: &str) -> Vec<String> {
     let mut sentences = Vec::new();
