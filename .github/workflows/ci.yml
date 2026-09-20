@@ -207,6 +207,12 @@ jobs:
       - name: Validate Vendor Evaluation Kit Driver (fake release over file:// URLs, fail-closed verification)
         run: bash scripts/vendor/test-evaluate.sh
 
+      - name: Validate Apple Release Manifest ABI Derivation (header is the source of truth)
+        run: bash scripts/apple/test-release-manifest-abi.sh
+
+      - name: Validate Release Bundle Publisher (stubbed GitHub, fake builder, fail-closed integrity checks)
+        run: bash scripts/release/test-publish-bundle.sh
+
       - name: Run Data-Builder Compiler (First Pass)
         run: cargo run -p kurmanci-data-builder -- build
 

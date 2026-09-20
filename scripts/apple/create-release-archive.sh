@@ -75,34 +75,11 @@ fi
 XCODE_VER=$(xcodebuild -version 2>/dev/null | head -n1 || echo "Xcode")
 SWIFT_VER=$(swift --version 2>/dev/null | head -n1 || echo "Swift")
 
-# Generate release-manifest.json
-cat <<EOF > "$DIST_DIR/release-manifest.json"
-{
-  "schema_version": "apple-sdk-release-v1",
-  "sdk_version": "${VERSION}",
-  "source_repository": "Kurdi-Language/kurmanci",
-  "source_tag": "swift-v${VERSION}",
-  "source_commit": "${COMMIT}",
-  "distribution_repository": "Kurdi-Language/kurmanci-swift",
-  "distribution_tag": "${VERSION}",
-  "c_abi_major": 1,
-  "c_abi_minor": 0,
-  "supported_pack_format_versions": [
-    4
-  ],
-  "artifact_sha256": "${SHA256_HASH}",
-  "swiftpm_checksum": "${SWIFTPM_CHECKSUM}",
-  "toolchain": {
-    "rust": "${RUST_VERSION}",
-    "xcode": "${XCODE_VER}",
-    "swift": "${SWIFT_VER}",
-    "deployment_targets": {
-      "macos": "11.0",
-      "ios": "14.0"
-    }
-  }
-}
-EOF
+# Generate release-manifest.json; the C ABI fields come from ffi/include/kurmanci.h through
+# scripts/apple/release-manifest.sh (scripts/apple/test-release-manifest-abi.sh checks it).
+# shellcheck source=scripts/apple/release-manifest.sh
+source "$SCRIPT_DIR/release-manifest.sh"
+write_release_manifest "$REPO_ROOT" "$VERSION" "$COMMIT" "$SHA256_HASH" "$SWIFTPM_CHECKSUM" "$RUST_VERSION" "$XCODE_VER" "$SWIFT_VER" "$DIST_DIR/release-manifest.json"
 
 echo "✅ Release archive created: dist/${ZIP_NAME}"
 echo "   SHA-256: ${SHA256_HASH}"
