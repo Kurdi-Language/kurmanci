@@ -1,0 +1,44 @@
+{
+ "schema_version": "device-benchmark-provenance-v1",
+ "purpose": "Provenance of the two Galaxy A05 reports in this directory beyond what the reports record (model, OS, ABI, pack identity): the first low-end Android device measured.",
+ "measured_on": "2026-09-20",
+ "device": {
+  "vendor": "Samsung",
+  "model": "SM-A055F",
+  "marketing_name": "not reported by the device (ro.product.marketname empty); model code only (Galaxy A05 class)",
+  "product": "a05mser",
+  "soc": "MediaTek MT6769V/CZ (ro.soc.model; ro.hardware mt6768), 8 cores",
+  "android": "14 (API 34)",
+  "build": "UP1A.231005.007.A055FXXS8CYC3",
+  "page_size_bytes": 4096,
+  "memtotal_kb": 3766792,
+  "abi": "arm64-v8a"
+ },
+ "access": "Samsung Remote Test Lab reserved device, connected to adb through Samsung's Remote Debug Bridge (rdb, Intel binary under Rosetta on an Apple M4 Mac, adb over localhost:57492); ANDROID_SERIAL pinned the Gradle instrumentation run to this device",
+ "artifact_under_test": {
+  "aar": "io.github.ferhatguneri:kurmanci-android:0.1.1 downloaded from Maven Central by the vendor evaluation kit (CONSUMER_MODE=public), the published artifact of release 0.1.1",
+  "aar_sha256": "67bfeb5fffedd0b66f03e1ac37e53331303aad461d554184b2ef004dde73016b",
+  "built_from": "release commit 2c6b1537031414c1cca371ca6e5005152a8d415e by the android-v0.1.1 Maven Central workflow; the same bytes are recorded as android/kurmanci-android-0.1.1.aar in the provenance of the published bundle kurmanci-ku-Latn-0.1.1",
+  "consumer_app": "integration/android/android-consumer, Debug, AGP 8.5.2 / Gradle 8.7, resolving the SDK from Maven Central",
+  "packs_from": "the published bundle kurmanci-ku-Latn-0.1.1 (GitHub release v0.1.1), verified by scripts/vendor/evaluate.sh fetch --version 0.1.1 before the runs"
+ },
+ "source_commit": "2c6b1537031414c1cca371ca6e5005152a8d415e",
+ "harness_commit": "523526f14f7a71d8159efb00f18b72fbacb7b8d9 (the head of PR #77 at the time of the runs, 10:42 UTC on 2026-09-20, before its merge at 10:48 UTC); tree fed7c0989dd69d1d056c999773c10c8ee44c0fc6, identical to the tree of the merge commit 30c68a165ad7820ee063059105e2ac7c3d3339e1 = tag vendor-kit-0.1.1, which therefore reproduces the exact harness. scripts/android/device-benchmark.sh's measurement logic is unchanged since #74; the file last changed in #76 (2c6b153, SDK-version resolution through kurmanci-version.sh).",
+ "command": "scripts/vendor/evaluate.sh android --version 0.1.1 --pack <pack> (scripts/android/device-benchmark.sh with CONSUMER_MODE=public; 200 iterations per operation, 5 cold loads, 300 stability rounds; JNI path from the instrumentation host)",
+ "packs": {
+  "reviewed": {
+   "lexicon_sha256": "8ad8bbf8134f5f67c95a631a4fa4a0345a0a4445a67140278b9cb48e5a1e399b",
+   "entries": 2143
+  },
+  "experimental-full": {
+   "lexicon_sha256": "6caf3b564465f4f7c9b49efba1a1a20779d9259a4a92d9684a419ad9c5f7392a",
+   "entries": 42248
+  }
+ },
+ "loader_observation": "4 KB-page device, so the 16 KB AppCompat path does not apply; the logcat buffer captured after the second run no longer held the library load line, only the nativeloader namespace configuration for the consumer and test APKs",
+ "notes": "experimental-full: whole-process RSS after the 300 query rounds (102.1 MB) is 16.9 MB lower than RSS after load (119.0 MB); 'RSS after load' is therefore the larger of two samples, not a steady state, and the cause of the decrease cannot be attributed from this benchmark (no empty-host measurement). The reviewed run's two samples were within 0.7 MB (76.8 to 77.4 MB). The harness's 'stable: true' asserts identical query results across rounds, not memory. Comparison with the SM-S948B rows of 2026-09-19 is cross-baseline: those measured the AAR built at 5ed81d9 (3f02e837...) with reviewed 485b9d70... (2,144 entries) and experimental-full 65764b14... (42,249 entries), not the published 0.1.1 bytes measured here.",
+ "reports": {
+  "android-samsung-SM-A055F-reviewed-20260920T104239Z.json": "e6bbe06fa676600e4e69922256245e85c6d515c6bef7d4d513e15c3ed6d40002",
+  "android-samsung-SM-A055F-experimental-full-20260920T104300Z.json": "277bc7c83a90e4612071ca9149ee144ed8a83e794a88b73aa85c7953430f710b"
+ }
+}

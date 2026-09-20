@@ -137,8 +137,8 @@ assertion).
 - **Individual calls were sub-millisecond on the measured iPhone 14 Pro.** At p50, every
   reviewed-pack call was under 0.07 ms and every experimental-full call under 0.4 ms;
   next-word prediction was 2.4 to 2.5 µs on both packs. How an integrating keyboard schedules
-  these calls relative to its UI thread is the platform's decision: no low-end device and no
-  production keyboard-extension workload has been measured.
+  these calls relative to its UI thread is the platform's decision: no production
+  keyboard-extension workload has been measured; a low-end device is in the 2026-09-20 addendum.
 - **Between the two measured packs, the candidate-generating operations grew and the lookups
   did not.** From 2,144 to 42,249 entries on the iPhone: suggest 4.9×, correct 6.2×, the
   two-letter completion 6.1×; known-word lookup stayed at 0.5 µs and prediction at 2.4 to
@@ -189,7 +189,51 @@ Every Samsung call was sub-millisecond at p50 on both packs; the p95 / p50 ratio
 twelve operation rows lies between 1.03 and 1.29, and RSS after 300 rounds stayed within
 1.3 MB of RSS after load. The Samsung and emulator columns are the same JNI path and land
 close together; the iPhone column is the Swift SDK path. The gap "no physical Android device"
-in the section above is closed; "no low-end device" remains.
+in the section above is closed; "no low-end device" is closed by the 2026-09-20 addendum below.
+
+## Addendum, 2026-09-20: first low-end Android device
+
+A Samsung `SM-A055F` (Galaxy A05 class: MediaTek MT6769V/CZ, 8 cores, 3.6 GiB `MemTotal`,
+Android 14 / API 34, 4 KB pages), reached through Samsung's Remote Test Lab and Remote Debug
+Bridge, ran the same harness on the same pack profiles, not on the same bytes as the S948B
+rows: those measured the AAR built at 5ed81d9 (`3f02e837…`) with reviewed `485b9d70…`
+(2,144 entries) and experimental-full `65764b14…` (42,249 entries), whereas here the
+artifact under test was the published release: the `0.1.1` AAR resolved from Maven Central
+(`67bfeb5f…`) and the packs of the published bundle `kurmanci-ku-Latn-0.1.1`, driven by the
+vendor evaluation kit (`scripts/vendor/evaluate.sh android --version 0.1.1`), so these rows
+are reproducible from the published artifacts alone. Reports and a provenance sidecar are
+under `device-benchmarks/` (`android-samsung-SM-A055F-*`). JNI path from the instrumentation
+host; RSS is the whole process.
+
+| Operation (input) | Pack | Samsung SM-S948B (flagship) | Samsung SM-A055F (low-end) | Emulator |
+|---|---|---|---|---|
+| load, median ms | reviewed | 10.2 | 32.5 | 23.7 |
+| load, median ms | experimental-full | 102.5 | 314.0 | 118.7 |
+| known word (welat), p50 µs | reviewed | 4.4 | 14.2 | 2.4 |
+| suggest (rojbas), p50 µs | reviewed | 53.5 | 178.2 | 45.6 |
+| correct (spaz), p50 µs | reviewed | 45.2 | 164.7 | 37.8 |
+| complete (ro), p50 µs | reviewed | 122.8 | 528.3 | 115.5 |
+| predict (ez), p50 µs | reviewed | 17.2 | 78.4 | 14.5 |
+| suggest (rojbas), p50 µs | experimental-full | 192.8 | 902.4 | 188.2 |
+| correct (spaz), p50 µs | experimental-full | 203.1 | 999.1 | 193.3 |
+| complete (ro), p50 µs | experimental-full | 618.2 | 2,393.8 | 601.0 |
+| predict (ez), p50 µs | experimental-full | 16.9 | 79.6 | 14.6 |
+| RSS after load, whole process | reviewed / experimental-full | 150.8 / 186.2 MB | 76.8 / 119.0 MB | 142.7 / 175.8 MB |
+
+As a cross-baseline observation on the same pack profiles (not identical pack bytes or
+artifact, so not a clean device-only ratio), the A05 p50 latencies are roughly 3 to 5
+times the S948B rows on every operation; every reviewed-pack call still lands under 1 ms at
+p50; the slowest measured call anywhere is experimental-full
+completion at 2.4 ms p50 (2.8 ms p95). Its p95 / p50 ratios are wider than the flagship's:
+1.16 to 2.01 on the reviewed pack (suggest 178.2 → 357.3 µs) and 1.08 to 1.54 on
+experimental-full; the per-operation max values in the reports include single outliers up to
+9.1 ms (suggest, reviewed). Both runs passed the harness's 300-round stability check, which
+asserts identical query results across rounds and says nothing about memory. Whole-process
+RSS on the reviewed pack was within 0.7 MB between the two samples (76.8 → 77.4 MB); on
+experimental-full it was 16.9 MB lower after the rounds than after load (119.0 → 102.1 MB),
+so "RSS after load" there is the larger of two samples rather than a steady state. The cause
+of that decrease, and the lower whole-process RSS compared with the S948B, cannot be
+attributed from this benchmark: there is no empty-host measurement on either device.
 
 ## Reproduction
 
@@ -215,8 +259,8 @@ The bench operation set is fixed by `bench/src/main.rs`; the device operation se
   rows remain as reference.
 - No empty-host measurement on the phone, so device RSS cannot be split between host and
   engine; the M4 attribution is the engine-only reference.
-- No low-end device: the iPhone 14 Pro and the emulator on an M4 are both fast hosts; a
-  budget Android phone would be the useful next point.
+- Low-end device: one (Samsung `SM-A055F`, MediaTek MT6769, 4 GB, Android 14; addendum of
+  2026-09-20); no mid-range point between it and the `SM-S948B`.
 - Bench and device operation sets overlap on five operations; the remaining bench operations
   have M4 numbers only.
 - The M4 reports carry no commit, machine or toolchain metadata of their own; the sidecar
