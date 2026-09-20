@@ -81,6 +81,7 @@ Deterministic release bundle (refuses unless the production state verifies; see 
 cargo run -p kurmanci-data-builder -- build-release-bundle                       # → dist/release/kurmanci-ku-Latn-<version>/
 cargo run -p kurmanci-data-builder -- verify-release-bundle dist/release/kurmanci-ku-Latn-0.1.1
 scripts/release/verify-clean-checkout-determinism.sh                            # two clean clones → byte-identical bundle
+scripts/release/publish-bundle.sh --version X.Y.Z --skip-publish              # after the SDK tags: bundle + notes for GitHub release vX.Y.Z (docs/RELEASE_PROVENANCE.md)
 ```
 
 Repository-side inspection (what the review data records about a word; read-only, never assigns a status):

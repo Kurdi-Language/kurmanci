@@ -119,3 +119,59 @@ evaluator sees them before anything else.
 
 Platform binaries (XCFramework, AAR) are outside this claim: they are produced by the
 existing Apple and Android scripts, attached on request and hashed as received.
+
+## Publishing a release
+
+A production release `X.Y.Z` is four immutable tags on `main` and one GitHub release, in this
+order. Tags are never moved; a mistake gets a new version.
+
+1. Merge the release commit (every version source at `X.Y.Z`: workspace and crate
+   manifests, `android/gradle.properties` `kurmanciVersion`, the Apple scripts' defaults, the
+   READMEs; a `CHANGELOG.md` section).
+2. Push `android-vX.Y.Z` and `swift-vX.Y.Z` on the merge commit. The Maven Central workflow
+   publishes `io.github.ferhatguneri:kurmanci-android:X.Y.Z`; the Apple workflow publishes
+   `KurmanciFFI-vX.Y.Z.xcframework.zip` with `release-manifest.json` on GitHub release
+   `swift-vX.Y.Z` (the manifest's C ABI is derived from `ffi/include/kurmanci.h`,
+   `scripts/apple/release-manifest.sh`) and the tag `X.Y.Z` in `Kurdi-Language/kurmanci-swift`
+   (needs the repository secret `SWIFT_DIST_TOKEN`). Both workflows validate after publication
+   becomes visible, so only their final success counts.
+3. Tag `vendor-kit-X.Y.Z`: every production release has one, on the commit whose tree is the
+   evaluation kit for that release. When no kit change was needed it is the release commit
+   itself; when the kit changed after the release, it is the commit that merged the change.
+   A later kit correction for the same release gets `vendor-kit-X.Y.Z-r2`, `-r3`, and so on.
+   The publisher accepts the tag only if its commit is on `origin/main`, the tree carries
+   `docs/vendor-evaluation-kit.md`, `scripts/vendor/evaluate.sh` and the remote iOS consumer,
+   the document names `vendor-kit-X.Y.Z` and `--version X.Y.Z` and no other release, and the
+   remote consumer's package requirement and `Package.resolved` pin the Swift package at
+   exactly `X.Y.Z`; a stale kit tree cannot be published under a new release's notes.
+4. `scripts/release/publish-bundle.sh --version X.Y.Z` (tested by
+   `scripts/release/test-publish-bundle.sh` in CI) fails closed on each of these before it
+   creates anything: the remote tags `android-vX.Y.Z` and `swift-vX.Y.Z` resolve to one
+   commit on `origin/main` (local tags must agree but are not authoritative); the two SDK
+   workflow runs for that commit completed successfully; `vendor-kit-X.Y.Z` exists; release
+   `vX.Y.Z` does not exist and the tag `vX.Y.Z` is absent or already at that commit; the
+   downloaded AAR and XCFramework are what `release-manifest.json` (schema, version, source
+   commit, artifact hash, C ABI as the header at the commit) and the Swift distribution tag's
+   `source-manifest.json` and `Package.swift` (version, source commit, checksum, immutable
+   URL whose bytes equal the release asset) describe; a clean clone at the commit runs the
+   derivation steps of `verify-clean-checkout-determinism.sh` and stays clean; the bundle
+   built with both artifacts attached is a production release from a clean tree with the
+   requested `release_version`, `provenance.source.commit` equal to the commit and exactly the
+   two expected platform-artifact records; `vendor-kit-X.Y.Z` passes the checks of step 3; the notes render from
+   `release-notes.template.md` with no placeholder left. It then creates the tag `vX.Y.Z` at
+   the commit if absent, pushes it, and creates the release on the verified tag with the
+   archive, its `.sha256`, `SHA256SUMS` and `provenance.json`. `--skip-publish` runs every
+   check and leaves the results under `dist/release-publish/X.Y.Z/out/`.
+
+Identities: the extracted bundle is deterministic, and `SHA256SUMS` with its sha256
+identifies the reproducible bundle contents (the value the release notes quote and
+`verify-clean-checkout-determinism.sh` reproduces). The `.tar.gz` is not itself claimed
+byte-identical across rebuilds, since archiver metadata may differ;
+`<bundle>.tar.gz.sha256` identifies the exact archive uploaded to that GitHub release.
+
+Release 0.1.1 predates the derived manifest ABI: its `release-manifest.json` records C ABI
+1.0 while the header at its commit says 1.1. Published artifacts and tags are immutable, so
+that record stands; reconstructing 0.1.1 with the publisher requires
+`--accept-apple-manifest-abi 1.0`, which prints the discrepancy instead of hiding it. The
+exception is mechanical (release 0.1.1, recorded 1.0, header 1.1, and the flag); any other
+ABI disagreement, for any release, is fatal with or without the flag.
