@@ -7,14 +7,16 @@
 # the test proves that signing follows the destination type: an explicit simulator
 # destination runs unsigned, a physical iOS destination runs with automatic Apple Development
 # signing and needs no DEVELOPMENT_TEAM, and any other destination is refused before
-# xcodebuild runs. Needs only bash (no Xcode).
+# xcodebuild runs; and that --project selects the local or the remote consumer project and
+# refuses anything else. Needs only bash (no Xcode).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WRAPPER="$SCRIPT_DIR/device-benchmark.sh"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP/bin" "$TMP/out-fail" "$TMP/out-ok" "$TMP/out-device" "$TMP/out-unsupported"
+mkdir -p "$TMP/bin" "$TMP/out-fail" "$TMP/out-ok" "$TMP/out-device" "$TMP/out-unsupported" "$TMP/out-remote" "$TMP/out-project"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ARGS="$TMP/xcodebuild-args"
 
 REPORT='{"schema_version":"device-benchmark-v1","platform":"ios","device_model":"fake","os_version":"0","simulator":true,"pack_file":"benchmark_pack.bin","pack_bytes":1,"pack_sha256":"0000000000000000000000000000000000000000000000000000000000000000","entry_count":1,"pack_format_version":4,"load_ms_median":0.1,"load_ms_min":0.1,"load_ms_max":0.1,"rss_after_load_bytes":1,"rss_after_queries_bytes":1,"operations":[{"name":"known_hit","input":"welat","iterations":1,"p50_us":1,"p95_us":1,"max_us":1,"result_count":1}],"stability_rounds":1,"stable":false}'
@@ -114,3 +116,25 @@ set -e
 if ls "$TMP/out-unsupported"/ios-*.json >/dev/null 2>&1; then echo "❌ report written for an unsupported destination" >&2; exit 1; fi
 grep -q "unsupported destination" "$TMP/unsupported.log" || { echo "❌ refusal not reported" >&2; cat "$TMP/unsupported.log" >&2; exit 1; }
 echo "✅ unsupported destination is refused before xcodebuild runs"
+
+# 6. --project selects the consumer test host: local (default) or remote; anything else is
+#    refused before xcodebuild runs.
+make_fake_xcodebuild 0
+PATH="$TMP/bin:$PATH" "$WRAPPER" --destination "platform=iOS Simulator,id=FAKE" --out "$TMP/out-ok" > "$TMP/default.log" 2>&1
+expect_args "default project" "-project" "$REPO_ROOT/integration/apple/ios-consumer/KurmanciConsumer.xcodeproj" \
+  --not "$REPO_ROOT/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj"
+make_fake_xcodebuild 0
+PATH="$TMP/bin:$PATH" "$WRAPPER" --project remote --destination "platform=iOS Simulator,id=FAKE" --out "$TMP/out-remote" > "$TMP/remote.log" 2>&1
+ls "$TMP/out-remote"/ios-*.json >/dev/null 2>&1 || { echo "❌ no report written for the remote-project run" >&2; cat "$TMP/remote.log" >&2; exit 1; }
+expect_args "remote project" "-project" "$REPO_ROOT/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj" \
+  --not "$REPO_ROOT/integration/apple/ios-consumer/KurmanciConsumer.xcodeproj"
+echo "✅ --project remote runs the remote consumer test host"
+rm -f "$ARGS"
+set +e
+PATH="$TMP/bin:$PATH" "$WRAPPER" --project other --destination "platform=iOS Simulator,id=FAKE" --out "$TMP/out-project" > "$TMP/project.log" 2>&1
+STATUS=$?
+set -e
+[[ $STATUS -ne 0 ]] || { echo "❌ wrapper accepted an unsupported --project" >&2; exit 1; }
+[[ ! -f "$ARGS" ]] || { echo "❌ xcodebuild ran for an unsupported --project" >&2; exit 1; }
+grep -q "unsupported --project" "$TMP/project.log" || { echo "❌ --project refusal not reported" >&2; cat "$TMP/project.log" >&2; exit 1; }
+echo "✅ unsupported --project is refused before xcodebuild runs"

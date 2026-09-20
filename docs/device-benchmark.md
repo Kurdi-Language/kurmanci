@@ -39,7 +39,11 @@ XCODEBUILD_EXTRA_ARGS="DEVELOPMENT_TEAM=<team id> -allowProvisioningUpdates" \
 scripts/android/device-benchmark.sh --pack data/build/packs/reviewed/lexicon.bin
 ```
 
-The iOS consumer host needs the local Swift package first (`scripts/apple/build-xcframework.sh`,
+`--project remote` runs the same harness in `integration/apple/ios-remote-consumer`, which
+depends on the published `Kurdi-Language/kurmanci-swift` package at the version the project
+pins, so no Rust toolchain is needed; this is what the vendor evaluation kit uses
+(`scripts/vendor/evaluate.sh ios`, `docs/vendor-evaluation-kit.md`). The default local
+iOS consumer host needs the local Swift package first (`scripts/apple/build-xcframework.sh`,
 `verify-xcframework.sh`, `create-release-archive.sh`, `generate-release-package.sh`, as CI runs them).
 It targets iOS 15 and uses the scene-based life cycle, which the iOS 26+ SDKs require; it has
 been verified under Xcode 27.0 (simulator and a real iPhone) and under the CI runner's Xcode.

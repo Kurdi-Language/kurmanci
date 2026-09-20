@@ -204,6 +204,9 @@ jobs:
       - name: Validate Android SDK Version Resolution (gradle.properties authoritative, no hidden fallback)
         run: bash scripts/android/test-kurmanci-version.sh
 
+      - name: Validate Vendor Evaluation Kit Driver (fake release over file:// URLs, fail-closed verification)
+        run: bash scripts/vendor/test-evaluate.sh
+
       - name: Run Data-Builder Compiler (First Pass)
         run: cargo run -p kurmanci-data-builder -- build
 
@@ -460,6 +463,73 @@ jobs:
             -scheme KurmanciConsumer \
             -configuration Release \
             -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+  apple-remote-consumer-published-package:
+    name: Apple iOS Remote Consumer on the Published Swift Package (Rust-Free)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Resolve the Published kurmanci-swift Package Pinned by the Remote Consumer
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/remote-consumer-packages"
+          python3 - <<'EOF'
+          import json, re
+          pbx = open("integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.pbxproj").read()
+          req = re.search(r'XCRemoteSwiftPackageReference "kurmanci-swift".*?version = "?([0-9.]+)"?;', pbx, re.S).group(1)
+          res = json.load(open("integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"))
+          pin = next(p for p in res["pins"] if p["identity"] == "kurmanci-swift")["state"]
+          assert pin["version"] == req, (pin, req)
+          print(f"remote consumer requires and resolved kurmanci-swift {req} (revision {pin['revision']})")
+          EOF
+
+      - name: Run the Remote Consumer Test Suite on the Simulator (includes DeviceBenchmarkTests)
+        run: |
+          SIM_UDID=$(python3 -c '
+          import json, subprocess
+          res = subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "--json"])
+          for runtime, dev_list in json.loads(res.decode("utf-8")).get("devices", {}).items():
+              if "iOS" in runtime:
+                  for d in dev_list:
+                      if d.get("isAvailable", False) and "iPhone" in d.get("name", ""):
+                          print(d["udid"]); exit(0)
+          ')
+          test -n "$SIM_UDID" || { echo "❌ Error: No available iPhone simulator found" >&2; exit 1; }
+          xcrun simctl boot "$SIM_UDID" 2>/dev/null || true
+          xcrun simctl bootstatus "$SIM_UDID" -b 2>/dev/null || true
+          export REPO_ROOT="$GITHUB_WORKSPACE"
+          xcodebuild test \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -sdk iphonesimulator \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/remote-consumer-packages" \
+            ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" 2>&1 | tee "$RUNNER_TEMP/remote-consumer-test.log" | grep -E 'Test Suite|Test Case|error:|BUILD|TEST'
+          STATUS=${PIPESTATUS[0]}
+          [[ $STATUS -eq 0 ]] || { echo "❌ remote consumer test suite failed (exit $STATUS)" >&2; tail -n 60 "$RUNNER_TEMP/remote-consumer-test.log" >&2; exit $STATUS; }
+          grep -q "DeviceBenchmarkTests testDeviceBenchmarkReport.*passed" "$RUNNER_TEMP/remote-consumer-test.log" || { echo "❌ DeviceBenchmarkTests did not run in the remote consumer" >&2; exit 1; }
+          grep -q "KURMANCI_DEVICE_BENCHMARK" "$RUNNER_TEMP/remote-consumer-test.log" || { echo "❌ no benchmark report line from the remote consumer" >&2; exit 1; }
+          echo "✅ remote consumer built and tested against the published package; DeviceBenchmarkTests compiled and ran."
+
+      - name: Run Unsigned iOS Device Build Gate for the Remote Consumer
+        run: |
+          xcodebuild build \
+            -project integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj \
+            -scheme KurmanciConsumer \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/remote-consumer-packages" \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""

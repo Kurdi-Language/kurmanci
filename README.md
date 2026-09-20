@@ -20,6 +20,10 @@ Canonical Repository: [https://github.com/Kurdi-Language/kurmanci](https://githu
 
 ---
 
+## For platform vendors
+
+Two documents for a platform or keyboard team evaluating Kurmancî for a built-in keyboard: [docs/vendor-summary.md](docs/vendor-summary.md) (what is published, the language surface, the API, the data, the measured cost, licensing, in ten minutes) and [docs/vendor-evaluation-kit.md](docs/vendor-evaluation-kit.md) (fetch and verify the published artifacts and reproduce the device measurements on your own hardware with `scripts/vendor/evaluate.sh`, without a Rust toolchain).
+
 ## Quick Start
 
 ### Prerequisites

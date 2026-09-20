@@ -2,10 +2,17 @@
 # Runs the internal device benchmark harness (DeviceBenchmarkTests) of the iOS consumer test
 # host on a simulator or a real iPhone and collects its JSON report.
 #
-# Usage: scripts/apple/device-benchmark.sh [--pack PATH] [--destination DEST] [--out DIR]
+# Usage: scripts/apple/device-benchmark.sh [--pack PATH] [--destination DEST] [--out DIR] [--project local|remote]
 #   --pack PATH          pack to measure (default: the committed placeholder benchmark_pack.bin,
 #                        a tiny fixture). The file is swapped into integration/apple/fixtures
 #                        for the run and the placeholder is restored afterwards.
+#   --project local|remote
+#                        which consumer test host runs the benchmark (default: local).
+#                        "local" is integration/apple/ios-consumer on the locally built Swift
+#                        package (needs the Rust toolchain and scripts/apple/build-xcframework.sh
+#                        first); "remote" is integration/apple/ios-remote-consumer on the
+#                        published Kurdi-Language/kurmanci-swift package at the version the
+#                        project pins, so no Rust toolchain is needed (vendor evaluation kit).
 #   --destination DEST   xcodebuild destination (default: the first available iPhone simulator).
 #                        "platform=iOS Simulator,id=<UDID>" runs unsigned; "platform=iOS,id=<UDID>"
 #                        (a real device) runs with automatic Apple Development signing, the team
@@ -18,7 +25,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FIXTURE="$REPO_ROOT/integration/apple/fixtures/benchmark_pack.bin"
-PROJECT="$REPO_ROOT/integration/apple/ios-consumer/KurmanciConsumer.xcodeproj"
+PROJECT_KIND="local"
 PACK=""
 DEST=""
 OUT_DIR="$REPO_ROOT/dist/device-benchmarks"
@@ -27,9 +34,15 @@ while [[ $# -gt 0 ]]; do
     --pack) PACK="$2"; shift 2 ;;
     --destination) DEST="$2"; shift 2 ;;
     --out) OUT_DIR="$2"; shift 2 ;;
+    --project) PROJECT_KIND="$2"; shift 2 ;;
     *) echo "Unknown argument: $1" >&2; exit 1 ;;
   esac
 done
+case "$PROJECT_KIND" in
+  local) PROJECT="$REPO_ROOT/integration/apple/ios-consumer/KurmanciConsumer.xcodeproj" ;;
+  remote) PROJECT="$REPO_ROOT/integration/apple/ios-remote-consumer/KurmanciConsumer.xcodeproj" ;;
+  *) echo "❌ unsupported --project '$PROJECT_KIND': expected 'local' or 'remote'" >&2; exit 1 ;;
+esac
 
 command -v xcodebuild >/dev/null 2>&1 || { echo "❌ xcodebuild not found" >&2; exit 1; }
 if [[ -z "$DEST" ]]; then
