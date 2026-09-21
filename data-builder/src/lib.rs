@@ -5,6 +5,7 @@ pub mod config;
 pub mod corpus;
 pub mod eval;
 pub mod eval_next_word;
+pub mod eval_prediction_coverage;
 pub mod eval_ranking;
 pub mod evaluation;
 pub mod importers;

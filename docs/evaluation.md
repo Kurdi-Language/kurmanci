@@ -119,3 +119,33 @@ The transition validator permits ordinary draft creation, revision, and removal.
 - Comparison policy: `three-pack-comparison-v1`.
 
 Changing one version does not automatically change the others.
+
+## 6. Prediction coverage on held-out contexts
+
+`data-builder evaluate-prediction-coverage --pack <lexicon.bin> [--partition development|evaluation] [--limit 5] [--json] [--out FILE]`
+measures how a pack's next-word prediction behaves on real contexts it was not built from,
+bound to the pack's provenance: the pack's `manifest.json` must record the pack's own
+`binary_sha256` and it must equal the hash of the supplied `lexicon.bin` (refused otherwise, so a
+modified or swapped pack never borrows a manifest's provenance); the manifest names the language
+model it embeds and the hash of that model's manifest (refused if the model on disk differs); the model's
+manifest names its corpus and the hash of the partition manifest its TRAIN data came from
+(refused if the local `data/build/corpus-partitions/manifest.json` differs, since the
+held-out partition would then not be held out from this model). It walks every sentence of
+the chosen partition (`development` by default, or `evaluation`; `train` is refused), requires
+every record to carry that partition name and the file to hold exactly the record count that
+pinned partition manifest declares for it (a truncated or augmented partition is refused, the
+rule the model builder applies to TRAIN), walks only canonical representatives of the model's
+corpus exactly as the model builder does, tokenizes through the same `sentence_token_sequences`
+helper the model builder uses, and queries the engine's public prediction API at every
+position. It reports, for two-word contexts, the positions answered from the trigram table,
+by the deterministic bigram backoff, or not at all, and for one-word contexts the positions
+answered from the bigram table or not at all, plus how often the word that actually followed
+is among the top 1, 3 and 5 candidates. The report records the pack, pack-manifest, model-manifest,
+partition-manifest and partition hashes with the model and corpus ids. Numbers and hashes
+only: no token, sentence or document text reaches the report
+(`data-builder/tests/prediction_coverage_test.rs`).
+
+These rates are the baseline for any later smoothing or backoff refinement: they are taken
+before and after the reviewed vocabulary grows, and a prediction change is justified only by
+a measured difference, never by inspection of individual outputs.
+

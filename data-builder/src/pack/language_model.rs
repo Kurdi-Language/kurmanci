@@ -39,7 +39,7 @@ use std::path::{Path, PathBuf};
 use crate::corpus::audit::{DOCUMENT_DEDUP_VERSION, SENTENCE_DEDUP_VERSION};
 use crate::corpus::frequency::{frequency_records_from_counts, FrequencyRecord};
 use crate::corpus::importer::{verify_canonical_manifest, CANONICAL_SCHEMA_VERSION};
-use crate::corpus::ngrams::{split_into_sentences, BigramRecord, NgramConfig, TrigramRecord};
+use crate::corpus::ngrams::{sentence_token_sequences, BigramRecord, NgramConfig, TrigramRecord};
 use crate::corpus::partition::{
     PartitionBuildManifest, PartitionDocumentRecord, PARTITION_POLICY_VERSION,
 };
@@ -219,7 +219,9 @@ fn model_dir(root: &Path, model_id: &str) -> PathBuf {
     root.join(LANGUAGE_MODEL_DIR).join(model_id)
 }
 
-fn validate_model_id(model_id: &str) -> Result<(), String> {
+/// Validates a language model id before any filesystem path is derived from it: ASCII
+/// letters, digits, '-', '_', '.' only, at most 128 characters, not starting with '.'.
+pub fn validate_model_id(model_id: &str) -> Result<(), String> {
     let ok = !model_id.is_empty()
         && model_id.len() <= 128
         && !model_id.starts_with('.')
@@ -653,9 +655,7 @@ pub fn build_language_model<P: AsRef<Path>>(
         for token in unique_in_doc {
             *doc_counts.entry(token).or_insert(0) += 1;
         }
-        for sentence in split_into_sentences(&record.text) {
-            sentences.push(tokenize_text(&sentence));
-        }
+        sentences.extend(sentence_token_sequences(&record.text));
     }
     if train_records_read != partition_manifest.train_documents {
         return Err(format!(

@@ -88,6 +88,24 @@ enum Commands {
     EvaluateRanking,
     /// Evaluates context-aware next-word prediction accuracy
     EvaluateNextWord,
+    /// Measures next-word prediction coverage of a built pack on a held-out corpus partition (development or evaluation, never train): positions answered from the trigram table, by bigram backoff, from the bigram table, or not at all, and how often the word that followed is among the top 1/3/5 candidates. Numbers and hashes only; changes nothing
+    EvaluatePredictionCoverage {
+        /// Built pack to measure (e.g. data/build/packs/reviewed/lexicon.bin); its manifest.json next to it names the language model the measurement is bound to
+        #[arg(long)]
+        pack: std::path::PathBuf,
+        /// Partition under data/build/corpus-partitions/: development (default) or evaluation
+        #[arg(long, default_value = "development")]
+        partition: String,
+        /// Candidates requested per query (at least 5)
+        #[arg(long, default_value_t = 5)]
+        limit: usize,
+        /// Output the report as JSON
+        #[arg(long)]
+        json: bool,
+        /// Also write the JSON report to this file
+        #[arg(long)]
+        out: Option<std::path::PathBuf>,
+    },
     /// Generates mechanical review queues for a source ID under data/review-queues/
     GenerateReviewQueues {
         #[arg(index = 1, default_value = "kurdish-hunspell-kmr")]
@@ -616,6 +634,41 @@ fn main() {
             println!("  Bigrams Output:       data/build/bigrams.jsonl");
             println!("  Trigrams Output:      data/build/trigrams.jsonl");
             println!("  Reports Dirs:         data/reports/ngrams/, data/reports/trigrams/");
+        }
+        Commands::EvaluatePredictionCoverage {
+            pack,
+            partition,
+            limit,
+            json,
+            out,
+        } => {
+            if !matches!(partition.as_str(), "development" | "evaluation") {
+                eprintln!("❌ --partition must be development or evaluation (the train partition built the model)");
+                std::process::exit(1);
+            }
+            let report = data_builder_lib::eval_prediction_coverage::evaluate_prediction_coverage(
+                std::path::Path::new("."),
+                &pack,
+                &partition,
+                limit,
+            )
+            .unwrap_or_else(|e| {
+                eprintln!("❌ prediction coverage failed: {e}");
+                std::process::exit(1);
+            });
+            let rendered = serde_json::to_string_pretty(&report).expect("serialize report");
+            if let Some(path) = out {
+                std::fs::write(&path, format!("{rendered}\n"))
+                    .unwrap_or_else(|e| panic!("write {:?}: {}", path, e));
+            }
+            if json {
+                println!("{rendered}");
+            } else {
+                print!(
+                    "{}",
+                    data_builder_lib::eval_prediction_coverage::format_report(&report)
+                );
+            }
         }
         Commands::EvaluateNextWord => {
             println!("=== Kurmancî Context Prediction Evaluation ===");
