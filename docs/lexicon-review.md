@@ -228,3 +228,30 @@ not), the Hunspell review pool and policy-excluded queue counts, every Kuwiki ba
 out-of-alphabet candidates with the decision each carries, and the built packs. It decides
 nothing, promotes nothing and writes nothing else; `tests/alphabet_policy_test.rs` proves the
 data and build trees are byte-identical before and after a run.
+
+## Post-review promotion report
+
+After a batch of human decisions is merged and the production state rebuilt, the compact
+technical diff the handoff asks for comes from `scripts/review/promotion-report.sh`:
+
+```bash
+scripts/review/promotion-report.sh run --base <commit before the batch> --out report.md --json report.json
+```
+
+It derives the production state of the base commit and of `HEAD` (or `--head REF`) in clean
+clones, with the same steps as `scripts/release/verify-clean-checkout-determinism.sh`, each
+by a `data-builder` built from that commit (a later builder is never applied to older data:
+a policy gate added later would otherwise refuse the older state), runs `evaluate-packs` in
+each, and reports, before and after: entries, size and hash of every pack; the decision counts
+per source and status; the ordinary Hunspell pool, the alphabet-excluded and the
+punctuation-held queue sizes; the language model the prediction packs reference (verified by
+the manifest hash the packs recorded) with its fingerprint, vocabulary size and n-gram counts;
+the 357-case pairwise improvement, regression and unchanged counts; and with `--bench`, the
+engine heap, RSS and load time per pack, measured by a `kurmanci-bench` built from that same
+commit and attributed to it in the report. `--working-tree` reports this working tree instead
+of a clone of `HEAD`, only after it passes `verify-production-state`, so stale generated files
+are never reported. It prints numbers and identities only: no word, no decision note and no
+corpus text. It never assigns or changes a review status. `collect` and `compare` are exposed
+separately and `scripts/review/test-promotion-report.sh` checks them, the clean-clone rule,
+the per-tree bench and the working-tree gate in CI.
+
