@@ -206,5 +206,13 @@ run_xcodebuild -destination "platform=iOS,id=$DEVICE" -allowProvisioningUpdates 
 APP="$DERIVED/Build/Products/Debug-iphoneos/KurmanciConsumer.app"
 [[ -d "$APP" ]] || { echo "❌ build produced no $APP" >&2; exit 1; }
 xcrun devicectl device install app --device "$DEVICE" "$APP"
-xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE_ID"
+if ! xcrun devicectl device process launch --device "$DEVICE" "$BUNDLE_ID"; then
+  cat >&2 <<EOF
+❌ installed, but iOS refused to launch $BUNDLE_ID. On a phone that has not yet run an app signed
+   by this team, trust the developer profile once: Settings > General > VPN & Device Management >
+   Developer App > the entry for team $TEAM > Trust. Then open the app from the home screen or
+   re-run this script.
+EOF
+  exit 1
+fi
 echo "✅ installed and launched $BUNDLE_ID on $DEVICE"
