@@ -1,4 +1,5 @@
 import UIKit
+import SwiftUI
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
@@ -10,7 +11,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     ) {
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = ViewController()
+        // The try-out screen (TryOutView) is the whole app: see docs/ios-tryout.md.
+        window.rootViewController = UIHostingController(rootView: TryOutView())
         window.makeKeyAndVisible()
         self.window = window
     }

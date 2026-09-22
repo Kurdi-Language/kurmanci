@@ -9,7 +9,9 @@
 /* Begin PBXBuildFile section */
 		110000012C12345600000001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000002 /* AppDelegate.swift */; };
 		110000012C12345600000034 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000035 /* SceneDelegate.swift */; };
-		110000012C12345600000003 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000004 /* ViewController.swift */; };
+		110000012C12345600000003 /* TryOutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000004 /* TryOutView.swift */; };
+		110000012C12345600000036 /* TryOutModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000037 /* TryOutModel.swift */; };
+		110000012C12345600000039 /* Packs in Resources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000038 /* Packs */; };
 		110000012C12345600000005 /* KurmanciConsumerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000006 /* KurmanciConsumerTests.swift */; };
 		110000012C12345600000032 /* DeviceBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110000012C12345600000033 /* DeviceBenchmarkTests.swift */; };
 		110000012C12345600000007 /* Kurmanci in Frameworks */ = {isa = PBXBuildFile; productRef = 110000012C12345600000008 /* Kurmanci */; };
@@ -32,7 +34,9 @@
 /* Begin PBXFileReference section */
 		110000012C12345600000002 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		110000012C12345600000035 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		110000012C12345600000004 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		110000012C12345600000004 /* TryOutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryOutView.swift; sourceTree = "<group>"; };
+		110000012C12345600000037 /* TryOutModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryOutModel.swift; sourceTree = "<group>"; };
+		110000012C12345600000038 /* Packs */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Packs; sourceTree = "<group>"; };
 		110000012C12345600000006 /* KurmanciConsumerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KurmanciConsumerTests.swift; sourceTree = "<group>"; };
 		110000012C12345600000033 /* DeviceBenchmarkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceBenchmarkTests.swift; sourceTree = "<group>"; };
 		110000012C1234560000000D /* KurmanciConsumer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KurmanciConsumer.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -69,6 +73,7 @@
 				110000012C12345600000024 /* apple_consumer_test.bin in Resources */,
 				110000012C12345600000026 /* prediction_test.bin in Resources */,
 				110000012C12345600000030 /* benchmark_pack.bin in Resources */,
+				110000012C12345600000039 /* Packs in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,6 +86,7 @@
 				110000012C12345600000013 /* KurmanciConsumer */,
 				110000012C12345600000014 /* KurmanciConsumerTests */,
 				110000012C12345600000015 /* Products */,
+				110000012C12345600000038 /* Packs */,
 			);
 			sourceTree = "<group>";
 		};
@@ -89,7 +95,8 @@
 			children = (
 				110000012C12345600000002 /* AppDelegate.swift */,
 				110000012C12345600000035 /* SceneDelegate.swift */,
-				110000012C12345600000004 /* ViewController.swift */,
+				110000012C12345600000004 /* TryOutView.swift */,
+				110000012C12345600000037 /* TryOutModel.swift */,
 			);
 			path = KurmanciConsumer;
 			sourceTree = "<group>";
@@ -207,7 +214,8 @@
 			files = (
 				110000012C12345600000001 /* AppDelegate.swift in Sources */,
 				110000012C12345600000034 /* SceneDelegate.swift in Sources */,
-				110000012C12345600000003 /* ViewController.swift in Sources */,
+				110000012C12345600000003 /* TryOutView.swift in Sources */,
+				110000012C12345600000036 /* TryOutModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -230,6 +238,7 @@
 				110000012C12345600000024 /* apple_consumer_test.bin in Resources */,
 				110000012C12345600000026 /* prediction_test.bin in Resources */,
 				110000012C12345600000030 /* benchmark_pack.bin in Resources */,
+				110000012C12345600000039 /* Packs in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
