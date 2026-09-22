@@ -149,3 +149,31 @@ These rates are the baseline for any later smoothing or backoff refinement: they
 before and after the reviewed vocabulary grows, and a prediction change is justified only by
 a measured difference, never by inspection of individual outputs.
 
+### Baseline, 2026-09-21: Kuwiki development partition, release 0.1.1 packs
+
+Reports: `docs/evaluation/prediction-coverage/kuwiki-20260801-development-<pack>-20260921.json`
+(the command's JSON output, unmodified). Bound provenance recorded in each report: model
+`kuwiki-20260801` (manifest `fa5b507b8be6…`), corpus `kuwiki`, partition
+manifest `7d85f85e659d…` (the one the model pins; reproduced locally by
+`acquire-corpus`, `import-all-corpora`, `partition-corpora`), development partition
+`eb5dd0d4b538…` with 9,328 declared records; 9,285 canonical
+documents evaluated (43 near-duplicates skipped), 55,201 sentences,
+822,225 tokens; limit 5. Reviewed pack `8ad8bbf8134f…`, experimental-full
+`6caf3b564465…` (release 0.1.1).
+
+| Pack | Two-word contexts: trigram / backoff / none | Two-word top-1 / top-3 / top-5 | One-word contexts: bigram / none | One-word top-1 / top-3 / top-5 |
+|---|---|---|---|---|
+| reviewed (2,143 entries) | 24.9% / 30.7% / 44.4% | 12.6% / 17.1% / 19.2% | 42.8% / 57.2% | 4.1% / 7.9% / 9.6% |
+| experimental-full (42,248 entries) | 38.0% / 31.7% / 30.3% | 18.5% / 25.3% / 28.3% | 52.7% / 47.3% | 6.3% / 15.5% / 18.5% |
+
+What the numbers say, without deciding anything: with the reviewed vocabulary, 44.4% of
+two-word contexts and 57.2% of sentence-initial one-word contexts get no prediction at all,
+and the experimental-full pack answers far more of them. Both packs use the same underlying
+language model, but the pack compiler embeds only the n-gram records whose words are in the
+pack's lexicon: the reviewed pack embeds 19,319 bigrams and 27,929 trigrams, experimental-full
+44,820 and 55,140, so the larger experimental vocabulary allows substantially more of that
+model's records to be embedded. The coverage difference is therefore consistent with
+vocabulary coverage expanding the usable n-gram table; this comparison does not isolate
+vocabulary size from embedded n-gram-table size. These are the rates
+to compare against after the next reviewed batches; a smoothing or backoff change is justified
+only by a measured difference here.
