@@ -55,3 +55,6 @@ integration/android/**/.gradle/
 scratch/kuwiki_batch_001_worksheet.json
 # Release bundles and platform artifacts (derived; see docs/RELEASE_PROVENANCE.md)
 dist/
+# Packs staged into the iOS try-out host by scripts/apple/tryout.sh (copied from a published bundle)
+/integration/apple/ios-remote-consumer/Packs/*
+!/integration/apple/ios-remote-consumer/Packs/.gitkeep

@@ -74,7 +74,7 @@ cargo run -p kurmanci-data-builder -- verify-production-state
 cargo run -p kurmanci-data-builder -- rebuild-production   # needs the Kuwiki corpus locally; add --acquire to download it
 ```
 
-On-device measurements (iPhone, Android): see [docs/device-benchmark.md](docs/device-benchmark.md). Consolidated baseline (M4, iPhone 14 Pro, Android emulator, 2026-09-18): [docs/evaluation/performance-baseline-2026-09-18.md](docs/evaluation/performance-baseline-2026-09-18.md).
+On-device measurements (iPhone, Android): see [docs/device-benchmark.md](docs/device-benchmark.md). Trying the engine by hand on an iPhone with a published release (internal harness, not a keyboard): [docs/ios-tryout.md](docs/ios-tryout.md). Consolidated baseline (M4, iPhone 14 Pro, Android emulator, 2026-09-18): [docs/evaluation/performance-baseline-2026-09-18.md](docs/evaluation/performance-baseline-2026-09-18.md).
 
 Deterministic release bundle (refuses unless the production state verifies; see [docs/RELEASE_PROVENANCE.md](docs/RELEASE_PROVENANCE.md)) and its read-only check:
 ```bash
