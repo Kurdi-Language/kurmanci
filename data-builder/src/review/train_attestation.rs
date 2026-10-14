@@ -41,6 +41,8 @@
 use crate::corpus::importer::calculate_file_sha256;
 use crate::corpus::partition::PartitionDocumentRecord;
 use crate::corpus::tokenizer::tokenize_text;
+use crate::pack::language_model::{validate_model_id, LANGUAGE_MODEL_SCHEMA_VERSION};
+use crate::sources::SourceRegistry;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
@@ -186,6 +188,7 @@ struct TargetIdRecord {
 
 #[derive(Debug, Deserialize)]
 struct ModelManifestFields {
+    schema_version: Option<String>,
     model_id: String,
     corpus_id: String,
     corpus_version: String,
@@ -202,6 +205,25 @@ struct ModelManifestFields {
 #[derive(Debug, Deserialize)]
 struct PartitionManifestFields {
     train_documents: usize,
+}
+
+/// A source id is a single path component naming a registered source. Validated before any
+/// path is derived from it, the same rule `validate_model_id` applies to a model id.
+fn validate_source_id(source_id: &str) -> Result<(), String> {
+    let ok = !source_id.is_empty()
+        && source_id.len() <= 128
+        && !source_id.starts_with('.')
+        && source_id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.');
+    if ok {
+        Ok(())
+    } else {
+        Err(format!(
+            "Invalid source id '{}' (ASCII letters, digits, '-', '_', '.' only)",
+            source_id
+        ))
+    }
 }
 
 fn sha256_hex(bytes: &[u8]) -> String {
@@ -232,7 +254,7 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
     // ------------------------------------------------------------------
     // 1. The language-model manifest: the anchor for the TRAIN population.
     // ------------------------------------------------------------------
-    crate::pack::language_model::validate_model_id(model_id)?;
+    validate_model_id(model_id)?;
     let model_manifest_path = root
         .join("data/language-model")
         .join(model_id)
@@ -250,6 +272,15 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
             model_manifest_path, e
         )
     })?;
+    // The manifest must be of the schema this report understands before any of its corpus,
+    // partition or document-set fields are interpreted: a document that merely happens to
+    // carry these field names is not a language-model manifest.
+    if model.schema_version.as_deref() != Some(LANGUAGE_MODEL_SCHEMA_VERSION) {
+        return Err(format!(
+            "language model manifest {:?} has schema {:?}, expected {:?}; refusing to interpret its corpus and partition provenance",
+            model_manifest_path, model.schema_version, LANGUAGE_MODEL_SCHEMA_VERSION
+        ));
+    }
     if model.model_id != model_id {
         return Err(format!(
             "language model manifest {:?} declares model_id '{}', '{}' was requested",
@@ -391,7 +422,30 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
     }
 
     // ------------------------------------------------------------------
-    // 4. The review pool and what has already been taken out of it.
+    // 4. The source: a registered source id, validated before a path is built from it.
+    // ------------------------------------------------------------------
+    validate_source_id(source_id)?;
+    let sources_path = root.join("data/source-registry/sources.toml");
+    let registry = SourceRegistry::load_from_file(&sources_path).map_err(|e| {
+        format!(
+            "Source registry {:?} could not be read: {}",
+            sources_path, e
+        )
+    })?;
+    let registered = registry
+        .sources
+        .iter()
+        .find(|s| s.source_id == source_id)
+        .ok_or_else(|| {
+            format!(
+                "source '{}' is not registered in {:?}; attestation is reported for registered sources only",
+                source_id, sources_path
+            )
+        })?;
+    let registered_version = registered.version.clone();
+
+    // ------------------------------------------------------------------
+    // 5. The review pool and what has already been taken out of it.
     // ------------------------------------------------------------------
     let queue_dir = root.join("data/review-queues").join(source_id);
     let pool_path = queue_dir.join(POOL_FILE);
@@ -441,9 +495,8 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
     }
 
     // ------------------------------------------------------------------
-    // 5. The funnel.
+    // 6. The funnel.
     // ------------------------------------------------------------------
-    let mut source_revision = String::new();
     let mut pool_records = 0usize;
     let mut excluded_conflict = 0usize;
     let mut excluded_decided = 0usize;
@@ -465,12 +518,13 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
                 rec.target_id, rec.source_id, source_id
             ));
         }
-        if source_revision.is_empty() {
-            source_revision = rec.source_revision.clone();
-        } else if !rec.source_revision.is_empty() && rec.source_revision != source_revision {
+        // The pool must describe the registered immutable version of the source, otherwise the
+        // attestation is reported against a different set of lexical entries than the registry
+        // records.
+        if rec.source_revision != registered_version {
             return Err(format!(
-                "pool mixes source revisions '{}' and '{}'",
-                source_revision, rec.source_revision
+                "pool record {} declares source_revision '{}', the registry records '{}' for source '{}'; regenerate the review queues",
+                rec.target_id, rec.source_revision, registered_version, source_id
             ));
         }
         if policy_removed.contains(&rec.target_id) {
@@ -536,7 +590,7 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
         schema_version: TRAIN_ATTESTATION_SCHEMA_VERSION.to_string(),
         source: SourceProvenance {
             source_id: source_id.to_string(),
-            source_revision,
+            source_revision: registered_version,
             pool_file: POOL_FILE.to_string(),
             pool_sha256,
             conflict_groups_sha256,

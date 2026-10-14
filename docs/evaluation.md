@@ -250,8 +250,9 @@ Every pending entry carries a distinct normalized form. Pending entries by TRAIN
 | 100+ | 0 |
 
 Two readings follow, and neither is a decision. First, no pending entry occurs in 100 or more
-TRAIN documents: the frequency-ranked review queue has already consumed that band, so an
-evaluation population built from attestation draws entirely from the 1 to 99 document range.
+TRAIN documents, which is consistent with the earlier frequency-ranked review work having
+consumed that band, so an evaluation population built from attestation draws entirely from the
+1 to 99 document range.
 Second, the 1,511 decisions already recorded distribute across those buckets very unevenly, and
 the report publishes their outcomes per bucket. Those entries were not selected at random, so
 the distribution is observational and supports no inference about the pending population on its

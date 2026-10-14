@@ -63,6 +63,12 @@ struct Opts {
     tamper_train_document_count: Option<usize>,
     /// Corpus the model claims to have been built from.
     model_corpus_id: Option<String>,
+    /// Replaces the model manifest's schema_version.
+    model_schema_version: Option<String>,
+    /// The source id the registry registers, when it should differ from the one requested.
+    registered_source_id: Option<String>,
+    /// The version the registry records for the source.
+    registered_version: Option<String>,
     decisions: Vec<(String, String)>,
     conflict_members: Vec<String>,
     alphabet_excluded: Vec<String>,
@@ -74,6 +80,32 @@ impl Fixture {
     fn new(train_docs: &[String], pool: &[String], opts: Opts) -> Self {
         let root = tempfile::tempdir().unwrap();
         let r = root.path();
+
+        // The source registry: attestation is reported for registered sources only.
+        let registered_id = opts
+            .registered_source_id
+            .clone()
+            .unwrap_or_else(|| SOURCE.to_string());
+        let registered_version = opts
+            .registered_version
+            .clone()
+            .unwrap_or_else(|| REVISION.to_string());
+        write(
+            &r.join("data/source-registry/sources.toml"),
+            &format!(
+                r#"[[sources]]
+source_id = "{registered_id}"
+source_name = "Fixture source"
+author = "Fixture"
+license = "Apache-2.0"
+license_url = "https://example.invalid/LICENSE"
+url = "https://example.invalid/source"
+version = "{registered_version}"
+redistribution = "allowed"
+notes = "Fixture source registered for the attestation test."
+"#
+            ),
+        );
 
         // Corpus artifacts the model pins by hash.
         let corpora_toml = r.join("data/source-registry/corpora.toml");
@@ -125,6 +157,7 @@ impl Fixture {
         // The language-model manifest: the anchor.
         let model_manifest = format!(
             r#"{{
+  "schema_version": "{schema}",
   "model_id": "{model}",
   "corpus_id": "{corpus}",
   "corpus_version": "19700101",
@@ -138,6 +171,10 @@ impl Fixture {
   "train_document_set_sha256": "{set}"
 }}
 "#,
+            schema = opts
+                .model_schema_version
+                .clone()
+                .unwrap_or_else(|| "language-model-v1".to_string()),
             model = MODEL,
             corpus = opts
                 .model_corpus_id
@@ -215,6 +252,13 @@ impl Fixture {
 
     fn run(&self) -> Result<data_builder_lib::review::TrainAttestationReport, String> {
         build_train_attestation_report(self.path(), CORPUS, SOURCE, MODEL)
+    }
+
+    fn run_source(
+        &self,
+        source: &str,
+    ) -> Result<data_builder_lib::review::TrainAttestationReport, String> {
+        build_train_attestation_report(self.path(), CORPUS, source, MODEL)
     }
 
     fn run_corpus(
@@ -483,4 +527,92 @@ fn missing_partitions_are_reported_as_an_unacquired_corpus() {
         "unexpected error: {err}"
     );
     let _unused: PathBuf = root.path().to_path_buf();
+}
+
+#[test]
+fn refuses_an_unsupported_language_model_schema() {
+    // An otherwise valid manifest: only its schema is one this report does not understand.
+    let train = vec![doc("train", CORPUS, "d1", "d1", "rojbaş")];
+    let pool = vec![pool_entry("t-rojbas", "rojbaş")];
+    let f = Fixture::new(
+        &train,
+        &pool,
+        Opts {
+            model_schema_version: Some("language-model-v99".into()),
+            ..Default::default()
+        },
+    );
+    let err = f
+        .run()
+        .expect_err("an unsupported manifest schema must be refused");
+    assert!(
+        err.contains("refusing to interpret its corpus and partition provenance"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn refuses_a_source_that_is_not_in_the_registry() {
+    let train = vec![doc("train", CORPUS, "d1", "d1", "rojbaş")];
+    let pool = vec![pool_entry("t-rojbas", "rojbaş")];
+    let f = Fixture::new(
+        &train,
+        &pool,
+        Opts {
+            registered_source_id: Some("some-other-source".into()),
+            ..Default::default()
+        },
+    );
+    let err = f.run().expect_err("an unregistered source must be refused");
+    assert!(err.contains("is not registered"), "unexpected error: {err}");
+}
+
+#[test]
+fn refuses_a_source_id_that_is_not_a_plain_identifier() {
+    // The id reaches no filesystem path: it is rejected on shape before any path is built.
+    let train = vec![doc("train", CORPUS, "d1", "d1", "rojbaş")];
+    let pool = vec![pool_entry("t-rojbas", "rojbaş")];
+    let f = Fixture::new(&train, &pool, Opts::default());
+    for bad in ["../escape", "a/b", "", ".hidden"] {
+        let err = f.run_source(bad).unwrap_err_or_else_message();
+        assert!(
+            err.contains("Invalid source id"),
+            "source id {bad:?} was not rejected on shape: {err}"
+        );
+    }
+}
+
+#[test]
+fn refuses_a_pool_revision_that_is_not_the_registered_version() {
+    let train = vec![doc("train", CORPUS, "d1", "d1", "rojbaş")];
+    let pool = vec![pool_entry("t-rojbas", "rojbaş")];
+    let f = Fixture::new(
+        &train,
+        &pool,
+        Opts {
+            registered_version: Some("0123456789abcdef".into()),
+            ..Default::default()
+        },
+    );
+    let err = f
+        .run()
+        .expect_err("a pool at another revision than the registry records must be refused");
+    assert!(
+        err.contains("the registry records"),
+        "unexpected error: {err}"
+    );
+}
+
+/// Small helper so the loop above reads as one assertion per bad id.
+trait ErrMessage {
+    fn unwrap_err_or_else_message(self) -> String;
+}
+
+impl ErrMessage for Result<data_builder_lib::review::TrainAttestationReport, String> {
+    fn unwrap_err_or_else_message(self) -> String {
+        match self {
+            Ok(_) => panic!("expected a refusal, got a report"),
+            Err(e) => e,
+        }
+    }
 }
