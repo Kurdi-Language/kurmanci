@@ -121,6 +121,22 @@ enum Commands {
         #[arg(index = 1)]
         pack_id: String,
     },
+    /// Diagnostic-only TRAIN corpus attestation for a source's ordinary review pool: per pending entry, whether its normalized form occurs in the canonical TRAIN document set the committed language model was built from, and in how many documents. Proves the walked document set is the model's own by recomputing train_document_set_sha256; refuses a DEVELOPMENT or EVALUATION document. Decides nothing and changes no pack, decision, ranking or release artifact
+    TrainAttestationReport {
+        #[arg(long, default_value = "kuwiki")]
+        corpus_id: String,
+        #[arg(long, default_value = "kurdish-hunspell-kmr")]
+        source_id: String,
+        /// The committed language model whose manifest anchors the TRAIN document set.
+        #[arg(long)]
+        model_id: String,
+        /// Write the report as JSON to this path in addition to the text summary.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Print JSON instead of the text summary.
+        #[arg(long)]
+        json: bool,
+    },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
     /// Generated, diagnostic-only alphabet audit: lists every lexical form outside the 31-letter Kurmancî alphabet with its provenance (reviewed-pack policy exclusions with their human decision, Hunspell import, Kuwiki batches, experimental-full). Writes data/reports/alphabet-audit/ only; decides and modifies nothing
@@ -734,6 +750,44 @@ fn main() {
         Commands::BuildPack { pack_id } => {
             let _ = data_builder_lib::build_pack(&pack_id, PathBuf::from("."))
                 .unwrap_or_else(|e| panic!("Pack build failed: {}", e));
+        }
+        Commands::TrainAttestationReport {
+            corpus_id,
+            source_id,
+            model_id,
+            out,
+            json,
+        } => {
+            match data_builder_lib::review::build_train_attestation_report(
+                ".", &corpus_id, &source_id, &model_id,
+            ) {
+                Ok(report) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&report).expect("serialize")
+                        );
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::review::format_train_attestation_report(&report)
+                        );
+                    }
+                    if let Some(path) = out {
+                        if let Some(parent) = path.parent() {
+                            std::fs::create_dir_all(parent).expect("create report directory");
+                        }
+                        let mut text = serde_json::to_string_pretty(&report).expect("serialize");
+                        text.push('\n');
+                        std::fs::write(&path, text).expect("write report");
+                        eprintln!("report written to {:?}", path);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ TRAIN attestation report failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
         }
         Commands::InspectWord { word, json } => {
             match data_builder_lib::review::inspect::inspect_word(".", &word) {
