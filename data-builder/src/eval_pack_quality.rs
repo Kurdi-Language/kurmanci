@@ -142,7 +142,7 @@ pub struct CleanInput {
 /// A deterministic corruption of a correctly spelled word. Each is a single edit, applied at a
 /// position derived from the word itself, so the same corpus always yields the same corruptions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Corruption {
+pub enum Corruption {
     DeleteOneLetter,
     DuplicateOneLetter,
     SubstituteOneLetter,
@@ -151,7 +151,7 @@ enum Corruption {
 }
 
 impl Corruption {
-    const ALL: [Corruption; 5] = [
+    pub const ALL: [Corruption; 5] = [
         Corruption::DeleteOneLetter,
         Corruption::DuplicateOneLetter,
         Corruption::SubstituteOneLetter,
@@ -159,7 +159,7 @@ impl Corruption {
         Corruption::StripDiacritics,
     ];
 
-    fn name(self) -> &'static str {
+    pub fn name(self) -> &'static str {
         match self {
             Corruption::DeleteOneLetter => "delete_one_letter",
             Corruption::DuplicateOneLetter => "duplicate_one_letter",
@@ -172,7 +172,7 @@ impl Corruption {
     /// Returns the corrupted form, or `None` when this word cannot carry this corruption (for
     /// example stripping diacritics from a word that has none, which would be no corruption at
     /// all and must not be counted as a trivially passed case).
-    fn apply(self, word: &str) -> Option<String> {
+    pub fn apply(self, word: &str) -> Option<String> {
         let chars: Vec<char> = word.chars().collect();
         if chars.len() < MIN_TARGET_CHARS {
             return None;
