@@ -8,7 +8,9 @@
 
 use data_builder_lib::pack::evaluation::{in_evaluation_population, BASE_PACK_ID};
 use data_builder_lib::pack::selection::EntryPopulation;
-use data_builder_lib::pack::{assemble_evaluation_pack, build_evaluation_pack};
+use data_builder_lib::pack::{
+    assemble_evaluation_pack, build_evaluation_pack, install_artifact_set,
+};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -216,5 +218,120 @@ fn refuses_a_model_the_base_pack_does_not_embed() {
     assert!(
         err.contains("both must be the same model"),
         "unexpected error: {err}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Atomic installation
+// ---------------------------------------------------------------------------
+
+fn files(pairs: &[(&'static str, &str)]) -> Vec<(&'static str, Vec<u8>)> {
+    pairs
+        .iter()
+        .map(|(n, c)| (*n, c.as_bytes().to_vec()))
+        .collect()
+}
+
+#[test]
+fn a_fresh_install_writes_exactly_the_given_set() {
+    let root = tempfile::tempdir().unwrap();
+    let out = root.path().join("dist/eval/pack");
+    install_artifact_set(
+        &out,
+        &files(&[("lexicon.bin", "AA"), ("manifest.json", "{}")]),
+    )
+    .unwrap();
+
+    let mut present: Vec<String> = fs::read_dir(&out)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .collect();
+    present.sort();
+    assert_eq!(present, vec!["lexicon.bin", "manifest.json"]);
+    assert_eq!(fs::read(out.join("lexicon.bin")).unwrap(), b"AA");
+    // No staging directory is left behind.
+    let leftovers: Vec<String> = fs::read_dir(out.parent().unwrap())
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .filter(|n| n.starts_with('.'))
+        .collect();
+    assert!(leftovers.is_empty(), "staging left behind: {leftovers:?}");
+}
+
+#[test]
+fn a_replacement_is_wholesale_and_leaves_no_stale_file() {
+    let root = tempfile::tempdir().unwrap();
+    let out = root.path().join("dist/eval/pack");
+    install_artifact_set(
+        &out,
+        &files(&[("lexicon.bin", "OLD"), ("stale-report.jsonl", "old report")]),
+    )
+    .unwrap();
+    install_artifact_set(
+        &out,
+        &files(&[("lexicon.bin", "NEW"), ("manifest.json", "{}")]),
+    )
+    .unwrap();
+
+    assert_eq!(fs::read(out.join("lexicon.bin")).unwrap(), b"NEW");
+    assert!(
+        !out.join("stale-report.jsonl").exists(),
+        "a file from the previous artifact survived the replacement"
+    );
+}
+
+#[test]
+fn a_failed_replacement_leaves_the_previous_artifact_byte_identical() {
+    let root = tempfile::tempdir().unwrap();
+    let out = root.path().join("dist/eval/pack");
+    install_artifact_set(
+        &out,
+        &files(&[("lexicon.bin", "ORIGINAL"), ("manifest.json", "{\"v\":1}")]),
+    )
+    .unwrap();
+
+    // A name with a directory component cannot be written into the staging directory, so the
+    // replacement fails partway through: the first file is staged, the second is not.
+    let err = install_artifact_set(
+        &out,
+        &files(&[
+            ("lexicon.bin", "REPLACEMENT"),
+            ("nested/manifest.json", "{}"),
+        ]),
+    )
+    .expect_err("the replacement must fail");
+    assert!(
+        err.contains("is unchanged"),
+        "the failure did not report the directory as unchanged: {err}"
+    );
+
+    assert_eq!(
+        fs::read(out.join("lexicon.bin")).unwrap(),
+        b"ORIGINAL",
+        "a failed replacement changed the previous binary"
+    );
+    assert_eq!(
+        fs::read(out.join("manifest.json")).unwrap(),
+        b"{\"v\":1}",
+        "a failed replacement changed the previous manifest"
+    );
+    let mut present: Vec<String> = fs::read_dir(&out)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .collect();
+    present.sort();
+    assert_eq!(
+        present,
+        vec!["lexicon.bin", "manifest.json"],
+        "a failed replacement left extra files behind"
+    );
+    let leftovers: Vec<String> = fs::read_dir(out.parent().unwrap())
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .filter(|n| n.starts_with('.'))
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "a failed replacement left staging behind: {leftovers:?}"
     );
 }

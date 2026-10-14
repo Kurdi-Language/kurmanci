@@ -41,7 +41,8 @@
 use crate::compile::{compile_binary_pack_from_records, CompileStats};
 use crate::pack::language_model::load_language_model;
 use crate::pack::manifest::{
-    generate_licensing_and_attribution, DataLicenseEntry, LanguageModelProvenance,
+    generate_licensing_and_attribution, DataLicenseEntry, LanguageModelProvenance, PackManifest,
+    LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION,
 };
 use crate::pack::policy::PackPolicyConfig;
 use crate::pack::resolve_authoritative_pack_payload;
@@ -58,6 +59,9 @@ pub const EVALUATION_PACK_SCHEMA_VERSION: &str = "evaluation-pack-v1";
 /// model profile, so the embedded statistics follow the same rules as the pack this population
 /// is compared against.
 pub const BASE_PACK_ID: &str = "experimental-full";
+/// Binary pack format the production builder emits; an evaluation artifact must declare the
+/// same one, since it is compiled by the same compiler.
+pub const PACK_FORMAT_VERSION: u32 = 4;
 
 /// Whether a resolved candidate belongs to the evaluation population.
 ///
@@ -97,6 +101,9 @@ pub struct EvaluationPackProvenance {
 pub struct EvaluationPackCounts {
     pub base_resolved_entries: usize,
     pub kept_human_approved: usize,
+    pub kept_manual_seed: usize,
+    pub kept_external_approved: usize,
+    pub kept_external_metadata_replacement: usize,
     /// Of the human-approved entries kept, how many carry a form that is also TRAIN-attested.
     /// Present so the attested population closes arithmetically: an attested form that
     /// collides with an approved entry of the same normalized form is represented in the pack
@@ -115,6 +122,10 @@ pub struct EvaluationPackCounts {
 #[derive(Debug)]
 pub struct EvaluationPack {
     pub provenance: EvaluationPackProvenance,
+    /// `language-pack-manifest-v1`, so `evaluate-prediction-coverage` and every other evaluator
+    /// bound to that schema accept this artifact without being weakened. It carries
+    /// `release_kind = "evaluation"` and `production_eligible = false`.
+    pub manifest: PackManifest,
     pub binary_bytes: Vec<u8>,
     pub attribution_text: String,
 }
@@ -230,8 +241,17 @@ pub fn assemble_evaluation_pack<P: AsRef<Path>>(
         }
         match cand.population {
             EntryPopulation::ExternalUnreviewed => counts.kept_unreviewed_train_attested += 1,
-            _ => {
+            other => {
                 counts.kept_human_approved += 1;
+                match other {
+                    EntryPopulation::ManualSeed | EntryPopulation::SeedMetadataChange => {
+                        counts.kept_manual_seed += 1
+                    }
+                    EntryPopulation::ExternalApprovedMetadataChange => {
+                        counts.kept_external_metadata_replacement += 1
+                    }
+                    _ => counts.kept_external_approved += 1,
+                }
                 if is_attested {
                     counts.kept_human_approved_also_train_attested += 1;
                 }
@@ -253,11 +273,19 @@ pub fn assemble_evaluation_pack<P: AsRef<Path>>(
     let included: Vec<String> = included_sources.into_iter().collect();
     let (mut licenses, mut attribution_text) = generate_licensing_and_attribution(root, &included)?;
 
-    let (binary_bytes, stats, language_model_id, language_model_manifest_sha256): (
+    #[allow(clippy::type_complexity)]
+    let (
+        binary_bytes,
+        stats,
+        language_model_id,
+        language_model_manifest_sha256,
+        model_provenance,
+    ): (
         Vec<u8>,
         CompileStats,
         Option<String>,
         Option<String>,
+        Option<LanguageModelProvenance>,
     ) = if base_def.uses_model() {
         let base_model_id = base_def.language_model.as_deref().ok_or_else(|| {
             format!(
@@ -290,6 +318,7 @@ pub fn assemble_evaluation_pack<P: AsRef<Path>>(
         )?;
         let provenance = LanguageModelProvenance::from_model(&model);
         licenses.push(provenance.data_license_entry());
+        let carried_provenance = Some(provenance);
         attribution_text.push_str(&format!(
             "\n=== Evaluation population ===\nThis is an evaluation artifact, not a release pack: \
              it contains entries no human has reviewed individually, admitted because their form \
@@ -304,10 +333,16 @@ pub fn assemble_evaluation_pack<P: AsRef<Path>>(
             )
             .map_err(|e| format!("language model manifest unreadable: {}", e))?,
         );
-        (bytes, stats, Some(base_model_id.to_string()), Some(sha))
+        (
+            bytes,
+            stats,
+            Some(base_model_id.to_string()),
+            Some(sha),
+            carried_provenance,
+        )
     } else {
         let (bytes, stats) = compile_binary_pack_from_records(&compiler_entries, false, &[], &[])?;
-        (bytes, stats, None, None)
+        (bytes, stats, None, None, None)
     };
 
     counts.frequency_entry_count = stats.frequency_entry_count;
@@ -315,7 +350,50 @@ pub fn assemble_evaluation_pack<P: AsRef<Path>>(
     counts.trigram_count = stats.trigram_count;
     counts.binary_bytes = binary_bytes.len();
 
+    let binary_sha256 = sha256_hex(&binary_bytes);
+    let manifest = PackManifest {
+        schema_version: LANGUAGE_PACK_MANIFEST_SCHEMA_VERSION.to_string(),
+        pack_id: pack_id.to_string(),
+        pack_format_version: PACK_FORMAT_VERSION,
+        language: "ku-Latn".to_string(),
+        // An evaluation artifact is never a default and always experimental.
+        is_default: false,
+        is_experimental: true,
+        model_profile: base_def.model_profile.clone(),
+        frequency_entry_count: stats.frequency_entry_count,
+        bigram_count: stats.bigram_count,
+        trigram_count: stats.trigram_count,
+        language_model_id: language_model_id.clone(),
+        language_model_manifest_sha256: language_model_manifest_sha256.clone(),
+        language_model_provenance: model_provenance,
+        // Each count keeps its production meaning, applied to this build. The exclusions that
+        // have no production counterpart, the unattested ones, are in provenance.json.
+        manual_seed_selected_count: counts.kept_manual_seed,
+        external_approved_selected_count: counts.kept_external_approved,
+        external_metadata_replacement_selected_count: counts.kept_external_metadata_replacement,
+        external_experimental_selected_count: 0,
+        external_unreviewed_selected_count: counts.kept_unreviewed_train_attested,
+        external_excluded_by_status_count: counts.dropped_experimental_only,
+        external_discarded_by_collision_count: payload
+            .collision_result
+            .external_discarded_by_collision_count,
+        final_unique_entry_count: counts.final_entry_count,
+        pack_policy_sha256: payload.policy_sha256.clone(),
+        review_decisions_sha256: payload.decisions_sha256.clone(),
+        review_queue_manifest_sha256: payload.queue_manifest_sha256.clone(),
+        controlled_review_report_manifest_sha256: payload.review_report_manifest_sha256.clone(),
+        source_provenance: payload.source_provenance.clone(),
+        binary_sha256: binary_sha256.clone(),
+        binary_size_bytes: binary_bytes.len() as u64,
+        data_licenses: licenses.clone(),
+        attribution_files: vec!["attribution.txt".to_string()],
+        // Unmistakable, and carried by the manifest itself rather than only by its directory.
+        release_kind: Some("evaluation".to_string()),
+        production_eligible: Some(false),
+    };
+
     Ok(EvaluationPack {
+        manifest,
         provenance: EvaluationPackProvenance {
             schema_version: EVALUATION_PACK_SCHEMA_VERSION.to_string(),
             release_kind: "evaluation".to_string(),
@@ -327,7 +405,7 @@ pub fn assemble_evaluation_pack<P: AsRef<Path>>(
                     .to_string(),
             attestation: attestation.report,
             counts,
-            binary_sha256: sha256_hex(&binary_bytes),
+            binary_sha256,
             language_model_id,
             language_model_manifest_sha256,
             licenses,
@@ -381,18 +459,117 @@ pub fn build_evaluation_pack<P: AsRef<Path>>(
 
     let pack = assemble_evaluation_pack(root, pack_id, corpus_id, source_id, model_id)?;
 
-    fs::create_dir_all(&absolute_out)
-        .map_err(|e| format!("Failed to create {:?}: {}", absolute_out, e))?;
-    fs::write(absolute_out.join("lexicon.bin"), &pack.binary_bytes)
-        .map_err(|e| format!("Failed to write lexicon.bin: {}", e))?;
-    fs::write(absolute_out.join("attribution.txt"), &pack.attribution_text)
-        .map_err(|e| format!("Failed to write attribution.txt: {}", e))?;
+    let mut manifest_json = serde_json::to_string_pretty(&pack.manifest)
+        .map_err(|e| format!("Failed to serialize the pack manifest: {}", e))?;
+    manifest_json.push('\n');
     let mut provenance_json = serde_json::to_string_pretty(&pack.provenance)
         .map_err(|e| format!("Failed to serialize provenance: {}", e))?;
     provenance_json.push('\n');
-    fs::write(absolute_out.join("provenance.json"), &provenance_json)
-        .map_err(|e| format!("Failed to write provenance.json: {}", e))?;
+
+    let mut files: Vec<(&'static str, Vec<u8>)> = vec![
+        ("lexicon.bin", pack.binary_bytes.clone()),
+        ("manifest.json", manifest_json.into_bytes()),
+        (
+            "attribution.txt",
+            pack.attribution_text.clone().into_bytes(),
+        ),
+        ("provenance.json", provenance_json.into_bytes()),
+    ];
+    // Self-verifying artifact set, in the same shape the production packs use.
+    let mut lines: Vec<String> = files
+        .iter()
+        .map(|(name, bytes)| format!("{} {}", sha256_hex(bytes), name))
+        .collect();
+    lines.sort();
+    files.push(("artifacts.sha256", lines.join("\n").into_bytes()));
+
+    install_artifact_set(&absolute_out, &files)?;
     Ok(pack.provenance)
+}
+
+/// Replaces `out_dir` with exactly `files`, or leaves it exactly as it was.
+///
+/// Writing a directory in place would let a failure after the first write leave a new binary
+/// beside a stale manifest, which for a benchmarking artifact is worse than no artifact at all.
+/// So the set is staged beside the target, read back and hash-checked, and only then swapped in
+/// one rename; the previous directory is kept until the swap succeeds and restored if it fails.
+/// A replacement is wholesale, so a file that used to be in the directory and is not in `files`
+/// is gone rather than left behind.
+pub fn install_artifact_set(out_dir: &Path, files: &[(&str, Vec<u8>)]) -> Result<(), String> {
+    let parent = out_dir
+        .parent()
+        .ok_or_else(|| format!("output directory {:?} has no parent", out_dir))?;
+    let name = out_dir
+        .file_name()
+        .ok_or_else(|| format!("output directory {:?} has no name", out_dir))?
+        .to_string_lossy()
+        .to_string();
+    fs::create_dir_all(parent).map_err(|e| format!("Failed to create {:?}: {}", parent, e))?;
+    let stage = parent.join(format!(".{}.tmp-stage", name));
+    let backup = parent.join(format!(".{}.tmp-backup", name));
+
+    let cleanup = |p: &Path| {
+        if p.exists() {
+            let _ = fs::remove_dir_all(p);
+        }
+    };
+    cleanup(&stage);
+    cleanup(&backup);
+    fs::create_dir_all(&stage).map_err(|e| format!("Failed to create {:?}: {}", stage, e))?;
+
+    // Stage, then read back and compare: a short write or a full disk must not pass as success.
+    let staged = (|| -> Result<(), String> {
+        for (file_name, bytes) in files {
+            let path = stage.join(file_name);
+            fs::write(&path, bytes).map_err(|e| format!("Failed to write {:?}: {}", path, e))?;
+            let written =
+                fs::read(&path).map_err(|e| format!("Failed to read back {:?}: {}", path, e))?;
+            if &written != bytes {
+                return Err(format!("{:?} does not match what was written", path));
+            }
+        }
+        Ok(())
+    })();
+    if let Err(e) = staged {
+        cleanup(&stage);
+        return Err(format!(
+            "evaluation pack not installed, {:?} is unchanged: {}",
+            out_dir, e
+        ));
+    }
+
+    if out_dir.exists() {
+        if let Err(e) = fs::rename(out_dir, &backup) {
+            cleanup(&stage);
+            return Err(format!(
+                "evaluation pack not installed, {:?} is unchanged: could not move it aside: {}",
+                out_dir, e
+            ));
+        }
+    }
+    match fs::rename(&stage, out_dir) {
+        Ok(()) => {
+            cleanup(&backup);
+            Ok(())
+        }
+        Err(e) => {
+            // Put the previous artifact back before reporting, so a failed replacement never
+            // costs the caller the directory they already had.
+            if backup.exists() {
+                if let Err(rollback) = fs::rename(&backup, out_dir) {
+                    return Err(format!(
+                        "failed to install the evaluation pack into {:?}: {}; restoring the previous directory also failed: {}",
+                        out_dir, e, rollback
+                    ));
+                }
+            }
+            cleanup(&stage);
+            Err(format!(
+                "evaluation pack not installed, {:?} is unchanged: {}",
+                out_dir, e
+            ))
+        }
+    }
 }
 
 /// Fixed-width text rendering. Counts and hashes only.

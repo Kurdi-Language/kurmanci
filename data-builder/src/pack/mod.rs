@@ -15,7 +15,8 @@ pub use builder::{
 };
 pub use evaluation::{
     assemble_evaluation_pack, build_evaluation_pack, format_evaluation_pack,
-    in_evaluation_population, EvaluationPackProvenance, EVALUATION_PACK_SCHEMA_VERSION,
+    in_evaluation_population, install_artifact_set, EvaluationPackProvenance,
+    EVALUATION_PACK_SCHEMA_VERSION,
 };
 pub use language_model::{
     build_language_model, language_model_manifest_sha256, load_language_model,

@@ -283,8 +283,29 @@ that:
 - an output path containing `..` is refused;
 - the model the attestation is computed against must be the model the base pack embeds.
 
-`provenance.json` records `release_kind = "evaluation"` and `production_eligible = false`, so a
-copy separated from its directory still says what it is.
+### The artifact set
+
+`lexicon.bin`, `manifest.json`, `attribution.txt`, `provenance.json` and `artifacts.sha256`.
+The manifest is `language-pack-manifest-v1`, the same schema and type the production packs use,
+binding the exact binary hash and size, the entry count, the model profile, the language-model
+id, the model-manifest hash and the model provenance. That is deliberate: `evaluate-prediction-
+coverage` requires a sibling manifest of that schema and verifies those hashes before it will
+run, and weakening that contract to accept a different document would remove a check that
+protects every measurement. Its selection counts keep their production meanings applied to this
+build, so the experimental-only exclusions appear under `external_excluded_by_status_count`,
+while the attestation exclusions, which have no production counterpart, are in `provenance.json`.
+
+Both the manifest and `provenance.json` record `release_kind = "evaluation"` and
+`production_eligible = false`, so a file separated from its directory still says what it is.
+Those two manifest fields are optional and omitted everywhere else, so no production manifest's
+bytes or recorded hash change because they exist.
+
+The set is installed atomically: assembled in memory, staged in a sibling directory, read back
+and compared byte for byte, then swapped in with a single rename, with the previous directory
+kept until the swap succeeds and restored if it fails. A replacement is wholesale, so a file
+from an earlier build cannot survive into a new one. Writing in place would let a failure after
+the first write leave a new binary beside a stale manifest, which for a benchmarking artifact is
+worse than no artifact.
 
 ### Built through the production path, by removal only
 
@@ -326,3 +347,10 @@ words are in the lexicon. So a next-word prediction comparison across the three 
 varies vocabulary and embedded table size together and cannot separate them, the same limit
 recorded for the prediction-coverage baseline in section 6. Known-word coverage, completion and
 correction comparisons do not have that confound.
+
+A first prediction-coverage run on the development partition illustrates why that caveat
+matters. Reviewed answers 19.2% of two-word contexts in its top five, this population 19.6%,
+and `experimental-full` 28.3%. So 10,471 attested words move top-five prediction by four tenths
+of a point, while the 29,500 unattested words plus the larger embedded tables account for the
+rest. Prediction is the axis where vocabulary and table size are entangled, so this is a
+motivation to run the completion and correction comparisons, not a conclusion about vocabulary.
