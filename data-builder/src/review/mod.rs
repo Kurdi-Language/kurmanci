@@ -7,6 +7,7 @@ pub mod kuwiki_decisions;
 pub mod merger;
 pub mod queues;
 pub mod schema;
+pub mod train_attestation;
 pub mod vocabulary_batch;
 
 pub use inspect::{inspect_word, WordInspection};
@@ -25,6 +26,10 @@ pub use queues::{generate_review_queues, ReviewQueueSummary};
 pub use schema::{
     compute_conflict_group_id, compute_entry_id, ReviewDecisionRecord, ReviewDecisionStatus,
     ReviewTargetType, REVIEW_DECISION_SCHEMA_VERSION,
+};
+pub use train_attestation::{
+    build_train_attestation_report, format_report as format_train_attestation_report,
+    TrainAttestationReport, TRAIN_ATTESTATION_SCHEMA_VERSION,
 };
 pub use vocabulary_batch::{
     generate_vocabulary_review_batch, VocabularyReviewBatchSummary, VocabularyReviewRecord,

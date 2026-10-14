@@ -177,3 +177,83 @@ vocabulary coverage expanding the usable n-gram table; this comparison does not 
 vocabulary size from embedded n-gram-table size. These are the rates
 to compare against after the next reviewed batches; a smoothing or backoff change is justified
 only by a measured difference here.
+
+## 7. TRAIN corpus attestation of a review pool
+
+`train-attestation-report` answers one question about a source's ordinary review pool with
+counts and hashes only: for each entry no human has decided yet, does its normalized form occur
+in the canonical TRAIN document set the committed language model was built from, and in how many
+of those documents?
+
+```bash
+cargo run -p kurmanci-data-builder -- train-attestation-report \
+  --model-id kuwiki-20260801 \
+  --out docs/evaluation/attestation/<corpus>-<source>-<date>.json
+```
+
+The corpus is external, so this needs it acquired locally (`acquire-corpus kuwiki`); the report
+is committed as evidence and is not recomputable on a clean checkout.
+
+### Why the TRAIN partition only
+
+This signal exists to select the membership of an evaluation pack whose completion, correction
+and coverage behaviour is then measured on the DEVELOPMENT partition. Attestation computed over
+the whole corpus would admit a form *because* it occurs in a held-out document, and the
+benchmark would then find that same form: the measurement would report its own selection rule
+back as a result. The language model already restricts itself to TRAIN
+(`pack/language_model.rs`: "DEV/EVAL partitions never contribute") and this report uses exactly
+that population.
+
+That is enforced rather than documented. Every record read must declare `partition == "train"`,
+only the corpus's canonical duplicate representatives contribute, and the report then recomputes
+`train_document_set_sha256` over the records it visited and refuses to continue unless it equals
+the value the language-model manifest records, alongside that manifest's train document count
+and the partition, registry and canonical-import hashes it pins. A walk that admitted one
+held-out document, or ran against a different partitioning, cannot produce that hash. The
+command therefore cannot be pointed at DEVELOPMENT or EVALUATION material at all.
+
+Attestation is evidence, never a review status. A form in a thousand documents is not approved
+by that fact and an unattested form is not rejected by it; both stay exactly as unreviewed as
+they were. The report also sizes no pack: an evaluation population's entry count is produced by
+the builder that assembles it, which is the component that knows the collision rules.
+
+Two different quantities must not be confused. The Review Desk ranks its queue by whole-corpus
+occurrence, which is sound because a ranking is measured against nothing. Pack membership uses
+canonical TRAIN occurrence, which is what this report records.
+
+### Baseline, 2026-10-14: KurdishHunspell pool against the Kuwiki TRAIN set
+
+`docs/evaluation/attestation/kuwiki-20260801-kurdish-hunspell-kmr-20261014.json`, over the
+73,212 canonical TRAIN documents of `kuwiki-20260801` (document set
+`19b6366127b866aa…`, verified against the model manifest) and the pool at Hunspell revision
+`88131d68…`:
+
+| funnel | entries |
+|---|---|
+| review pool records | 41,258 |
+| less already decided | 1,511 |
+| less metadata conflict group members | 2,193 |
+| pending | 37,554 |
+| pending, TRAIN-attested | 10,473 |
+| pending, TRAIN-unattested | 27,081 |
+
+Every pending entry carries a distinct normalized form. Pending entries by TRAIN document count:
+
+| documents | pending entries |
+|---|---|
+| 0 | 27,081 |
+| 1-4 | 6,034 |
+| 5-9 | 1,753 |
+| 10-24 | 1,546 |
+| 25-49 | 857 |
+| 50-99 | 283 |
+| 100+ | 0 |
+
+Two readings follow, and neither is a decision. First, no pending entry occurs in 100 or more
+TRAIN documents, which is consistent with the earlier frequency-ranked review work having
+consumed that band, so an evaluation population built from attestation draws entirely from the
+1 to 99 document range.
+Second, the 1,511 decisions already recorded distribute across those buckets very unevenly, and
+the report publishes their outcomes per bucket. Those entries were not selected at random, so
+the distribution is observational and supports no inference about the pending population on its
+own. It is published to be superseded by a randomised, blinded sample.

@@ -1,0 +1,147 @@
+{
+  "schema_version": "train-attestation-v1",
+  "source": {
+    "source_id": "kurdish-hunspell-kmr",
+    "source_revision": "88131d6878ef7fa3ee114aa554adc385ff85b44c",
+    "pool_file": "hunspell-only.jsonl",
+    "pool_sha256": "fb89dfe3fac39f0dea21990ba1abd572bb80bcad4296a33144bcb8421d0968e5",
+    "conflict_groups_sha256": "6651e9d984d00bce3521f9f5d05a08cb3c03543677d5509af3693370767f62fd",
+    "decisions_sha256": "20ad9f14a1cf629b39ff66ace8d8dcfb9c64a4dd9087699f5bee3577b0c51938"
+  },
+  "corpus": {
+    "corpus_id": "kuwiki",
+    "corpus_version": "20260801",
+    "language_model_id": "kuwiki-20260801",
+    "language_model_manifest_sha256": "fa5b507b8be6ee674745b0e9b8965173ce247de1125673889da983c8d9add054",
+    "corpus_source_artifact_sha256": "158b726695cb55fb46eadf06ac2c966b0e146cad1b714be43e72716926f186cf",
+    "corpus_documents_sha256": "083607fb631536bdb00d8ac0e0e8cfc44fb0d2dcfd77e9bb60c0cb8104c7e1f1",
+    "corpus_registry_sha256": "f965164f51a551a16d4eb88675efd128c82df84806779ed8f2a11334991c2247",
+    "canonical_manifest_sha256": "cc4e6f4b755a594f212cad86937862cb192ed8583a6be1ac321ac390db4c7386",
+    "partition_manifest_sha256": "7d85f85e659d2655035bbb880195ff7e2a0c580df5adc5a214b55034b2c2aa4a",
+    "train_partition_sha256": "e786987f15e1ff56304ddc033029ebfa7b70c749f3104d81afe7da5d0547417b",
+    "train_records_read": 73284,
+    "train_document_count": 73212,
+    "train_document_set_sha256": "19b6366127b866aa508ffd891ada8a4715ebc47e77c1718c4fd4fd15cea787ca",
+    "tokenizer": "corpus::tokenizer::tokenize_text"
+  },
+  "funnel": {
+    "pool_records": 41258,
+    "excluded_conflict_group_member": 2193,
+    "excluded_already_decided": 1511,
+    "pending": 37554,
+    "pending_train_attested": 10473,
+    "pending_train_unattested": 27081,
+    "pending_distinct_normalized": 37554,
+    "pending_distinct_normalized_train_attested": 10473
+  },
+  "pending_by_bucket": [
+    {
+      "bucket": "0",
+      "entries": 27081,
+      "distinct_normalized": 27081
+    },
+    {
+      "bucket": "1-4",
+      "entries": 6034,
+      "distinct_normalized": 6034
+    },
+    {
+      "bucket": "5-9",
+      "entries": 1753,
+      "distinct_normalized": 1753
+    },
+    {
+      "bucket": "10-24",
+      "entries": 1546,
+      "distinct_normalized": 1546
+    },
+    {
+      "bucket": "25-49",
+      "entries": 857,
+      "distinct_normalized": 857
+    },
+    {
+      "bucket": "50-99",
+      "entries": 283,
+      "distinct_normalized": 283
+    },
+    {
+      "bucket": "100+",
+      "entries": 0,
+      "distinct_normalized": 0
+    }
+  ],
+  "decided_by_bucket": [
+    {
+      "bucket": "0",
+      "decided": 332,
+      "by_status": {
+        "approved": 57,
+        "needs_linguist": 269,
+        "needs_source_investigation": 1,
+        "rejected_from_default_pack": 5
+      }
+    },
+    {
+      "bucket": "1-4",
+      "decided": 98,
+      "by_status": {
+        "approved": 18,
+        "experimental_only": 1,
+        "needs_linguist": 74,
+        "needs_source_investigation": 2,
+        "rejected_from_default_pack": 3
+      }
+    },
+    {
+      "bucket": "5-9",
+      "decided": 21,
+      "by_status": {
+        "approved": 3,
+        "needs_linguist": 15,
+        "needs_source_investigation": 2,
+        "rejected_from_default_pack": 1
+      }
+    },
+    {
+      "bucket": "10-24",
+      "decided": 17,
+      "by_status": {
+        "approved": 6,
+        "needs_linguist": 11
+      }
+    },
+    {
+      "bucket": "25-49",
+      "decided": 13,
+      "by_status": {
+        "approved": 4,
+        "experimental_only": 1,
+        "needs_linguist": 8
+      }
+    },
+    {
+      "bucket": "50-99",
+      "decided": 265,
+      "by_status": {
+        "approved": 167,
+        "approved_with_metadata_change": 4,
+        "experimental_only": 50,
+        "needs_linguist": 22,
+        "rejected_from_default_pack": 22
+      }
+    },
+    {
+      "bucket": "100+",
+      "decided": 765,
+      "by_status": {
+        "approved": 555,
+        "approved_with_metadata_change": 4,
+        "experimental_only": 77,
+        "needs_linguist": 66,
+        "needs_source_investigation": 1,
+        "rejected_from_default_pack": 62
+      }
+    }
+  ]
+}
