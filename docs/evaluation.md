@@ -354,3 +354,72 @@ and `experimental-full` 28.3%. So 10,471 attested words move top-five prediction
 of a point, while the 29,500 unattested words plus the larger embedded tables account for the
 rest. Prediction is the axis where vocabulary and table size are entangled, so this is a
 motivation to run the completion and correction comparisons, not a conclusion about vocabulary.
+
+## 9. Pack quality on a held-out partition
+
+`evaluate-pack-quality` measures the spelling side of a built pack with no human judgement, so
+packs can be compared directly:
+
+```bash
+cargo run -p kurmanci-data-builder -- evaluate-pack-quality \
+  --pack data/build/packs/reviewed/lexicon.bin --partition development --targets 2000
+```
+
+Four families: how much held-out text the pack knows, by token occurrence and by distinct form;
+completion of a target from its first one to four letters; restoration of a deterministically
+corrupted spelling; and what the pack does to words that are already spelled correctly. The
+provenance chain is the shared one in `eval_support`, the same chain
+`evaluate-prediction-coverage` uses, so the partition is provably held out from the model the
+pack embeds.
+
+Two design rules make a comparison meaningful. **Targets are drawn from the corpus before any
+pack is consulted**, as the most frequent alphabet-eligible held-out forms of at least four
+characters, so every pack answers for the same words and a target a pack lacks counts as a miss
+rather than being dropped. And **correction is measured in both directions**: a larger
+vocabulary flatters a one-directional measurement, because knowing more words means offering
+corrections for fewer inputs, so the report also counts how often correctly spelled held-out
+words are treated as unknown or answered with a different word first. A corruption that is
+itself a word the pack knows is counted separately rather than as a failure, since penalising a
+pack for knowing more words would invert the measurement.
+
+Correction rates have a ceiling: a target the pack does not contain can never be restored, so
+the report records `targets_known` and prints that ceiling. A correction comparison between
+packs is therefore mostly a vocabulary comparison and must be read as one.
+
+### Three-population comparison, 2026-10-14
+
+`docs/evaluation/pack-quality/kuwiki-20260801-development-*-20261014.json`, development
+partition, 9,285 documents evaluated, 2,000 targets, five candidates per query.
+
+| | reviewed | reviewed + TRAIN-attested | experimental-full |
+|---|---|---|---|
+| entries | 2,143 | 12,614 | 42,248 |
+| held-out tokens known | 54.8% | 56.8% | 69.0% |
+| distinct held-out forms known | 2.4% | 7.7% | 9.7% |
+| completion top-5, 2 letters | 20.8% | 4.0% | 2.5% |
+| completion top-5, 3 letters | 48.0% | 29.8% | 27.2% |
+| completion top-5, 4 letters | 59.2% | 52.7% | 56.3% |
+| correction ceiling | 61.7% | 62.2% | 72.4% |
+| correction top-1, transposition | 61.7% | 61.7% | 70.6% |
+| correctly spelled word answered with another word | 0% | 0% | 0% |
+
+Three readings follow.
+
+**Corpus attestation selects a weak subset.** The 10,471 attested entries add two points of
+held-out token coverage; the unattested remainder adds twelve more. Attestation is therefore
+not a good proxy for which undecided entries are worth having, which is the opposite of what the
+evaluation population was built to test. Whether those unattested forms are *linguistically*
+sound is a different question that no mechanical measurement answers.
+
+**Completion degrades sharply as the lexicon grows, and the cause is a pack configuration, not
+the vocabulary.** No pack here embeds unigram frequencies: `model_profile = "prediction"` encodes
+n-grams only, `uses_frequencies` is true for the `frequency` and `ngram` profiles alone, and all
+three packs report zero frequency entries. Completion ranking therefore cannot prefer common
+words. With 2,143 entries that hardly matters; with 42,248 a two-letter prefix has far more
+matches than the five slots can hold. This is testable: the same benchmark run against a pack
+built on the `ngram` profile, which embeds frequencies as well as n-grams, would confirm or
+refute it. No ranking or policy change is made here.
+
+**Correction improves with vocabulary and costs no precision.** Each pack performs close to its
+own ceiling, so the gain comes from knowing the word rather than from correcting better, and
+every correctly spelled known word is answered with itself in all three packs.

@@ -1,0 +1,128 @@
+{
+  "schema_version": "pack-quality-v1",
+  "provenance": {
+    "pack_path": "/private/tmp/claude-501/-Users-ferhatguneri-Desktop-Kurmanc-/68b4bc67-2c08-488d-8c72-f97fb2b38566/scratchpad/eval-pack/lexicon.bin",
+    "pack_sha256": "023d945460beb8046b749da66ecbd2ac9501815d591af9ea8683d43e4a7175cb",
+    "pack_entry_count": 12614,
+    "pack_manifest_sha256": "560bac4d83e2443c9ec250f68f380c4199b8a30a3d4c3f8bfd4c7cfb4ac6d39f",
+    "model_id": "kuwiki-20260801",
+    "model_manifest_sha256": "fa5b507b8be6ee674745b0e9b8965173ce247de1125673889da983c8d9add054",
+    "corpus_id": "kuwiki",
+    "partition": "development",
+    "partition_manifest_sha256": "7d85f85e659d2655035bbb880195ff7e2a0c580df5adc5a214b55034b2c2aa4a",
+    "partition_sha256": "eb5dd0d4b538d6dd9a183c115b045ab74cc213fe6d875e0878d570fd8f964081",
+    "partition_declared_documents": 9328,
+    "result_limit": 5,
+    "target_limit": 2000,
+    "min_target_chars": 4
+  },
+  "corpus": {
+    "documents_read": 9328,
+    "documents_evaluated": 9285,
+    "other_corpus_documents_skipped": 0,
+    "duplicate_documents_skipped": 43
+  },
+  "known_words": {
+    "token_occurrences": 822225,
+    "token_occurrences_known": 466852,
+    "distinct_forms": 85315,
+    "distinct_forms_known": 6609,
+    "distinct_forms_outside_alphabet": 6519
+  },
+  "completion": [
+    {
+      "prefix_chars": 1,
+      "targets": 2000,
+      "top1": 0,
+      "top3": 0,
+      "top5": 1,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 2,
+      "targets": 2000,
+      "top1": 14,
+      "top3": 40,
+      "top5": 79,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 3,
+      "targets": 2000,
+      "top1": 142,
+      "top3": 426,
+      "top5": 597,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 4,
+      "targets": 2000,
+      "top1": 455,
+      "top3": 868,
+      "top5": 1054,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    }
+  ],
+  "correction": [
+    {
+      "corruption": "delete_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 42,
+      "measured": 1958,
+      "top1": 747,
+      "top3": 1019,
+      "top5": 1105,
+      "no_suggestion": 120
+    },
+    {
+      "corruption": "duplicate_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 6,
+      "measured": 1994,
+      "top1": 1204,
+      "top3": 1240,
+      "top5": 1240,
+      "no_suggestion": 269
+    },
+    {
+      "corruption": "substitute_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 7,
+      "measured": 1993,
+      "top1": 1017,
+      "top3": 1196,
+      "top5": 1236,
+      "no_suggestion": 186
+    },
+    {
+      "corruption": "transpose_two_letters",
+      "targets": 1983,
+      "corruption_is_known_word": 8,
+      "measured": 1975,
+      "top1": 1219,
+      "top3": 1233,
+      "top5": 1234,
+      "no_suggestion": 187
+    },
+    {
+      "corruption": "strip_diacritics",
+      "targets": 1178,
+      "corruption_is_known_word": 44,
+      "measured": 1134,
+      "top1": 739,
+      "top3": 754,
+      "top5": 754,
+      "no_suggestion": 89
+    }
+  ],
+  "clean_input": {
+    "targets": 2000,
+    "targets_known": 1244,
+    "treated_as_unknown": 756,
+    "corrected_away_from_input": 0
+  }
+}

@@ -151,6 +151,20 @@ enum Commands {
         #[arg(long)]
         out: PathBuf,
     },
+    /// Spelling-side quality of a built pack on a held-out partition: how much held-out text it knows, how well it completes a word from its first letters, whether it restores a deterministically corrupted spelling, and whether it leaves correctly spelled words alone. Fully mechanical, so packs can be compared without human judgement; targets are drawn from the corpus before any pack is consulted, so every pack answers for the same words. Decides and changes nothing
+    EvaluatePackQuality {
+        #[arg(long)]
+        pack: PathBuf,
+        #[arg(long, default_value = "development")]
+        partition: String,
+        /// Distinct held-out forms used as completion and correction targets. Coverage always uses the whole partition.
+        #[arg(long, default_value_t = 5000)]
+        targets: usize,
+        #[arg(long)]
+        out: Option<PathBuf>,
+        #[arg(long)]
+        json: bool,
+    },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
     /// Generated, diagnostic-only alphabet audit: lists every lexical form outside the 31-letter Kurmancî alphabet with its provenance (reviewed-pack policy exclusions with their human decision, Hunspell import, Kuwiki batches, experimental-full). Writes data/reports/alphabet-audit/ only; decides and modifies nothing
@@ -822,6 +836,47 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("❌ Evaluation pack build failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::EvaluatePackQuality {
+            pack,
+            partition,
+            targets,
+            out,
+            json,
+        } => {
+            match data_builder_lib::eval_pack_quality::evaluate_pack_quality(
+                std::path::Path::new("."),
+                &pack,
+                &partition,
+                targets,
+            ) {
+                Ok(report) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&report).expect("serialize")
+                        );
+                    } else {
+                        print!(
+                            "{}",
+                            data_builder_lib::eval_pack_quality::format_report(&report)
+                        );
+                    }
+                    if let Some(path) = out {
+                        if let Some(parent) = path.parent() {
+                            std::fs::create_dir_all(parent).expect("create report directory");
+                        }
+                        let mut text = serde_json::to_string_pretty(&report).expect("serialize");
+                        text.push('\n');
+                        std::fs::write(&path, text).expect("write report");
+                        eprintln!("report written to {:?}", path);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ Pack quality evaluation failed: {}", e);
                     std::process::exit(1);
                 }
             }

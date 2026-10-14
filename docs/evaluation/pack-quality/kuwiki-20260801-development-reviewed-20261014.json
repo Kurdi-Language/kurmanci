@@ -1,0 +1,128 @@
+{
+  "schema_version": "pack-quality-v1",
+  "provenance": {
+    "pack_path": "data/build/packs/reviewed/lexicon.bin",
+    "pack_sha256": "8ad8bbf8134f5f67c95a631a4fa4a0345a0a4445a67140278b9cb48e5a1e399b",
+    "pack_entry_count": 2143,
+    "pack_manifest_sha256": "4fc2aa2d2de7dc762eff6b58f7be5ffe0a9b2cff870a0a0c838c254e42718ee4",
+    "model_id": "kuwiki-20260801",
+    "model_manifest_sha256": "fa5b507b8be6ee674745b0e9b8965173ce247de1125673889da983c8d9add054",
+    "corpus_id": "kuwiki",
+    "partition": "development",
+    "partition_manifest_sha256": "7d85f85e659d2655035bbb880195ff7e2a0c580df5adc5a214b55034b2c2aa4a",
+    "partition_sha256": "eb5dd0d4b538d6dd9a183c115b045ab74cc213fe6d875e0878d570fd8f964081",
+    "partition_declared_documents": 9328,
+    "result_limit": 5,
+    "target_limit": 2000,
+    "min_target_chars": 4
+  },
+  "corpus": {
+    "documents_read": 9328,
+    "documents_evaluated": 9285,
+    "other_corpus_documents_skipped": 0,
+    "duplicate_documents_skipped": 43
+  },
+  "known_words": {
+    "token_occurrences": 822225,
+    "token_occurrences_known": 450852,
+    "distinct_forms": 85315,
+    "distinct_forms_known": 2086,
+    "distinct_forms_outside_alphabet": 6519
+  },
+  "completion": [
+    {
+      "prefix_chars": 1,
+      "targets": 2000,
+      "top1": 1,
+      "top3": 11,
+      "top5": 20,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 2,
+      "targets": 2000,
+      "top1": 77,
+      "top3": 252,
+      "top5": 415,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 3,
+      "targets": 2000,
+      "top1": 354,
+      "top3": 779,
+      "top5": 960,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 4,
+      "targets": 2000,
+      "top1": 619,
+      "top3": 1060,
+      "top5": 1185,
+      "no_candidate": 2,
+      "candidates_returned": 9825
+    }
+  ],
+  "correction": [
+    {
+      "corruption": "delete_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 15,
+      "measured": 1985,
+      "top1": 939,
+      "top3": 1170,
+      "top5": 1210,
+      "no_suggestion": 194
+    },
+    {
+      "corruption": "duplicate_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 1,
+      "measured": 1999,
+      "top1": 1221,
+      "top3": 1233,
+      "top5": 1233,
+      "no_suggestion": 411
+    },
+    {
+      "corruption": "substitute_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 1,
+      "measured": 1999,
+      "top1": 1137,
+      "top3": 1226,
+      "top5": 1231,
+      "no_suggestion": 281
+    },
+    {
+      "corruption": "transpose_two_letters",
+      "targets": 1983,
+      "corruption_is_known_word": 4,
+      "measured": 1979,
+      "top1": 1221,
+      "top3": 1225,
+      "top5": 1225,
+      "no_suggestion": 293
+    },
+    {
+      "corruption": "strip_diacritics",
+      "targets": 1178,
+      "corruption_is_known_word": 15,
+      "measured": 1163,
+      "top1": 761,
+      "top3": 769,
+      "top5": 769,
+      "no_suggestion": 145
+    }
+  ],
+  "clean_input": {
+    "targets": 2000,
+    "targets_known": 1233,
+    "treated_as_unknown": 767,
+    "corrected_away_from_input": 0
+  }
+}
