@@ -137,6 +137,20 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Builds an evaluation-only language pack from corpus evidence: the human-approved entries plus the still-undecided entries of a source whose form occurs in the canonical TRAIN document set of the committed language model. Not declared in pack-policy.toml, never production eligible, refused an output directory under data/build/packs/. Selection, the language-model join and the compilation are the production ones, reached by removing entries from the resolved experimental-full payload
+    BuildEvaluationPack {
+        #[arg(long, default_value = "reviewed-plus-train-attested")]
+        pack_id: String,
+        #[arg(long, default_value = "kuwiki")]
+        corpus_id: String,
+        #[arg(long, default_value = "kurdish-hunspell-kmr")]
+        source_id: String,
+        #[arg(long)]
+        model_id: String,
+        /// Output directory. Must be outside data/build/packs/.
+        #[arg(long)]
+        out: PathBuf,
+    },
     /// Strictly validates all built language pack manifests and binary invariants under data/build/packs/
     ValidatePackManifest,
     /// Generated, diagnostic-only alphabet audit: lists every lexical form outside the 31-letter Kurmancî alphabet with its provenance (reviewed-pack policy exclusions with their human decision, Hunspell import, Kuwiki batches, experimental-full). Writes data/reports/alphabet-audit/ only; decides and modifies nothing
@@ -785,6 +799,29 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("❌ TRAIN attestation report failed: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
+        Commands::BuildEvaluationPack {
+            pack_id,
+            corpus_id,
+            source_id,
+            model_id,
+            out,
+        } => {
+            match data_builder_lib::pack::build_evaluation_pack(
+                ".", &pack_id, &corpus_id, &source_id, &model_id, &out,
+            ) {
+                Ok(provenance) => {
+                    print!(
+                        "{}",
+                        data_builder_lib::pack::format_evaluation_pack(&provenance)
+                    );
+                    eprintln!("evaluation pack written to {:?}", out);
+                }
+                Err(e) => {
+                    eprintln!("❌ Evaluation pack build failed: {}", e);
                     std::process::exit(1);
                 }
             }

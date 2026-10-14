@@ -28,8 +28,9 @@ pub use schema::{
     ReviewTargetType, REVIEW_DECISION_SCHEMA_VERSION,
 };
 pub use train_attestation::{
-    build_train_attestation_report, format_report as format_train_attestation_report,
-    TrainAttestationReport, TRAIN_ATTESTATION_SCHEMA_VERSION,
+    build_train_attestation_report, compute_train_attestation,
+    format_report as format_train_attestation_report, TrainAttestation, TrainAttestationReport,
+    TRAIN_ATTESTATION_SCHEMA_VERSION,
 };
 pub use vocabulary_batch::{
     generate_vocabulary_review_batch, VocabularyReviewBatchSummary, VocabularyReviewRecord,

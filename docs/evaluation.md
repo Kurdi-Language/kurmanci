@@ -257,3 +257,72 @@ Second, the 1,511 decisions already recorded distribute across those buckets ver
 the report publishes their outcomes per bucket. Those entries were not selected at random, so
 the distribution is observational and supports no inference about the pending population on its
 own. It is published to be superseded by a randomised, blinded sample.
+
+## 8. Evaluation-only pack from corpus evidence
+
+`build-evaluation-pack` assembles one population for measurement: the entries a human approved,
+plus the still-undecided entries of a source whose normalized form occurs in the canonical TRAIN
+document set of the committed language model. It exists to answer whether corpus attestation is
+a good enough membership rule to ship vocabulary nobody has reviewed one by one.
+
+```bash
+cargo run -p kurmanci-data-builder -- build-evaluation-pack \
+  --model-id kuwiki-20260801 --out dist/evaluation-packs/reviewed-plus-train-attested
+```
+
+### It is not a pack this project ships
+
+The pack id is absent from [data/pack-policy.toml](../data/pack-policy.toml) and stays absent
+while this is an experiment, so it is invisible to `build-pack`, `verify-production-state`,
+`rebuild-production` and the release bundle, and no host can resolve it. Four guards enforce
+that:
+
+- a pack id already declared in the pack policy is refused;
+- an output directory inside, equal to, or containing `data/build/packs/` is refused, with both
+  paths resolved through symlinks and normalized by the same rule before comparison;
+- an output path containing `..` is refused;
+- the model the attestation is computed against must be the model the base pack embeds.
+
+`provenance.json` records `release_kind = "evaluation"` and `production_eligible = false`, so a
+copy separated from its directory still says what it is.
+
+### Built through the production path, by removal only
+
+Selection, collision resolution, licensing, the language-model join and the binary compilation
+are the production ones, reached by resolving the authoritative `experimental-full` payload and
+then removing entries from it. Nothing is selected or compiled by a rule production does not
+use, because a population built by different rules could not be compared with the packs it is
+measured against: a difference in the result would not be attributable to the vocabulary.
+
+Membership follows the population the authoritative resolver already assigned. Seed and
+human-approved entries are kept. Experimental-only entries are dropped, because a human decided
+they are not for the reviewed pack and corpus evidence does not overturn a human decision.
+Undecided entries are kept only when TRAIN-attested. No review status is read, written or
+inferred beyond the population the resolver assigned, and attestation never becomes one.
+
+### First build, 2026-10-14
+
+Against `kuwiki-20260801` and the KurdishHunspell pool:
+
+| | entries |
+|---|---|
+| base resolved entries (`experimental-full`) | 42,248 |
+| kept, human approved | 2,143 |
+| kept, undecided and TRAIN-attested | 10,471 |
+| dropped, undecided and unattested | 29,500 |
+| dropped, experimental-only decisions | 134 |
+| final | 12,614 |
+
+The four categories sum to the base payload exactly. Of the 2,143 approved entries, 2 carry a
+form that is also TRAIN-attested, so all 10,473 attested forms of the attestation report are
+present: 10,471 as undecided entries and 2 represented by an approved entry of the same
+normalized form.
+
+### What the comparison can and cannot attribute
+
+The pack embeds 29,499 bigrams and 29,481 trigrams, against 19,319 and 27,929 for `reviewed` and
+44,820 and 55,140 for `experimental-full`, because the compiler embeds only n-gram records whose
+words are in the lexicon. So a next-word prediction comparison across the three populations
+varies vocabulary and embedded table size together and cannot separate them, the same limit
+recorded for the prediction-coverage baseline in section 6. Known-word coverage, completion and
+correction comparisons do not have that confound.

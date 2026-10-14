@@ -241,7 +241,16 @@ fn read_jsonl_lines(path: &Path) -> Result<Vec<String>, String> {
         .collect())
 }
 
-/// Builds the report. `model_id` names the committed language model whose manifest is the
+/// The report plus the attested population it describes. One computation serves both, so a
+/// pack built from this signal can never be built from a different set than the report states.
+#[derive(Debug, Clone)]
+pub struct TrainAttestation {
+    pub report: TrainAttestationReport,
+    /// Normalized forms of pending entries occurring in at least one canonical TRAIN document.
+    pub attested_pending_normalized: BTreeSet<String>,
+}
+
+/// Builds the report only. `model_id` names the committed language model whose manifest is the
 /// anchor for the TRAIN document set; `corpus_id` must be the corpus that model was built from.
 pub fn build_train_attestation_report<P: AsRef<Path>>(
     root_dir: P,
@@ -249,6 +258,16 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
     source_id: &str,
     model_id: &str,
 ) -> Result<TrainAttestationReport, String> {
+    compute_train_attestation(root_dir, corpus_id, source_id, model_id).map(|a| a.report)
+}
+
+/// Builds the report and returns the attested population with it.
+pub fn compute_train_attestation<P: AsRef<Path>>(
+    root_dir: P,
+    corpus_id: &str,
+    source_id: &str,
+    model_id: &str,
+) -> Result<TrainAttestation, String> {
     let root = root_dir.as_ref();
 
     // ------------------------------------------------------------------
@@ -586,7 +605,7 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
         })
         .collect();
 
-    Ok(TrainAttestationReport {
+    let report = TrainAttestationReport {
         schema_version: TRAIN_ATTESTATION_SCHEMA_VERSION.to_string(),
         source: SourceProvenance {
             source_id: source_id.to_string(),
@@ -624,6 +643,10 @@ pub fn build_train_attestation_report<P: AsRef<Path>>(
         },
         pending_by_bucket,
         decided_by_bucket,
+    };
+    Ok(TrainAttestation {
+        report,
+        attested_pending_normalized: pending_forms_attested,
     })
 }
 
