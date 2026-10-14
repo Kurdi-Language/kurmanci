@@ -2,6 +2,7 @@
 
 pub mod builder;
 pub mod collisions;
+pub mod evaluation;
 pub mod language_model;
 pub mod manifest;
 pub mod policy;
@@ -11,6 +12,11 @@ pub use builder::{
     assemble_pack, assemble_pack_artifacts, build_pack, build_temp_frequency_pack,
     resolve_authoritative_pack_lexicon, resolve_authoritative_pack_payload, AssembledPack,
     AuthoritativePackResolution, PackArtifacts, PACK_ARTIFACT_FILES,
+};
+pub use evaluation::{
+    assemble_evaluation_pack, build_evaluation_pack, format_evaluation_pack,
+    in_evaluation_population, install_artifact_set, EvaluationPackProvenance,
+    EVALUATION_PACK_SCHEMA_VERSION,
 };
 pub use language_model::{
     build_language_model, language_model_manifest_sha256, load_language_model,

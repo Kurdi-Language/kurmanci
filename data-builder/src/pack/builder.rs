@@ -532,6 +532,9 @@ pub fn assemble_pack_artifacts<P: AsRef<Path>>(
         binary_size_bytes,
         data_licenses: licenses,
         attribution_files: vec!["attribution.txt".to_string()],
+        // Absent: this is a pack the project ships.
+        release_kind: None,
+        production_eligible: None,
     };
     let manifest_bytes = serde_json::to_string_pretty(&manifest)
         .map_err(|e| e.to_string())?

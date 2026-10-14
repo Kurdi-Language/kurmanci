@@ -290,6 +290,15 @@ pub struct PackManifest {
     pub binary_size_bytes: u64,
     pub data_licenses: Vec<DataLicenseEntry>,
     pub attribution_files: Vec<String>,
+    /// Absent on every pack this project ships. Present only on an evaluation artifact, which
+    /// sets it to "evaluation", so a manifest separated from its directory still says what it
+    /// is. Skipped when absent, so a production manifest's bytes and recorded hash are
+    /// unaffected by this field existing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub release_kind: Option<String>,
+    /// Absent on every pack this project ships; `false` on an evaluation artifact.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub production_eligible: Option<bool>,
 }
 
 /// Generates source-derived licensing array and `attribution.txt` content dynamically from registry.

@@ -141,6 +141,9 @@ model_profile = "none"
                 spdx: "Apache-2.0".to_string(),
             }],
             attribution_files: vec!["attribution.txt".to_string()],
+            // A fixture of an ordinary pack: the evaluation markers are absent.
+            release_kind: None,
+            production_eligible: None,
         };
 
         fs::write(
