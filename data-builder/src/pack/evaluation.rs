@@ -487,6 +487,34 @@ pub fn build_evaluation_pack<P: AsRef<Path>>(
     Ok(pack.provenance)
 }
 
+/// Requires a single plain filename: one normal path component, no separator, no `.` or `..`,
+/// not absolute and not a platform prefix. Checked for every entry before any write, so a
+/// rejected set leaves nothing behind.
+fn validate_artifact_name(name: &str) -> Result<(), String> {
+    let reject = |why: &str| Err(format!("invalid artifact file name {:?}: {}", name, why));
+    if name.is_empty() {
+        return reject("empty");
+    }
+    if name.contains('/') || name.contains('\\') {
+        return reject("contains a path separator");
+    }
+    if name == "." || name == ".." {
+        return reject("refers to a directory");
+    }
+    if name.contains('\0') {
+        return reject("contains a NUL byte");
+    }
+    let mut components = Path::new(name).components();
+    match (components.next(), components.next()) {
+        (Some(std::path::Component::Normal(component)), None)
+            if component == std::ffi::OsStr::new(name) =>
+        {
+            Ok(())
+        }
+        _ => reject("is not a single plain file name"),
+    }
+}
+
 /// Replaces `out_dir` with exactly `files`, or leaves it exactly as it was.
 ///
 /// Writing a directory in place would let a failure after the first write leave a new binary
@@ -496,6 +524,12 @@ pub fn build_evaluation_pack<P: AsRef<Path>>(
 /// A replacement is wholesale, so a file that used to be in the directory and is not in `files`
 /// is gone rather than left behind.
 pub fn install_artifact_set(out_dir: &Path, files: &[(&str, Vec<u8>)]) -> Result<(), String> {
+    // Every name is checked before anything is created or written. This helper is public, so a
+    // caller must not be able to place a file outside the directory being installed, and a
+    // name's meaning must not depend on which directories happen to exist.
+    for (file_name, _) in files {
+        validate_artifact_name(file_name)?;
+    }
     let parent = out_dir
         .parent()
         .ok_or_else(|| format!("output directory {:?} has no parent", out_dir))?;

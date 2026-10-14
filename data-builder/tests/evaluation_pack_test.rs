@@ -290,14 +290,13 @@ fn a_failed_replacement_leaves_the_previous_artifact_byte_identical() {
     )
     .unwrap();
 
-    // A name with a directory component cannot be written into the staging directory, so the
-    // replacement fails partway through: the first file is staged, the second is not.
+    // A name longer than any filesystem component limit is a single plain file name, so it
+    // passes validation and then fails on write: the replacement breaks partway through, with
+    // the first file staged and the second not.
+    let too_long: &'static str = Box::leak(("x".repeat(300) + ".bin").into_boxed_str());
     let err = install_artifact_set(
         &out,
-        &files(&[
-            ("lexicon.bin", "REPLACEMENT"),
-            ("nested/manifest.json", "{}"),
-        ]),
+        &files(&[("lexicon.bin", "REPLACEMENT"), (too_long, "{}")]),
     )
     .expect_err("the replacement must fail");
     assert!(
@@ -334,4 +333,48 @@ fn a_failed_replacement_leaves_the_previous_artifact_byte_identical() {
         leftovers.is_empty(),
         "a failed replacement left staging behind: {leftovers:?}"
     );
+}
+
+#[test]
+fn an_artifact_name_must_be_a_single_plain_file_name() {
+    // The helper is public, so a caller must not be able to reach outside the directory being
+    // installed, nor have a name mean different things depending on what already exists.
+    let root = tempfile::tempdir().unwrap();
+    let out = root.path().join("dist/eval/pack");
+    install_artifact_set(&out, &files(&[("lexicon.bin", "ORIGINAL")])).unwrap();
+
+    for bad in [
+        "../escape.bin",
+        "nested/manifest.json",
+        "nested\\manifest.json",
+        "/absolute.bin",
+        "",
+        ".",
+        "..",
+        "./lexicon.bin",
+    ] {
+        let err = install_artifact_set(&out, &files(&[("lexicon.bin", "NEW"), (bad, "x")]))
+            .expect_err(&format!("{bad:?} must be rejected"));
+        assert!(
+            err.contains("invalid artifact file name"),
+            "{bad:?} was rejected for another reason: {err}"
+        );
+    }
+    // Nothing was created, written or removed by any of those attempts.
+    assert_eq!(fs::read(out.join("lexicon.bin")).unwrap(), b"ORIGINAL");
+    let present: Vec<String> = fs::read_dir(&out)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .collect();
+    assert_eq!(present, vec!["lexicon.bin"]);
+    let leftovers: Vec<String> = fs::read_dir(out.parent().unwrap())
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+        .filter(|n| n.starts_with('.'))
+        .collect();
+    assert!(leftovers.is_empty(), "staging left behind: {leftovers:?}");
+
+    // A name that merely looks unusual but is a single component is accepted.
+    install_artifact_set(&out, &files(&[(".hidden-but-valid", "ok")])).unwrap();
+    assert!(out.join(".hidden-but-valid").exists());
 }
