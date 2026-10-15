@@ -1,0 +1,131 @@
+{
+  "schema_version": "pack-quality-v1",
+  "provenance": {
+    "pack_id": "experimental-full",
+    "pack_sha256": "6caf3b564465f4f7c9b49efba1a1a20779d9259a4a92d9684a419ad9c5f7392a",
+    "pack_entry_count": 42248,
+    "pack_manifest_sha256": "af788f4c0a900e6558b9530ef6b70c45cebef58633bb834ebf4c30f087669cba",
+    "model_id": "kuwiki-20260801",
+    "model_manifest_sha256": "fa5b507b8be6ee674745b0e9b8965173ce247de1125673889da983c8d9add054",
+    "corpus_id": "kuwiki",
+    "partition": "development",
+    "partition_manifest_sha256": "7d85f85e659d2655035bbb880195ff7e2a0c580df5adc5a214b55034b2c2aa4a",
+    "partition_sha256": "eb5dd0d4b538d6dd9a183c115b045ab74cc213fe6d875e0878d570fd8f964081",
+    "partition_declared_documents": 9328,
+    "result_limit": 5,
+    "target_limit": 2000,
+    "min_target_chars": 4
+  },
+  "corpus": {
+    "documents_read": 9328,
+    "documents_evaluated": 9285,
+    "other_corpus_documents_skipped": 0,
+    "duplicate_documents_skipped": 43
+  },
+  "known_words": {
+    "token_occurrences": 804300,
+    "token_occurrences_known": 567078,
+    "distinct_forms": 78796,
+    "distinct_forms_known": 8226,
+    "excluded_out_of_alphabet_forms": 6519,
+    "excluded_out_of_alphabet_occurrences": 17925,
+    "excluded_punctuation_held_forms": 0,
+    "excluded_punctuation_held_occurrences": 0
+  },
+  "completion": [
+    {
+      "prefix_chars": 1,
+      "targets": 2000,
+      "top1": 0,
+      "top3": 0,
+      "top5": 1,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 2,
+      "targets": 2000,
+      "top1": 9,
+      "top3": 28,
+      "top5": 50,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 3,
+      "targets": 2000,
+      "top1": 112,
+      "top3": 368,
+      "top5": 543,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    },
+    {
+      "prefix_chars": 4,
+      "targets": 2000,
+      "top1": 471,
+      "top3": 909,
+      "top5": 1126,
+      "no_candidate": 0,
+      "candidates_returned": 10000
+    }
+  ],
+  "correction": [
+    {
+      "corruption": "delete_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 68,
+      "measured": 1932,
+      "top1": 752,
+      "top3": 1052,
+      "top5": 1170,
+      "no_suggestion": 102
+    },
+    {
+      "corruption": "duplicate_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 6,
+      "measured": 1994,
+      "top1": 1355,
+      "top3": 1433,
+      "top5": 1441,
+      "no_suggestion": 218
+    },
+    {
+      "corruption": "substitute_one_letter",
+      "targets": 2000,
+      "corruption_is_known_word": 10,
+      "measured": 1990,
+      "top1": 1091,
+      "top3": 1339,
+      "top5": 1409,
+      "no_suggestion": 150
+    },
+    {
+      "corruption": "transpose_two_letters",
+      "targets": 1983,
+      "corruption_is_known_word": 10,
+      "measured": 1973,
+      "top1": 1392,
+      "top3": 1431,
+      "top5": 1431,
+      "no_suggestion": 149
+    },
+    {
+      "corruption": "strip_diacritics",
+      "targets": 1178,
+      "corruption_is_known_word": 54,
+      "measured": 1124,
+      "top1": 815,
+      "top3": 836,
+      "top5": 836,
+      "no_suggestion": 62
+    }
+  ],
+  "clean_input": {
+    "targets": 2000,
+    "targets_known": 1448,
+    "treated_as_unknown": 552,
+    "corrected_away_from_input": 0
+  }
+}
