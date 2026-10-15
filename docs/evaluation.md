@@ -372,6 +372,13 @@ provenance chain is the shared one in `eval_support`, the same chain
 `evaluate-prediction-coverage` uses, so the partition is provably held out from the model the
 pack embeds.
 
+Coverage and targets use the whole lexical eligibility boundary production applies to a
+default-vocabulary entry: the alphabet policy **and** the word-punctuation hold. The alphabet
+helper deliberately permits `-`, `'` and `’` because those are governed by the hold, so checking
+the alphabet alone would admit forms the reviewed pack may not contain until a linguist has
+reviewed them. Forms production excludes are left out of the denominator and reported on their
+own lines, because counting them would charge a pack for words it is not allowed to hold.
+
 Two design rules make a comparison meaningful. **Targets are drawn from the corpus before any
 pack is consulted**, as the most frequent alphabet-eligible held-out forms of at least four
 characters, so every pack answers for the same words and a target a pack lacks counts as a miss
@@ -391,11 +398,17 @@ packs is therefore mostly a vocabulary comparison and must be read as one.
 `docs/evaluation/pack-quality/kuwiki-20260801-development-*-20261014.json`, development
 partition, 9,285 documents evaluated, 2,000 targets, five candidates per query.
 
+Denominators are the eligible held-out forms: 78,796 distinct forms and 804,300 occurrences,
+after excluding 6,519 forms the alphabet policy keeps out of any default vocabulary. The
+punctuation hold excluded nothing here, because the corpus tokenizer treats punctuation as a
+token boundary, so no corpus token can carry a hyphen or apostrophe; the check is applied
+anyway, so that the eligibility boundary is the production one for every source.
+
 | | reviewed | reviewed + TRAIN-attested | experimental-full |
 |---|---|---|---|
 | entries | 2,143 | 12,614 | 42,248 |
-| held-out tokens known | 54.8% | 56.8% | 69.0% |
-| distinct held-out forms known | 2.4% | 7.7% | 9.7% |
+| held-out tokens known | 56.1% | 58.0% | 70.5% |
+| distinct held-out forms known | 2.6% | 8.4% | 10.4% |
 | completion top-5, 2 letters | 20.8% | 4.0% | 2.5% |
 | completion top-5, 3 letters | 48.0% | 29.8% | 27.2% |
 | completion top-5, 4 letters | 59.2% | 52.7% | 56.3% |
@@ -405,20 +418,21 @@ partition, 9,285 documents evaluated, 2,000 targets, five candidates per query.
 
 Three readings follow.
 
-**Corpus attestation selects a weak subset.** The 10,471 attested entries add two points of
-held-out token coverage; the unattested remainder adds twelve more. Attestation is therefore
+**Corpus attestation selects a weak subset.** The 10,471 attested entries add 1.9 points of
+held-out token coverage; the unattested remainder adds 12.5 more. Attestation is therefore
 not a good proxy for which undecided entries are worth having, which is the opposite of what the
 evaluation population was built to test. Whether those unattested forms are *linguistically*
 sound is a different question that no mechanical measurement answers.
 
-**Completion degrades sharply as the lexicon grows, and the cause is a pack configuration, not
-the vocabulary.** No pack here embeds unigram frequencies: `model_profile = "prediction"` encodes
-n-grams only, `uses_frequencies` is true for the `frequency` and `ngram` profiles alone, and all
-three packs report zero frequency entries. Completion ranking therefore cannot prefer common
-words. With 2,143 entries that hardly matters; with 42,248 a two-letter prefix has far more
-matches than the five slots can hold. This is testable: the same benchmark run against a pack
-built on the `ngram` profile, which embeds frequencies as well as n-grams, would confirm or
-refute it. No ranking or policy change is made here.
+**Completion degrades sharply as the lexicon grows. The cause is not established.** Two facts
+are established: no pack here embeds unigram frequencies, because `model_profile = "prediction"`
+encodes n-grams only while `uses_frequencies` is true for the `frequency` and `ngram` profiles
+alone, and all three report zero frequency entries; and completion worsens as the vocabulary
+expands. The degradation is *consistent with* the absence of frequency ranking interacting badly
+with a larger candidate set, since ranking cannot prefer common words and five slots fill up
+sooner. This measurement does not isolate that cause, and nothing here should be read as having
+established it. A controlled frequency-enabled build, the same benchmark against a pack on the
+`ngram` profile, is required to establish causality. No ranking or policy change is made here.
 
 **Correction improves with vocabulary and costs no precision.** Each pack performs close to its
 own ceiling, so the gain comes from knowing the word rather than from correcting better, and

@@ -62,7 +62,9 @@ pub struct PackQualityReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QualityProvenance {
-    pub pack_path: String,
+    /// The pack's own declared identity. Deliberately not the invocation's path: an absolute
+    /// path would make a committed report machine-specific and unreproducible elsewhere.
+    pub pack_id: String,
     pub pack_sha256: String,
     pub pack_entry_count: usize,
     pub pack_manifest_sha256: String,
@@ -91,13 +93,17 @@ pub struct CorpusCounts {
 /// comparison usually quotes. They answer different questions and both are reported.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct KnownWords {
+    /// Occurrences and forms a pack is permitted to contain. Everything production policy keeps
+    /// out of a default vocabulary is excluded from the denominator and reported below instead,
+    /// because counting it would charge a pack for words it may not hold.
     pub token_occurrences: usize,
     pub token_occurrences_known: usize,
     pub distinct_forms: usize,
     pub distinct_forms_known: usize,
-    /// Distinct forms outside the 31-letter alphabet, which no pack may contain by policy, so
-    /// they are reported rather than counted against a pack.
-    pub distinct_forms_outside_alphabet: usize,
+    pub excluded_out_of_alphabet_forms: usize,
+    pub excluded_out_of_alphabet_occurrences: usize,
+    pub excluded_punctuation_held_forms: usize,
+    pub excluded_punctuation_held_occurrences: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -223,6 +229,16 @@ impl Corruption {
     }
 }
 
+/// The whole lexical eligibility boundary production applies to a default-vocabulary entry:
+/// the alphabet policy *and* the word-punctuation hold. The alphabet helper deliberately
+/// permits `-`, `'` and `’`, because those are governed by the separate hold, so a measurement
+/// that checked only the alphabet would admit forms the reviewed pack may not contain until a
+/// linguist has reviewed them.
+fn is_production_eligible(normalized: &str) -> bool {
+    crate::alphabet::default_pack_eligibility(normalized).is_ok()
+        && crate::alphabet::word_punctuation_hold(normalized).is_ok()
+}
+
 fn rate(part: usize, whole: usize) -> f64 {
     if whole == 0 {
         0.0
@@ -244,6 +260,12 @@ pub fn evaluate_pack_quality(
     }
     let verified = verify_pack_on_held_out_partition(root, pack_path, partition)?;
 
+    let pack_id = verified.pack_id.clone().ok_or_else(|| {
+        format!(
+            "the manifest beside {:?} declares no pack_id; a report identifies a pack by its declared identity and hash, not by the path it was invoked with",
+            pack_path
+        )
+    })?;
     let engine = KurmanciEngine::from_pack_bytes(&verified.pack_bytes)
         .map_err(|e| format!("Failed to load pack {:?}: {}", pack_path, e))?;
     let pack_entry_count = engine.len();
@@ -300,11 +322,18 @@ pub fn evaluate_pack_quality(
     // 2. Coverage of held-out text, by occurrence and by distinct form.
     let mut known = KnownWords::default();
     for (form, count) in &form_counts {
+        if crate::alphabet::default_pack_eligibility(form).is_err() {
+            known.excluded_out_of_alphabet_forms += 1;
+            known.excluded_out_of_alphabet_occurrences += count;
+            continue;
+        }
+        if crate::alphabet::word_punctuation_hold(form).is_err() {
+            known.excluded_punctuation_held_forms += 1;
+            known.excluded_punctuation_held_occurrences += count;
+            continue;
+        }
         known.token_occurrences += count;
         known.distinct_forms += 1;
-        if crate::alphabet::default_pack_eligibility(form).is_err() {
-            known.distinct_forms_outside_alphabet += 1;
-        }
         if engine.is_known_word(form) {
             known.distinct_forms_known += 1;
             known.token_occurrences_known += count;
@@ -317,8 +346,7 @@ pub fn evaluate_pack_quality(
     let mut eligible: Vec<(&String, usize)> = form_counts
         .iter()
         .filter(|(form, _)| {
-            form.chars().count() >= MIN_TARGET_CHARS
-                && crate::alphabet::default_pack_eligibility(form).is_ok()
+            form.chars().count() >= MIN_TARGET_CHARS && is_production_eligible(form)
         })
         .map(|(f, c)| (f, *c))
         .collect();
@@ -450,7 +478,7 @@ pub fn evaluate_pack_quality(
     Ok(PackQualityReport {
         schema_version: PACK_QUALITY_SCHEMA_VERSION.to_string(),
         provenance: QualityProvenance {
-            pack_path: pack_path.display().to_string(),
+            pack_id,
             pack_sha256: verified.pack_sha256,
             pack_entry_count,
             pack_manifest_sha256: verified.pack_manifest_sha256,
@@ -478,9 +506,9 @@ pub fn format_report(r: &PackQualityReport) -> String {
     let p = &r.provenance;
     let k = &r.known_words;
     let mut out = format!(
-        "Pack quality ({})\n  pack {} (sha256 {}…, {} entries), model {}\n  partition {} ({} documents declared, {} evaluated); targets {}, limit {}\n",
+        "Pack quality ({})\n  pack '{}' (sha256 {}…, {} entries), model {}\n  partition {} ({} documents declared, {} evaluated); targets {}, limit {}\n",
         r.schema_version,
-        p.pack_path,
+        p.pack_id,
         &p.pack_sha256[..12],
         p.pack_entry_count,
         p.model_id,
@@ -500,8 +528,12 @@ pub fn format_report(r: &PackQualityReport) -> String {
         k.distinct_forms_known,
         k.distinct_forms,
         rate(k.distinct_forms_known, k.distinct_forms),
-        "distinct forms outside the alphabet",
-        k.distinct_forms_outside_alphabet
+        "excluded, outside the alphabet",
+        k.excluded_out_of_alphabet_forms
+    ));
+    out.push_str(&format!(
+        "  {:<34} {:>9}\n",
+        "excluded, punctuation held", k.excluded_punctuation_held_forms
     ));
     out.push_str("\ncompletion from the first letters\n  prefix  targets    top1    top3    top5  none  mean cands\n");
     for c in &r.completion {

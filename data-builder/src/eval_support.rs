@@ -22,6 +22,8 @@ struct PackManifestModelFields {
     #[serde(default)]
     schema_version: Option<String>,
     #[serde(default)]
+    pack_id: Option<String>,
+    #[serde(default)]
     model_profile: String,
     #[serde(default)]
     binary_sha256: Option<String>,
@@ -55,6 +57,10 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
 /// A pack proved to belong with its manifest, its language model and the partitioning the model
 /// was built from, together with the held-out partition's bytes.
 pub struct VerifiedPackOnPartition {
+    /// The pack's logical identity as its own manifest declares it. A report identifies a pack
+    /// by this and by its hash, never by the absolute path of the invocation, which would make
+    /// a committed report machine-specific and unreproducible elsewhere.
+    pub pack_id: Option<String>,
     pub pack_bytes: Vec<u8>,
     pub pack_sha256: String,
     pub pack_manifest_sha256: String,
@@ -215,6 +221,7 @@ pub fn verify_pack_on_held_out_partition(
     let partition_sha256 = sha256_hex(&partition_bytes);
 
     Ok(VerifiedPackOnPartition {
+        pack_id: pack_manifest.pack_id.clone(),
         pack_bytes,
         pack_sha256,
         pack_manifest_sha256: sha256_hex(&manifest_bytes),

@@ -1,7 +1,7 @@
 {
   "schema_version": "pack-quality-v1",
   "provenance": {
-    "pack_path": "/private/tmp/claude-501/-Users-ferhatguneri-Desktop-Kurmanc-/68b4bc67-2c08-488d-8c72-f97fb2b38566/scratchpad/eval-pack/lexicon.bin",
+    "pack_id": "reviewed-plus-train-attested",
     "pack_sha256": "023d945460beb8046b749da66ecbd2ac9501815d591af9ea8683d43e4a7175cb",
     "pack_entry_count": 12614,
     "pack_manifest_sha256": "560bac4d83e2443c9ec250f68f380c4199b8a30a3d4c3f8bfd4c7cfb4ac6d39f",
@@ -23,11 +23,14 @@
     "duplicate_documents_skipped": 43
   },
   "known_words": {
-    "token_occurrences": 822225,
-    "token_occurrences_known": 466852,
-    "distinct_forms": 85315,
-    "distinct_forms_known": 6609,
-    "distinct_forms_outside_alphabet": 6519
+    "token_occurrences": 804300,
+    "token_occurrences_known": 466834,
+    "distinct_forms": 78796,
+    "distinct_forms_known": 6592,
+    "excluded_out_of_alphabet_forms": 6519,
+    "excluded_out_of_alphabet_occurrences": 17925,
+    "excluded_punctuation_held_forms": 0,
+    "excluded_punctuation_held_occurrences": 0
   },
   "completion": [
     {

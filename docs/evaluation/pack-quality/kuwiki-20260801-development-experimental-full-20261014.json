@@ -1,7 +1,7 @@
 {
   "schema_version": "pack-quality-v1",
   "provenance": {
-    "pack_path": "data/build/packs/experimental-full/lexicon.bin",
+    "pack_id": "experimental-full",
     "pack_sha256": "6caf3b564465f4f7c9b49efba1a1a20779d9259a4a92d9684a419ad9c5f7392a",
     "pack_entry_count": 42248,
     "pack_manifest_sha256": "af788f4c0a900e6558b9530ef6b70c45cebef58633bb834ebf4c30f087669cba",
@@ -23,11 +23,14 @@
     "duplicate_documents_skipped": 43
   },
   "known_words": {
-    "token_occurrences": 822225,
-    "token_occurrences_known": 567111,
-    "distinct_forms": 85315,
-    "distinct_forms_known": 8252,
-    "distinct_forms_outside_alphabet": 6519
+    "token_occurrences": 804300,
+    "token_occurrences_known": 567078,
+    "distinct_forms": 78796,
+    "distinct_forms_known": 8226,
+    "excluded_out_of_alphabet_forms": 6519,
+    "excluded_out_of_alphabet_occurrences": 17925,
+    "excluded_punctuation_held_forms": 0,
+    "excluded_punctuation_held_occurrences": 0
   },
   "completion": [
     {

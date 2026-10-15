@@ -193,10 +193,13 @@ fn coverage_counts_occurrences_and_forms_separately() {
     assert_eq!(r.schema_version, PACK_QUALITY_SCHEMA_VERSION);
     assert_eq!(r.corpus.documents_read, 2);
     assert_eq!(r.corpus.documents_evaluated, 2);
-    assert_eq!(r.known_words.token_occurrences, 5, "five tokens in total");
+    assert_eq!(
+        r.known_words.token_occurrences, 5,
+        "five eligible tokens in total"
+    );
     assert_eq!(
         r.known_words.distinct_forms, 3,
-        "pirtûk, heval and the unknown form"
+        "pirtûk, heval and the unknown form, all eligible"
     );
     // A common word counts once per occurrence, which is what a person typing would feel.
     assert!(
@@ -321,4 +324,80 @@ fn a_zero_target_limit_is_refused() {
     let err = evaluate_pack_quality(f.root(), &f.pack, "development", 0)
         .expect_err("a zero target limit measures nothing");
     assert!(err.contains("at least 1"), "unexpected error: {err}");
+}
+
+// ---------------------------------------------------------------------------
+// The eligibility boundary is the production one
+// ---------------------------------------------------------------------------
+
+#[test]
+fn forms_production_excludes_are_out_of_the_denominator_and_out_of_the_targets() {
+    // "kurdî2" carries a digit, so the alphabet policy excludes it. "dest-pêk" and "bav'ê"
+    // carry word-internal punctuation, which the alphabet helper deliberately permits because
+    // the punctuation hold governs it: a measurement that checked only the alphabet would make
+    // them targets even though the reviewed pack may not contain them until a linguist has
+    // reviewed them. The tokenizer splits on punctuation, so those two arrive already split;
+    // the digit case is the one a corpus can actually produce.
+    let f = Fixture::new(
+        "development",
+        &[record("development", "d1", "pirtûk kurdî2 heval")],
+    );
+    let r = evaluate_pack_quality(f.root(), &f.pack, "development", 100).unwrap();
+
+    assert_eq!(
+        r.known_words.distinct_forms, 2,
+        "only pirtûk and heval are eligible: {:?}",
+        r.known_words
+    );
+    assert_eq!(r.known_words.token_occurrences, 2);
+    assert_eq!(r.known_words.excluded_out_of_alphabet_forms, 1);
+    assert_eq!(r.known_words.excluded_out_of_alphabet_occurrences, 1);
+    assert_eq!(
+        r.clean_input.targets, 2,
+        "an ineligible form must not become a target"
+    );
+}
+
+#[test]
+fn a_punctuation_held_form_is_never_a_target() {
+    // Proven at the boundary itself, since the corpus tokenizer cannot emit such a token: the
+    // alphabet policy admits these forms and the punctuation hold is what keeps them out.
+    for held in ["dest-pêk", "bav'ê", "bav’ê"] {
+        assert!(
+            data_builder_lib::alphabet::default_pack_eligibility(held).is_ok(),
+            "{held} is expected to pass the alphabet policy"
+        );
+        assert!(
+            data_builder_lib::alphabet::word_punctuation_hold(held).is_err(),
+            "{held} must be held by the punctuation policy, which is what excludes it"
+        );
+    }
+}
+
+#[test]
+fn a_pack_whose_manifest_declares_no_identity_is_refused() {
+    // A report identifies its pack by the declared pack_id and hash, never by the invocation
+    // path, so a manifest without an identity cannot be measured.
+    let f = Fixture::new("development", &[record("development", "d1", "pirtûk")]);
+    let manifest = f.pack.parent().unwrap().join("manifest.json");
+    let text = fs::read_to_string(&manifest).unwrap();
+    fs::write(&manifest, text.replace(r#""pack_id":"reviewed","#, "")).unwrap();
+    let err = evaluate_pack_quality(f.root(), &f.pack, "development", 100)
+        .expect_err("a manifest without a pack_id must be refused");
+    assert!(
+        err.contains("declares no pack_id"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn the_report_carries_the_declared_identity_and_no_invocation_path() {
+    let f = Fixture::new("development", &[record("development", "d1", "pirtûk")]);
+    let r = evaluate_pack_quality(f.root(), &f.pack, "development", 100).unwrap();
+    assert_eq!(r.provenance.pack_id, "reviewed");
+    let json = serde_json::to_string(&r).unwrap();
+    assert!(
+        !json.contains(&f.root().display().to_string()),
+        "the report leaked the temporary root, so a committed report would be machine-specific"
+    );
 }

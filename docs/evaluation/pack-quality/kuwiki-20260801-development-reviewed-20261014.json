@@ -1,7 +1,7 @@
 {
   "schema_version": "pack-quality-v1",
   "provenance": {
-    "pack_path": "data/build/packs/reviewed/lexicon.bin",
+    "pack_id": "reviewed",
     "pack_sha256": "8ad8bbf8134f5f67c95a631a4fa4a0345a0a4445a67140278b9cb48e5a1e399b",
     "pack_entry_count": 2143,
     "pack_manifest_sha256": "4fc2aa2d2de7dc762eff6b58f7be5ffe0a9b2cff870a0a0c838c254e42718ee4",
@@ -23,11 +23,14 @@
     "duplicate_documents_skipped": 43
   },
   "known_words": {
-    "token_occurrences": 822225,
-    "token_occurrences_known": 450852,
-    "distinct_forms": 85315,
-    "distinct_forms_known": 2086,
-    "distinct_forms_outside_alphabet": 6519
+    "token_occurrences": 804300,
+    "token_occurrences_known": 450834,
+    "distinct_forms": 78796,
+    "distinct_forms_known": 2069,
+    "excluded_out_of_alphabet_forms": 6519,
+    "excluded_out_of_alphabet_occurrences": 17925,
+    "excluded_punctuation_held_forms": 0,
+    "excluded_punctuation_held_occurrences": 0
   },
   "completion": [
     {
